@@ -25,7 +25,16 @@ bank_blob = json.dumps(bank, **J)
 media_blob = json.dumps(json.load(open(ROOT / 'data' / 'media.json', encoding='utf-8')), **J)
 rec_blob = json.dumps(json.load(open(ROOT / 'data' / 'recipes.json', encoding='utf-8')), **J)
 
+# Адрес и публичный ключ Supabase. Файла может не быть или он пустой — тогда вход
+# выключен и приложение открывается без пароля, как раньше.
+try:
+    auth = json.load(open(ROOT / 'data' / 'auth.json', encoding='utf-8'))
+    auth = {'url': auth.get('url', '').rstrip('/'), 'key': auth.get('key', '')}
+except Exception:
+    auth = {'url': '', 'key': ''}
+
 tpl = (ROOT / 'quiz_template.html').read_text(encoding='utf-8')
+tpl = tpl.replace('__SB__', json.dumps(auth, **J))
 out = ROOT / 'build' / 'app'
 out.mkdir(parents=True, exist_ok=True)
 
@@ -51,3 +60,4 @@ kb = lambda s: f'{len(s)//1024} КБ'
 print(f'index.html {kb(split)} · media.js {kb(media_blob)} · recipes.js {kb(rec_blob)} · '
       f'bank.js {kb(bank_blob)} · quiz.html {kb(single)}')
 print(f'вопросов {len(bank)}, рецептов {len(json.loads(rec_blob)["recipes"])}')
+print('вход:', auth['url'] or 'выключен (data/auth.json не заполнен)')

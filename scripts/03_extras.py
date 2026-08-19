@@ -88,7 +88,12 @@ def parse_tea():
             continue
         if a and b and 'гр' in b:                       # обычный сорт
             cur = None
-            simple.append({'name': a, 'dose': b, 'temp': c, 'spoons': d})
+            # «Таежный Микс (до обнуления остатков использовать…)» — в названии сидит
+            # примечание на полстроки. В вопросах показываем короткое имя, полное
+            # остаётся рядом и попадает в карточку.
+            short = a.split('(')[0].strip().rstrip('*').strip()
+            simple.append({'name': short or a.strip(), 'full': a.strip(),
+                           'dose': b, 'temp': c, 'spoons': d})
         elif a and not b:                               # начало крафтовой смеси
             cur = {'name': a, 'ing': [], 'method': ''}
             mixes.append(cur)

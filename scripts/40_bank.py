@@ -307,9 +307,11 @@ for d in drinks:
         if not cnt:
             continue
         label = clean_gar(n)
-        # Заказчик: из чисто штучного спрашиваем только бамбуковый лист. Зонтик,
-        # наклейка, пергамент и сахарные картинки — не рецептура, а сборка подачи.
-        if 'гр' not in a and 'бамбук' not in label.lower():
+        # Украшение спрашиваем в граммах везде, где граммовка есть в исходнике;
+        # вопрос «сколько штук» остаётся только там, где граммов нет вовсе.
+        # Из такого чисто штучного нужен лишь бамбуковый лист: зонтик, наклейка,
+        # пергамент и сахарные картинки — сборка подачи, а не рецептура.
+        if 'гр' in a or 'бамбук' not in label.lower():
             continue
         others = [c for c in PIECE_POOL if c != cnt]
         rnd.shuffle(others)
@@ -580,6 +582,20 @@ for ch in CHAPTERS:
     for nm in ch['items']:
         CH_OF[nm] = ch['id']
 
+def calc_ml(d):
+    """Выход, посчитанный как сумма жидкостей. Нужен вариантам «Безо льда»: в таблице
+    у них выход не проставлен вовсе. Помечаем «≈», чтобы не путать с цифрой из исходника."""
+    if d['total']:
+        return d['total']
+    s = 0.0
+    for n, a in d['ing']:
+        if 'укр' in n.lower():
+            continue
+        m = re.match(r'^(\d+[.,]?\d*)\s*мл\.?$', a.strip())
+        if m:
+            s += float(m.group(1).replace(',', '.'))
+    return f'≈ {fmtnum(s)} мл' if s else ''
+
 BYNAME = {d['name']: d for d in drinks}
 VARIANTS = {}
 for d in drinks:
@@ -612,7 +628,8 @@ for ch in CHAPTERS:
             'formula': ' + '.join(f'{v} {n}' for v, n in d['formula']),
             'key': MNEMO.get(nm) or FAMILY_NOTE.get(nm, ''),
             'img': thumb(d['photos'][0] if d['photos'] else ''),
-            'var': [{'name': pretty(v), 'method': BYNAME[v]['method']} for v in VARIANTS.get(nm, [])],
+            'var': [{'name': pretty(v), 'method': BYNAME[v]['method'],
+                     'total': calc_ml(BYNAME[v])} for v in VARIANTS.get(nm, [])],
         })
 
 for i, r in enumerate(recipes):       # карточки кофе, чая, ПФ и подачи
@@ -674,7 +691,10 @@ for t in extras['tea']['simple']:
     ing = [['Заварка', t['dose']]]
     if t['spoons'].isdigit():
         ing.append(['Ложек «1 tbsp»', t['spoons'] + ' шт'])
-    extra_card(t['name'].strip(), 'Чай', ing, '', '', [t['temp']] if t['temp'] else [])
+    note = t.get('full', '')
+    extra_card(t['name'].strip(), 'Чай', ing, '',
+               note if note != t['name'].strip() else '',
+               [t['temp']] if t['temp'] else [])
 for m in extras['tea']['mixes']:
     extra_card(m['name'].strip(), 'Чай', m['ing'], '', m['method'])
 for x in extras['pf']:

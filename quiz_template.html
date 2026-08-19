@@ -56,22 +56,29 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
 
 /* ---------- карточка вопроса ---------- */
 .stage{flex:1;display:flex;flex-direction:column;justify-content:center}
-.q{background:var(--card);border-radius:22px;padding:20px;border:1px solid var(--line);
-  animation:in .26s cubic-bezier(.2,.8,.2,1)}
+.q{background:var(--card);border-radius:22px;padding:clamp(13px,2vh,20px);
+  border:1px solid var(--line);animation:in .26s cubic-bezier(.2,.8,.2,1);
+  max-height:calc(100vh - 108px);overflow-y:auto}
 @keyframes in{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
 @keyframes shake{10%,90%{transform:translateX(-2px)}30%,70%{transform:translateX(4px)}50%{transform:translateX(-6px)}}
 .q.shake{animation:shake .35s}
-.q .drink{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.q .drink img{width:52px;height:52px;border-radius:13px;object-fit:cover;background:var(--card-2);flex:0 0 52px}
+.q .drink{display:flex;align-items:center;gap:12px;margin-bottom:clamp(8px,1.6vh,14px)}
+.q .drink img{width:clamp(40px,6vh,52px);height:clamp(40px,6vh,52px);border-radius:13px;
+  object-fit:cover;background:var(--card-2);flex:0 0 auto}
 .q .drink div{min-width:0}
 .q .drink b{display:block;font-size:16px;line-height:1.2}
 .q .drink span{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
-.q h2{font-size:21px;line-height:1.25;margin:0 0 4px;font-weight:700;letter-spacing:-.3px}
+.q h2{font-size:clamp(17px,2.6vh,21px);line-height:1.25;margin:0 0 4px;font-weight:700;
+  letter-spacing:-.3px}
 .q .hint{font-size:12.5px;color:var(--ink-3);margin-top:6px}
 
-/* таблица пака «пропущенная граммовка» */
-.fillt{width:100%;border-collapse:collapse;margin-top:14px}
-.fillt td{padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--ink-2)}
+/* таблица пака «пропущенная граммовка»: длинный состав прокручивается внутри себя,
+   чтобы клавиатура осталась на экране */
+.fillt{width:100%;border-collapse:collapse;margin-top:clamp(8px,1.4vh,14px);display:block;
+  max-height:24vh;overflow-y:auto}
+.fillt tbody{display:table;width:100%}
+.fillt td{padding:clamp(4px,.8vh,7px) 0;border-bottom:1px solid var(--line);
+  font-size:clamp(13px,1.8vh,14.5px);color:var(--ink-2)}
 .fillt td+td{text-align:right;font-family:var(--mono);color:var(--ink);white-space:nowrap;padding-left:10px}
 .fillt tr.miss td{color:var(--acc)}
 .fillt tr.miss td+td{color:var(--acc);font-weight:700}
@@ -101,8 +108,10 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
 .opt.dim{opacity:.45}
 
 /* фидбек */
-.fb{margin-top:14px;border-radius:14px;padding:12px 14px;font-size:14.5px;display:none;
-  animation:in .2s ease-out}
+.fb{margin-top:clamp(8px,1.4vh,14px);border-radius:14px;padding:clamp(9px,1.5vh,12px) 14px;
+  font-size:14.5px;display:none;animation:in .2s ease-out}
+.fb .next{display:inline-block;margin-top:8px;background:var(--acc);color:#17140F;
+  border-radius:11px;padding:9px 16px;font-weight:700;font-size:14px}
 .fb.show{display:block}
 .fb.ok{background:#4FB4771f;color:#9EE0B8}
 .fb.bad{background:#E2564B1f;color:#F3A8A2}
@@ -261,20 +270,29 @@ details.cheat b{color:var(--ink)}
 /* На телефоне системная цифровая клавиатура закрывала карточку целиком и прыгала
    при каждом фокусе. Своя всегда на месте и не двигает вёрстку. */
 .numbox{margin-top:16px}
+.numbox{margin-top:clamp(10px,1.6vh,16px)}
 .numbox .disp{display:flex;align-items:center;gap:10px;background:var(--card-2);
-  border:1.5px solid var(--line);border-radius:15px;padding:13px 16px;transition:border-color .2s}
+  border:1.5px solid var(--line);border-radius:15px;padding:clamp(6px,1.1vh,12px) 16px;
+  transition:border-color .2s}
 .numbox .disp.focus{border-color:var(--acc)}
 .numbox .disp.ok{border-color:var(--ok)} .numbox .disp.bad{border-color:var(--bad)}
-.numbox .val{flex:1;font-family:var(--mono);font-size:26px;line-height:1.1;min-height:30px;
-  color:var(--ink);word-break:break-all}
+.numbox .val{flex:1;font-family:var(--mono);font-size:clamp(20px,2.9vh,26px);line-height:1.1;
+  min-height:clamp(24px,3vh,30px);color:var(--ink);word-break:break-all}
 .numbox .val.ph{color:var(--ink-3)}
 .numbox .val i{font-style:normal;display:inline-block;width:2px;height:24px;background:var(--acc);
   vertical-align:-4px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 .numbox .unit{font-family:var(--mono);font-size:16px;color:var(--ink-3)}
-.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
-.pad button{background:var(--card-2);border:1px solid var(--line);border-radius:14px;
-  padding:15px 0;font-family:var(--mono);font-size:22px;transition:transform .12s,background .18s}
+/* Ответ дан — клавиатура больше не нужна. Прячем её, иначе вердикт «Верно/Неверно»
+   уезжает под нижний край экрана (проверяли на iPhone 12). */
+.numbox.answered .pad{display:none}
+/* Клавиатура ужимается по высоте экрана: на маленьком телефоне с длинным составом
+   всё равно должна помещаться целиком, без прокрутки до кнопки «Ответ». */
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(5px,1vh,8px);
+  margin-top:clamp(8px,1.4vh,12px)}
+.pad button{background:var(--card-2);border:1px solid var(--line);border-radius:13px;
+  padding:clamp(6px,1.15vh,14px) 0;font-family:var(--mono);font-size:clamp(16px,2vh,21px);
+  transition:transform .12s,background .18s}
 .pad button:active{transform:scale(.93);background:var(--line)}
 .pad button.act{background:var(--acc);color:#17140F;font-family:var(--sans);font-size:16px;font-weight:700}
 .pad button.sub{color:var(--ink-2);font-size:19px}
@@ -304,6 +322,18 @@ details.cheat b{color:var(--ink)}
 .icard tr:last-child td{border-bottom:0}
 .icard td+td{text-align:right;font-family:var(--mono);color:var(--ink);white-space:nowrap}
 .icard tr.g td{color:var(--ink-3)} .icard tr.g td+td{color:var(--acc)}
+
+/* ---------- значок «включён фильтр» на карточке режима ---------- */
+/* .mode span{display:block} растягивал бы значок на всю кнопку и уносил крестик
+   на отдельную строку — поэтому display задан явно и с той же специфичностью. */
+.mode .filt, .filt{display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+  background:#E0A45B1f;border:1px solid var(--acc);border-radius:10px;padding:5px 8px;
+  font-size:12px;color:var(--acc);max-width:100%;vertical-align:top}
+.filt+.filt{margin-left:6px}
+.filt b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mode .filt .x, .filt .x{display:inline-block;flex:0 0 auto;background:#0003;border-radius:7px;
+  padding:1px 6px;font-size:12px;color:var(--acc);line-height:1.4}
+.filt .x:active{transform:scale(.9)}
 
 /* ---------- прочее ---------- */
 .tagline{font-size:11px;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;
@@ -356,22 +386,25 @@ details.cheat b{color:var(--ink)}
       <b>Тренировка</b>
       <span>Без таймера и лимита ошибок. Можно выбрать вид напитков, только избранное или только то, что ещё не решено.</span>
       <div class="tags"><i id="bankSize">0 вопросов</i><i>с настройками</i></div>
+      <div id="fTrain"></div>
     </button>
     <button class="mode" data-mode="ref">
       <b>Справочник</b>
       <span>Все карточки коктейлей целиком: состав, украшения, приготовление, ключ к запоминанию. И шпаргалки по системе.</span>
       <div class="tags"><i id="refSize">0 рецептов</i><i>поиск по ингредиенту</i></div>
+      <div id="fRef"></div>
     </button>
     <button class="mode" data-mode="qbase">
       <b>База вопросов</b>
       <span>Все вопросы с ответами списком — просто посмотреть, без теста. Фильтр по виду напитка и по теме.</span>
       <div class="tags"><i id="qbSize">0 вопросов</i><i>с ответами</i></div>
+      <div id="fQbase"></div>
     </button>
     <button class="mode ghost" data-mode="errors">
       <b>Мои ошибки <span style="display:inline;color:var(--bad)" id="errCount"></span></b>
       <span>Разбор, статистика по коктейлям и повторное решение того, что не получилось.</span>
     </button>
-    <div class="foot">Работает без интернета · данные хранятся только в этом браузере</div>
+    <div class="foot" id="homeFoot">Работает без интернета · данные хранятся только в этом браузере</div>
   </div>
 
   <!-- ТЕСТ -->
@@ -379,6 +412,19 @@ details.cheat b{color:var(--ink)}
 
   <!-- РЕЗУЛЬТАТ -->
   <div id="result" class="hidden"></div>
+
+  <!-- ВХОД -->
+  <div id="login" class="hidden">
+    <h1>Тренажёр<br>граммовок</h1>
+    <p class="lead">Доступ по логину и паролю. Аккаунты заводит владелец — регистрация закрыта.</p>
+    <input class="search" id="logMail" type="email" inputmode="email" autocomplete="username"
+           placeholder="Почта" autocapitalize="off" spellcheck="false">
+    <input class="search" id="logPass" type="password" autocomplete="current-password"
+           placeholder="Пароль">
+    <button class="go wide" id="logGo">Войти</button>
+    <div class="note hidden" id="logErr" style="border-color:var(--bad);color:var(--bad);margin-top:12px"></div>
+    <div class="foot">После первого входа тренажёр работает и без интернета</div>
+  </div>
 
   <!-- НАСТРОЙКА ТРЕНИРОВКИ -->
   <div id="setup" class="hidden">
@@ -446,6 +492,9 @@ details.cheat b{color:var(--ink)}
 <script id="bank" type="application/json">__BANK__</script>
 <script>
 const BANK = JSON.parse(document.getElementById('bank').textContent);
+// Адрес и публичный ключ Supabase. Пустой url = вход выключен, приложение работает
+// как раньше — это нужно, чтобы сборка не ломалась до настройки проекта.
+const SB = __SB__;
 BANK.forEach((q,i)=>q.i=i);
 const IMG = window.IMG || {};                 // ключ -> data-URI, картинка хранится один раз
 const REC = (window.RECIPES||{recipes:[],chapters:[]});
@@ -462,7 +511,8 @@ const BY_ID = {}; BANK.forEach(q=>BY_ID[q.id]=q);
 // fav — избранные коктейли, favQ — избранные вопросы, skip — напитки, убранные из тренировки,
 // solved — что уже решено верно (для режима «только нерешённые»), sess — незаконченная тренировка.
 let store = {errors:{}, stats:{runs:0, best:0, right:0, total:0},
-             fav:{}, favQ:{}, skip:{}, skipQ:{}, skipSh:{}, solved:{}, sess:null, showTotal:true};
+             fav:{}, favQ:{}, skip:{}, skipQ:{}, skipSh:{}, solved:{}, sess:null, showTotal:true,
+             opt:null, qb:null, ref:null};
 try{
   const raw=localStorage.getItem(KEY);
   if(raw){ store=Object.assign(store, JSON.parse(raw)); }
@@ -483,7 +533,10 @@ try{
   }
 }catch(e){}
 for(const k of ['fav','favQ','skip','skipQ','skipSh','solved','errors']) if(!store[k]) store[k]={};
-const save = ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
+const save = ()=>{
+  try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
+  if(typeof pushProgress === 'function') pushProgress();
+};
 
 /* ---------- избранное и исключения ---------- */
 const isFav  = n => !!store.fav[n];
@@ -538,12 +591,20 @@ function pickExam(){
     ...take(pool.filter(q=>q.cat==='glass'), 3),
     ...take(pool.filter(q=>q.cat==='method'), 2)
   ];
-  return dedupe(shuffle(set)).slice(0, EX_N);
+  // dedupe выбрасывает повторы (в том числе одинаковые факты у зелёных чаёв),
+  // из-за чего квоты могут не добрать до 75. Добираем из остатка тем же правилом,
+  // чтобы экзамен всегда был полным и всё равно без дублей.
+  let out = dedupe(shuffle(set));
+  if(out.length < EX_N){
+    const have = new Set(out.map(q=>q.id));
+    out = dedupe(out.concat(shuffle(pool.filter(q=>!have.has(q.id)))));
+  }
+  return out.slice(0, EX_N);
 }
 
 /* ---------- состояние ---------- */
 let S = null, tick = null;
-const SCREENS = ['home','quiz','result','errors','ref','setup','qbase'];
+const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
@@ -561,6 +622,17 @@ function renderHome(){
   $('#refSize').textContent = REC.recipes.length+' рецептов';
   const n = Object.keys(store.errors).length;
   $('#errCount').textContent = n ? '· '+n : '';
+  $('#fTrain').innerHTML = filtHTML(filtWords(OPT,'train'), 'setup', 'opt');
+  $('#fQbase').innerHTML = filtHTML(filtWords(QB,'qb'), 'qbase', 'qb');
+  $('#fRef').innerHTML   = filtHTML(filtWords({sheet:REF_SHEET, fav:REF_FAV},'ref'), 'ref', 'ref');
+  const offN = Object.keys(store.skipSh).length + Object.keys(store.skip).length
+             + Object.keys(store.skipQ).length;
+  if(offN) $('#fTrain').innerHTML += filtHTML(['выключено '+offN], 'setup', 'off');
+  $('#homeFoot').innerHTML = (authOn() && AUTH)
+    ? `${AUTH.mail||''} · прогресс синхронизируется · <span class="fbbtn" id="logout"
+        style="margin-top:6px">Выйти</span>`
+    : 'Работает без интернета · данные хранятся только в этом браузере';
+  const lo = $('#logout'); if(lo) lo.onclick = logout;
   show('home');
 }
 
@@ -570,7 +642,28 @@ const CATS = [['all','Все темы'],['grams','Состав'],['garnish','У�
               ['glass','Посуда'],['method','Метод'],['coffee','Кофе'],['tea','Чай'],
               ['pf','Заготовки'],['serve','Подача']];
 const CAT_NAME = Object.fromEntries(CATS);
-let OPT = {pool:'all', sheet:'all', cat:'all'};
+// Фильтры живут в store: бармен настроил «только лимонады, только украшения» —
+// и после закрытия приложения возвращается туда же, а не к полному банку.
+let OPT = Object.assign({pool:'all', sheet:'all', cat:'all'}, store.opt||{});
+const saveOpt = ()=>{ store.opt = {pool:OPT.pool, sheet:OPT.sheet, cat:OPT.cat}; save(); };
+
+const CAT_TITLE = v => (CATS.find(c=>c[0]===v)||[,''])[1];
+const POOL_TITLE = {all:'', new:'только нерешённые', fav:'избранное'};
+
+// Что показать на главной: короткий человеческий список включённых ограничений.
+function filtWords(o, kind){
+  const w = [];
+  if(kind==='train' && POOL_TITLE[o.pool]) w.push(POOL_TITLE[o.pool]);
+  if(kind!=='train' && o.fav) w.push('избранное');
+  if(o.sheet && o.sheet!=='all') w.push(o.sheet);
+  if(o.cat && o.cat!=='all') w.push(CAT_TITLE(o.cat));
+  return w;
+}
+function filtHTML(words, goto, clear){
+  if(!words.length) return '';
+  return `<span class="filt" data-goto="${goto}"><b>${words.join(' · ')}</b>` +
+         `<span class="x" data-clear="${clear}">✕</span></span>`;
+}
 
 // Один и тот же факт спрашивается по-разному: точным вводом, выбором, пропуском в составе.
 // В одной сессии это выглядит как повтор, поэтому от каждой строки рецепта берём один вопрос.
@@ -579,9 +672,20 @@ function dedupKey(q){
   const kind = p[p.length-1]==='g' ? 'g' : 'i';   // украшение и состав — всё-таки разные факты
   return p.slice(0,-1).join('|')+'|'+kind;
 }
+// У зелёных чаёв доза и температура одинаковы (8 гр, 80 °C), у чёрных — свои 10 гр
+// и 100 °C. Три подряд одинаковых вопроса про разные сорта ничему не учат, поэтому
+// такой факт в сессии показывается один раз. Крафтовые смеси не страдают: у них состав
+// уникальный, значит и ответы разные, и в сессию попадают все.
+// Кофе сюда намеренно не входит: заказчик просил спрашивать дозу у каждого напитка,
+// даже если «15-16 гр» повторяется — это разные технологические карты.
+const EQ_CATS = {tea:1};
+const eqKey = q => EQ_CATS[q.cat] ? q.cat+'|'+q.q+'|'+answerText(q) : null;
+
 function dedupe(list){
-  const seen = new Set(), full = new Set(), taken = {}, out = [];
+  const seen = new Set(), full = new Set(), taken = {}, eq = new Set(), out = [];
   for(const q of list){
+    const ek = eqKey(q);
+    if(ek){ if(eq.has(ek)) continue; eq.add(ek); }
     const isAll = /\|all\|mfill$/.test(q.sk||'');
     // «Впиши весь состав» перекрывает все граммовки этого коктейля — вместе они дубли
     if(isAll && taken[q.drink]) continue;
@@ -634,15 +738,15 @@ function renderSetup(){
 }
 $('#setPool').addEventListener('click', e=>{
   const b=e.target.closest('button[data-pool]'); if(!b) return;
-  OPT.pool=b.dataset.pool; renderSetup();
+  OPT.pool=b.dataset.pool; saveOpt(); renderSetup();
 });
 $('#setSheet').addEventListener('click', e=>{
   const b=e.target.closest('button[data-sheet]'); if(!b) return;
-  OPT.sheet=b.dataset.sheet; renderSetup();
+  OPT.sheet=b.dataset.sheet; saveOpt(); renderSetup();
 });
 $('#setCat').addEventListener('click', e=>{
   const b=e.target.closest('button[data-cat]'); if(!b) return;
-  OPT.cat=b.dataset.cat; renderSetup();
+  OPT.cat=b.dataset.cat; saveOpt(); renderSetup();
 });
 $('#setOff').addEventListener('click', e=>{
   const b=e.target.closest('button[data-off]'); if(!b) return;
@@ -698,6 +802,9 @@ function runSession(){
 // Выход напитка — подсказка: зная его, пропуск считается арифметикой. На экзамене
 // не показываем никогда, в тренировке это выбор пользователя.
 const showTotal = () => S.mode!=='exam' && !!store.showTotal;
+// Подсказка «выход = сумма всех жидкостей» имеет смысл, только когда выход виден.
+// С выключённым показом это просто дразнилка, а на экзамене — ещё и лишний намёк.
+const hintOf = q => (q.hint && q.hint.indexOf('выход') === 0 && !showTotal()) ? '' : q.hint;
 
 function renderQ(){
   const q = S.list[S.k];
@@ -727,7 +834,7 @@ function renderQ(){
         ${q.tag?`<div class="tagline">${q.tag}</div>`:''}</div>
         ${starHTML(isFavQ(q.id), 'id="favQ"')}</div>
       <h2>${q.q}</h2>
-      ${q.hint?`<div class="hint">${q.hint}</div>`:''}
+      ${hintOf(q)?`<div class="hint">${hintOf(q)}</div>`:''}
       ${body}
       <div class="fb" id="fb"></div>
     </div>`;
@@ -744,7 +851,6 @@ function renderQ(){
 /* ---------- своя клавиатура ---------- */
 // Нативная клавиатура телефона перекрывала карточку и прыгала при фокусе,
 // поэтому цифры вводятся своим падом. Он же обслуживает несколько полей у «впиши состав».
-const QUICK = [10,20,30,40,50,60,100,150,200];
 let PAD = null;
 
 function padHTML(q, nBlanks){
@@ -756,7 +862,6 @@ function padHTML(q, nBlanks){
     </div>
     ${many?`<div class="hint" id="slotHint"></div>`:''}
     <div class="pad">
-      <div class="quick">${QUICK.map(v=>`<button data-q="${v}">${v}</button>`).join('')}</div>
       ${[1,2,3,4,5,6,7,8,9].map(d=>`<button data-d="${d}">${d}</button>`).join('')}
       <button data-d="," class="sub">,</button>
       <button data-d="0">0</button>
@@ -835,6 +940,7 @@ function submitNum(){
             if(!ok) tr.querySelector('.slot').textContent = fmt(q.a)+' '+q.unit; }
   }
   $('#disp').classList.add(ok?'ok':'bad');
+  $('#numbox').classList.add('answered');
   grade(ok);
 }
 
@@ -856,10 +962,12 @@ function replay(q, rec){
   fb.className = 'fb '+(rec.ok?'ok':'bad')+' show';
   fb.innerHTML = (rec.ok?'Верно':'Правильный ответ: <b>'+answerText(q)+'</b>')
     + '<span style="opacity:.55;font-size:12px"> · этот вопрос вы уже отвечали</span>'
-    + (q.r!=null ? '<br><span class="fbbtn" id="showRec" data-r="'+q.r+'">Открыть рецепт целиком</span>' : '');
+    + (q.r!=null ? '<br><span class="fbbtn" id="showRec" data-r="'+q.r+'">Открыть рецепт целиком</span>' : '')
+    + '<br><span class="next" id="fbNext">Дальше</span>';
   $('#quiz').querySelectorAll('.opt').forEach((b,j)=>{ b.disabled=true;
     b.classList.add(j===q.ai ? 'ok' : 'dim'); });
-  if($('#ok')){ $('#ok').textContent='Дальше'; $('#ok').onclick = ()=>next(); }
+  const nb = $('#numbox'); if(nb) nb.classList.add('answered');
+  const nx = $('#fbNext'); if(nx) nx.onclick = ()=>next();
   const tab=$('#ftab');
   if(tab) tab.querySelectorAll('tr[data-b]').forEach((tr,i)=>{
     tr.classList.remove('act');
@@ -897,9 +1005,10 @@ function grade(ok){
   }
   save();
   if(S.mode==='exam' && S.lives<=0){ setTimeout(()=>finish('lives'), 1200); return; }
-  const delay = ok ? 520 : 2200;
+  // Пауза только чтобы прочитать вердикт: заказчик просил листать быстрее.
+  const delay = ok ? 300 : 1300;
   S.timer = setTimeout(next, delay);
-  setTimeout(()=>{ if(!S.ended){ S.armed=true; document.addEventListener('pointerdown', onAdvance, {once:true}); } }, 220);
+  setTimeout(()=>{ if(!S.ended){ S.armed=true; document.addEventListener('pointerdown', onAdvance, {once:true}); } }, 150);
 }
 
 function onAdvance(e){
@@ -1083,7 +1192,9 @@ function recipeHTML(r){
   const rows = r.ing.map(([n,a])=>`<tr><td>${n}</td><td class="a">${a}</td></tr>`).join('');
   const gars = r.gar.length ? `<div class="lbl">Украшение</div><table>`+
       r.gar.map(([n,a])=>`<tr class="g"><td>${n}</td><td class="a">${a}</td></tr>`).join('')+`</table>` : '';
-  const vars = (r.var||[]).map(v=>`<div class="var"><b>${v.name}</b><p>${mark(v.method)}</p></div>`).join('');
+  const vars = (r.var||[]).map(v=>`<div class="var"><b>${v.name}${
+      v.total?` <span style="font-family:var(--mono);font-size:13px;color:var(--acc)">${v.total}</span>`:''
+    }</b><p>${mark(v.method)}</p></div>`).join('');
   return `<div class="grip"><i></i>
       <button class="cls" id="clsRec"><b>‹</b>${BACK_LABEL}</button>
       <div style="margin-left:auto;display:flex;gap:8px">
@@ -1151,8 +1262,9 @@ function rowHTML(r,i){
     <div data-r="${i}">${compHTML(r)}</div></div>`;
 }
 
-let REF_SHEET = 'all';        // фильтр по виду напитков
-let REF_FAV = false;          // показывать только избранное
+let REF_SHEET = (store.ref&&store.ref.sheet) || 'all';   // фильтр по виду напитков
+let REF_FAV = !!(store.ref&&store.ref.fav);             // показывать только избранное
+const saveRef = ()=>{ store.ref = {sheet:REF_SHEET, fav:REF_FAV}; save(); };
 
 function refPool(f){
   return REC.recipes.map((r,i)=>[r,i])
@@ -1277,15 +1389,17 @@ $('#refSort').addEventListener('click', e=>{
 });
 $('#refSheet').addEventListener('click', e=>{
   const f = e.target.closest('[data-fav-filter]');
-  if(f){ REF_FAV = !REF_FAV; renderRef($('#refQ').value); return; }
+  if(f){ REF_FAV = !REF_FAV; saveRef(); renderRef($('#refQ').value); return; }
   const b = e.target.closest('[data-sheet]'); if(!b) return;
   REF_SHEET = b.dataset.sheet;
+  saveRef();
   renderRef($('#refQ').value);
 });
 
 /* ---------- база вопросов ---------- */
 // Просто список вопросов с ответами: посмотреть, что вообще спрашивается, без теста.
-let QB = {sheet:'all', cat:'all', fav:false, q:''};
+let QB = Object.assign({sheet:'all', cat:'all', fav:false, q:''}, store.qb||{}, {q:''});
+const saveQB = ()=>{ store.qb = {sheet:QB.sheet, cat:QB.cat, fav:QB.fav}; save(); };
 
 function qbRowHTML(q){
   const meta = [q.drink, q.tag, q.sh].filter(Boolean).join(' · ');
@@ -1335,13 +1449,13 @@ function openQB(){ renderQB(); show('qbase'); $('#qbQ').oninput = e=>{ QB.q=e.ta
 
 $('#qbSheet').addEventListener('click', e=>{
   const f = e.target.closest('[data-fav-filter]');
-  if(f){ QB.fav=!QB.fav; renderQB(); return; }
+  if(f){ QB.fav=!QB.fav; saveQB(); renderQB(); return; }
   const b = e.target.closest('[data-sheet]'); if(!b) return;
-  QB.sheet=b.dataset.sheet; renderQB();
+  QB.sheet=b.dataset.sheet; saveQB(); renderQB();
 });
 $('#qbCat').addEventListener('click', e=>{
   const b = e.target.closest('[data-cat]'); if(!b) return;
-  QB.cat=b.dataset.cat; renderQB();
+  QB.cat=b.dataset.cat; saveQB(); renderQB();
 });
 
 /* ---------- ошибки ---------- */
@@ -1393,7 +1507,187 @@ function openErrors(){
   } else $('#home2').onclick = renderHome;
 }
 
+/* ---------- вход и синхронизация ---------- */
+// Тонкий клиент поверх REST API Supabase: библиотека не подключается, потому что
+// приложение должно открываться офлайн и не тянуть ничего из сети при запуске.
+const AKEY = 'barquiz.auth';
+let AUTH = null;
+try{ AUTH = JSON.parse(localStorage.getItem(AKEY)||'null'); }catch(e){}
+const authOn = () => !!(SB && SB.url && SB.key);
+const saveAuth = () => { try{ localStorage.setItem(AKEY, JSON.stringify(AUTH)); }catch(e){} };
+
+async function sbAuth(path, body){
+  const r = await fetch(SB.url+'/auth/v1/'+path, {
+    method:'POST',
+    headers:{'apikey':SB.key,'Content-Type':'application/json'},
+    body:JSON.stringify(body)});
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error_description || j.msg || j.message || 'Ошибка входа');
+  return j;
+}
+
+function setSession(j){
+  AUTH = {token:j.access_token, refresh:j.refresh_token,
+          uid:(j.user&&j.user.id)||(AUTH&&AUTH.uid),
+          mail:(j.user&&j.user.email)||(AUTH&&AUTH.mail),
+          exp:Date.now() + (j.expires_in||3600)*1000};
+  saveAuth();
+}
+
+async function ensureToken(){
+  if(!AUTH) return null;
+  if(AUTH.exp && AUTH.exp - Date.now() > 60000) return AUTH.token;
+  try{
+    setSession(await sbAuth('token?grant_type=refresh_token', {refresh_token:AUTH.refresh}));
+    return AUTH.token;
+  }catch(e){ return AUTH.token; }      // офлайн: работаем на старом токене
+}
+
+async function sbRest(path, opts){
+  const token = await ensureToken();
+  return fetch(SB.url+'/rest/v1/'+path, Object.assign({}, opts, {
+    headers:Object.assign({'apikey':SB.key,'Authorization':'Bearer '+token,
+      'Content-Type':'application/json'}, (opts&&opts.headers)||{})}));
+}
+
+/* Слияние прогресса. Устройство и база правятся независимо, поэтому счётчики
+   объединяем по максимуму, а не перетираем: ошибки и избранное — по большему
+   значению, статистика — по большей сумме. Так ни один разбор не теряется. */
+function mergeStore(remote){
+  if(!remote) return;
+  const maxMap = (a,b)=>{ const o=Object.assign({}, a||{});
+    for(const [k,v] of Object.entries(b||{})) o[k]=Math.max(o[k]||0, v||0); return o; };
+  store.errors = maxMap(store.errors, remote.errors);
+  for(const k of ['fav','favQ','skip','skipQ','skipSh','solved'])
+    store[k] = Object.assign({}, remote[k]||{}, store[k]||{});
+  const rs = remote.stats||{}, ls = store.stats;
+  store.stats = {runs:Math.max(rs.runs||0, ls.runs||0), best:Math.max(rs.best||0, ls.best||0),
+                 right:Math.max(rs.right||0, ls.right||0), total:Math.max(rs.total||0, ls.total||0)};
+  if(remote.sess && !store.sess) store.sess = remote.sess;
+  if(typeof remote.showTotal === 'boolean' && store.showTotal===undefined)
+    store.showTotal = remote.showTotal;
+}
+
+async function pullProgress(){
+  if(!authOn() || !AUTH) return;
+  try{
+    const r = await sbRest('bar_progress?select=data&user_id=eq.'+AUTH.uid, {method:'GET'});
+    if(!r.ok) return;
+    const rows = await r.json();
+    if(rows[0] && rows[0].data){ mergeStore(rows[0].data); save(); }
+  }catch(e){}
+}
+
+let pushTimer = null;
+function pushProgress(){
+  if(!authOn() || !AUTH) return;
+  clearTimeout(pushTimer);
+  // Пишем пачкой: во время теста store сохраняется после каждого ответа,
+  // а базе достаточно одного запроса раз в несколько секунд.
+  pushTimer = setTimeout(async ()=>{
+    try{
+      await sbRest('bar_progress', {method:'POST',
+        headers:{'Prefer':'resolution=merge-duplicates'},
+        body:JSON.stringify({user_id:AUTH.uid, data:store, updated_at:new Date().toISOString()})});
+    }catch(e){}
+  }, 4000);
+}
+
+function showLogin(msg){
+  SCREENS.concat(['login']).forEach(x=>$('#'+x).classList.toggle('hidden', x!=='login'));
+  $('#top').classList.add('hidden');
+  $('#logErr').classList.toggle('hidden', !msg);
+  if(msg) $('#logErr').textContent = msg;
+}
+
+$('#logGo').addEventListener('click', async ()=>{
+  const mail = $('#logMail').value.trim(), pass = $('#logPass').value;
+  if(!mail || !pass){ showLogin('Введите почту и пароль'); return; }
+  $('#logGo').textContent = 'Проверяем…';
+  try{
+    setSession(await sbAuth('token?grant_type=password', {email:mail, password:pass}));
+    $('#logGo').textContent = 'Войти';
+    await pullProgress();
+    renderHome();
+  }catch(e){
+    $('#logGo').textContent = 'Войти';
+    showLogin(String(e.message||e).includes('credentials') ? 'Неверная почта или пароль' : e.message);
+  }
+});
+$('#logPass').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#logGo').click(); });
+
+function logout(){
+  AUTH = null;
+  try{ localStorage.removeItem(AKEY); }catch(e){}
+  showLogin('');
+}
+
+/* ---------- горизонтальные ленты на компьютере ---------- */
+// На телефоне ряды чипсов и быстрых значений листаются пальцем. На компьютере
+// колесо мыши крутит только страницу, а до дальних видов напитков не добраться,
+// поэтому над лентой вертикальное колесо превращаем в горизонтальную прокрутку,
+// а зажатую кнопку мыши — в перетаскивание, как палец.
+function bindRails(){
+  document.querySelectorAll('.chips-row, .pad .quick').forEach(el=>{
+    if(el.dataset.rail) return;
+    el.dataset.rail = '1';
+    el.addEventListener('wheel', e=>{
+      if(Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;   // тачпад уже листает вбок
+      const max = el.scrollWidth - el.clientWidth;
+      if(max <= 0) return;
+      const next = Math.min(max, Math.max(0, el.scrollLeft + e.deltaY));
+      if(next !== el.scrollLeft){ e.preventDefault(); el.scrollLeft = next; }
+    }, {passive:false});
+    let drag = null;
+    el.addEventListener('pointerdown', e=>{
+      if(e.pointerType !== 'mouse') return;                  // пальцу помогать не надо
+      drag = {x:e.clientX, left:el.scrollLeft, moved:false};
+    });
+    el.addEventListener('pointermove', e=>{
+      if(!drag) return;
+      const dx = e.clientX - drag.x;
+      if(Math.abs(dx) > 3){ drag.moved = true; el.scrollLeft = drag.left - dx; }
+    });
+    const stop = ()=>{
+      // если ленту тащили, следующий click — «хвост» перетаскивания, а не выбор чипса.
+      // preventDefault на pointerup клик не отменяет, поэтому гасим сам click.
+      if(drag && drag.moved){
+        el.addEventListener('click', ev=>{ ev.preventDefault(); ev.stopPropagation(); },
+                            {capture:true, once:true});
+      }
+      drag = null;
+    };
+    el.addEventListener('pointerup', stop, true);
+    el.addEventListener('pointerleave', ()=>{ drag = null; });
+  });
+}
+// Ленты пересоздаются вместе с экранами, поэтому подписываемся после каждой перерисовки.
+const _obs = new MutationObserver(()=>bindRails());
+_obs.observe(document.body, {childList:true, subtree:true});
+
 /* ---------- события ---------- */
+// Значок фильтра живёт внутри кнопки режима, поэтому его обработчик должен
+// сработать раньше и остановить всплытие — иначе крестик заодно открывал бы экран.
+document.addEventListener('click', e=>{
+  const x = e.target.closest('[data-clear]');
+  if(x){
+    e.stopPropagation(); e.preventDefault();
+    const what = x.dataset.clear;
+    if(what==='opt'){ OPT={pool:'all',sheet:'all',cat:'all'}; saveOpt(); }
+    if(what==='qb'){ QB.sheet='all'; QB.cat='all'; QB.fav=false; saveQB(); }
+    if(what==='ref'){ REF_SHEET='all'; REF_FAV=false; saveRef(); }
+    if(what==='off'){ store.skip={}; store.skipQ={}; store.skipSh={}; save(); }
+    renderHome();
+    return;
+  }
+  const g = e.target.closest('[data-goto]');
+  if(g){
+    e.stopPropagation(); e.preventDefault();
+    const to = g.dataset.goto;
+    if(to==='setup') renderSetup(); else if(to==='qbase') openQB(); else openRef();
+  }
+}, true);
+
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
   if(m==='errors') openErrors();
@@ -1443,8 +1737,15 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='ArrowLeft') prevQ();
 });
-renderHome();
-
+// Вход спрашиваем один раз: дальше сессия лежит в localStorage и обновляется молча,
+// поэтому в баре приложение открывается сразу и работает без интернета.
+if(authOn() && !AUTH){
+  showLogin('');
+} else {
+  renderHome();
+  pullProgress();
+}
+bindRails();
 </script>
 </body>
 </html>
