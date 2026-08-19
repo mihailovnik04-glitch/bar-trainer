@@ -492,18 +492,21 @@ const qLabel = q => q.q.replace(/^Сколько\s+/,'').replace(/^весит:\s
    .replace(/^В какой посуде.*$/,'Посуда').replace(/^Чем украшается.*$/,'Набор украшений');
 
 function pickExam(){
-  const isNum = q => q.t==='num'||q.t==='fill';
-  const by = c => BANK.filter(q=>q.cat===c && isNum(q));
-  const byc = c => BANK.filter(q=>q.cat===c && !isNum(q));
+  // «впиши весь состав» — тоже ввод числа, только полей несколько
+  const isNum = q => q.t==='num'||q.t==='fill'||q.t==='mfill';
+  const pool = BANK.filter(q=>q.t!=='mfill' || q.a.length<=4);   // на экзамене без простыней
+  const by = c => pool.filter(q=>q.cat===c && isNum(q));
+  const byc = c => pool.filter(q=>q.cat===c && !isNum(q));
   const take = (arr,n) => shuffle(arr.slice()).slice(0,n);
   const set = [
-    ...take(by('grams'), 48),
+    ...take(by('grams'), 46),
     ...take(byc('grams'), 7),
     ...take(by('garnish'), 12),
     ...take(byc('garnish'), 5),
-    ...take(BANK.filter(q=>q.cat==='glass'), 3)
+    ...take(pool.filter(q=>q.cat==='glass'), 3),
+    ...take(pool.filter(q=>q.cat==='method'), 2)
   ];
-  return shuffle(set).slice(0, EX_N);
+  return dedupe(shuffle(set)).slice(0, EX_N);
 }
 
 /* ---------- состояние ---------- */

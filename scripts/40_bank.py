@@ -246,6 +246,76 @@ for d in drinks:
         add(t='garset', cat='garnish', drink=nm, tag=tg, sh=sh, img=im,
             q='Чем украшается напиток?', ans=' + '.join(gars), sk=f'{nm}|garset')
 
+# ------------------------------------------------- количество и форма украшений
+# Штучные украшения (бамбуковый лист, зонтик, сахарная картинка, мармеладное желе)
+# в исходнике записаны без граммов — «1 шт», «2 шт», — поэтому в вопросы про вес они
+# не попадали вовсе. Спрашиваем их отдельно: сколько штук и в какой форме.
+PIECE = re.compile(r'^(\d+)\s*шт\.?$')
+PIECE_IN = re.compile(r'^(\d+)\s*шт')
+
+def piece_count(a):
+    """'2 шт' -> '2 шт'; '4 шт - 32 гр' -> '4 шт'. Иначе пусто."""
+    a = (a or '').strip()
+    m = PIECE_IN.match(a)
+    return f'{m.group(1)} шт' if m else ''
+
+# Варианты берём из реально встречающихся количеств, ничего не придумываем.
+PIECE_POOL = set()
+for d in drinks:
+    for n, a in d['ing']:
+        if 'укр' in n.lower():
+            c = piece_count(a)
+            if c: PIECE_POOL.add(c)
+PIECE_POOL = sorted(PIECE_POOL, key=lambda x: int(x.split()[0]))
+
+piece_n = 0
+for d in drinks:
+    if 'Безо льда' in d['name']:
+        continue
+    nm, tg, sh = pretty(d['name']), tag_of(d), d['sheet']
+    im = thumb(d['photos'][0] if d['photos'] else '')
+    seen_g = {}
+    for n, a in d['ing']:
+        seen_g[n] = seen_g.get(n, 0) + 1
+    for n, a in d['ing']:
+        if 'укр' not in n.lower() or seen_g[n] > 1:
+            continue
+        cnt = piece_count(a)
+        if not cnt:
+            continue
+        label = clean_gar(n)
+        # Заказчик: из чисто штучного спрашиваем только бамбуковый лист. Зонтик,
+        # наклейка, пергамент и сахарные картинки — не рецептура, а сборка подачи.
+        if 'гр' not in a and 'бамбук' not in label.lower():
+            continue
+        others = [c for c in PIECE_POOL if c != cnt]
+        rnd.shuffle(others)
+        opts = others[:3] + [cnt]
+        if len(opts) < 4:
+            continue
+        rnd.shuffle(opts)
+        add(t='choice', cat='garnish', drink=nm, tag=tg, sh=sh, img=im, hint='',
+            q=f'Сколько штук «{label}» идёт на украшение?',
+            opts=opts, ai=opts.index(cnt), sk=f'{nm}|{label}|pcs')
+        piece_n += 1
+
+# Форма нарезки с листа «Украшения»: целый лист или две половинки, вейдж или кольцо.
+# Варианты — тоже только реальные формы из того же листа.
+FORM_POOL = sorted({f for f in GAR_FORMS.values()})
+form_n = 0
+for (prod, weight), form in sorted(GAR_FORMS.items()):
+    others = [f for f in FORM_POOL if f != form]
+    if len(others) < 3:
+        continue
+    rnd.shuffle(others)
+    opts = others[:3] + [form]
+    rnd.shuffle(opts)
+    title = prod[:1].upper() + prod[1:]
+    add(t='choice', cat='garnish', drink='Эталон украшения', tag='эталон', sh='Украшения',
+        img='', hint='', q=f'В какой форме режется «{title}» на {fmtnum(weight)} гр?',
+        opts=opts, ai=opts.index(form), sk=f'эталон|{prod}|{fmtnum(weight)}|form')
+    form_n += 1
+
 # ------------------------------------------------- паки на состав целиком
 # Показываем состав, часть строк прячем — их нужно вписать. Вопрос честный только там,
 # где выход равен сумме жидкостей: тогда пропуск действительно вычисляется, а не угадывается.
@@ -460,6 +530,7 @@ json.dump(MEDIA, open(f'{W}/data/media.json', 'w', encoding='utf-8'), ensure_asc
 json.dump(bank, open(f'{W}/data/bank.json', 'w', encoding='utf-8'), ensure_ascii=False)
 from collections import Counter
 print('вопросов:', len(bank), Counter((q['cat'], q['t']) for q in bank))
+print('украшения: штук', piece_n, '· форм', form_n)
 print('пак «пропущенная граммовка»:', fill_n, '· «впиши состав»:', mfill_n, '· метод:', method_n)
 print('рецептов:', len(recipes), '· картинок:', len(MEDIA))
 print('посуда:', glasses)
