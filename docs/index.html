@@ -439,21 +439,20 @@ details.cheat b{color:var(--ink)}
   <div id="home">
     <h1>Tokyo-City<br>для сотрудников</h1>
     <p class="lead" id="homeLead">Бар</p>
-    <button class="mode" data-mode="learn">
-      <b>Обучение</b>
-      <span>Тренажёр, аттестация и база знаний — всё, что нужно выучить и где это посмотреть.</span>
-      <div class="tags"><i id="bankSize">0 вопросов</i><i id="refSize">0 карт</i></div>
-      <div id="fTrain"></div>
+    <button class="mode" data-mode="profile">
+      <b>Мой профиль</b>
+      <span>Данные аккаунта, код для входа на другом устройстве и личная статистика.</span>
+      <div class="tags"><i id="profTag">—</i></div>
     </button>
     <button class="mode" data-mode="sched">
       <b>График</b>
       <span>Смены по точке, как в таблице. Смотрят бармены, менеджер и директор.</span>
       <div class="tags"><i>скоро</i></div>
     </button>
-    <button class="mode" data-mode="profile">
-      <b>Мой профиль</b>
-      <span>Данные аккаунта, код для входа на другом устройстве и личная статистика.</span>
-      <div class="tags"><i id="profTag">—</i></div>
+    <button class="mode" data-mode="learn">
+      <b>Обучение</b>
+      <span>Тренажёр, аттестация и база знаний — всё, что нужно выучить и где это посмотреть.</span>
+      <div class="tags"><i id="bankSize">0 вопросов</i><i id="refSize">0 карт</i></div>
     </button>
     <button class="mode ghost hidden" data-mode="roadmap" id="rmBtn">
       <b>Роадмап</b>
@@ -775,7 +774,7 @@ function renderHome(){
   put('bankSize', BANK.length+' вопросов');
   put('bankSize2', BANK.length+' вопросов');
   put('refSize2', REC.recipes.length+' карт');
-  put('profTag', (AUTH && AUTH.mail) ? AUTH.cat+'-я категория' : 'без входа');
+  put('profTag', (AUTH && AUTH.mail) ? ((AUTH.cat||1)+'-я категория') : 'без входа');
   $('#rmBtn').classList.toggle('hidden', !isOwner());
   // #qbSize и #errCount живут внутри базы знаний и тренажёра — их может не быть в DOM
   put('qbSize', BANK.length+' вопросов');
@@ -1522,6 +1521,7 @@ const ROADMAP = [
   {st:'done', t:'База вопросов', d:'весь банк списком с фильтрами и выключением лишнего'},
   {st:'done', t:'Аккаунты и синхронизация', d:'вход по паролю, прогресс между устройствами, перенос входа ссылкой'},
   {st:'done', t:'Категории и роли', d:'категория назначается владельцем, разделы раздаются по ней'},
+  {st:'work', t:'График смен — ближайшее', d:'то же, что в таблице бара, но нативно: сетка «сотрудник × день» по полумесяцам, смена вводится как «16-04», выходной — крестик, отдельно пометки (квиз, генка, инвентаризация, замена, другая точка) и комментарии к дню. Правка тапом, подсчёт часов и смен, фильтр по точке, доступ по роли'},
   {st:'work', t:'Аттестация · назначенная', d:'управляющий ставит дату и состав, результат уходит в отчёт'},
   {st:'plan', t:'База знаний · видео', d:'записи разборов и приготовления'},
   {st:'plan', t:'База знаний · теория алкоголя', d:'категории напитков, крепость, органолептика'},
@@ -1529,7 +1529,7 @@ const ROADMAP = [
   {st:'plan', t:'Редактор базы знаний и тестов', d:'отдельное меню: править карточки, вопросы и разделы прямо в приложении, без таблицы и пересборки. Удобный нативный редактор, доступ у бренд бар-менеджера и владельца'},
   {st:'plan', t:'Тренинги', d:'календарь очных занятий и запись на них'},
   {st:'plan', t:'Пригласительные ссылки', d:'сейчас по ссылке может зарегистрироваться любой — заменить на приглашения от владельца'},
-  {st:'plan', t:'График', d:'смены по точке; смотрят бармены, менеджер и директор'},
+  {st:'plan', t:'График · заявки', d:'отгул, подмена и перенос смены прямо из графика'},
   {st:'plan', t:'Статистика', d:'зарплата, опоздания, часы за период'},
   {st:'plan', t:'Моя карта', d:'скидочная карта сотрудника для скидки на кассе'},
   {st:'plan', t:'Отметка о приходе', d:'связать с готовой внешней системой учёта: QR-код в приложении, отпечаток пальца, карточка сотрудника'},
@@ -1967,6 +1967,27 @@ async function ensureToken(){
   }catch(e){ return AUTH.token; }      // офлайн: работаем на старом токене
 }
 
+/* Категорию и роль владелец меняет в аккаунте, а в сессии на устройстве лежит слепок
+   с момента входа. Поэтому при каждом запуске перечитываем профиль: иначе повышение
+   категории увидят только те, кто вышел и зашёл заново. */
+async function refreshProfile(){
+  if(!authOn() || !AUTH) return;
+  try{
+    const token = await ensureToken();
+    const r = await fetch(SB.url+'/auth/v1/user', {
+      headers:{'apikey':SB.key, 'Authorization':'Bearer '+token}});
+    if(!r.ok) return;
+    const u = await r.json();
+    const meta = u.app_metadata || {};
+    AUTH.cat = meta.category || AUTH.cat || 1;
+    AUTH.role = meta.role || AUTH.role || 'staff';
+    AUTH.dept = meta.dept || AUTH.dept || 'bar';
+    AUTH.venue = meta.venue || AUTH.venue || '';
+    AUTH.mail = u.email || AUTH.mail;
+    saveAuth();
+  }catch(e){}                       // офлайн — работаем с тем, что сохранено
+}
+
 async function sbRest(path, opts){
   const token = await ensureToken();
   return fetch(SB.url+'/rest/v1/'+path, Object.assign({}, opts, {
@@ -2233,6 +2254,7 @@ if(authOn() && !AUTH && /[#&]s=/.test(location.hash||'')){
   showLogin('');
 } else {
   renderHome();
+  refreshProfile().then(renderHome);
   pullProgress().then(()=>pushProgress(true));
 }
 bindRails();
