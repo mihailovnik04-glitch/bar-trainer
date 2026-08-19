@@ -173,6 +173,9 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
 .rc td{padding:6px 0;border-bottom:1px solid var(--line);font-size:14.5px;vertical-align:baseline}
 .rc td.a{text-align:right;font-family:var(--mono);font-size:14px;white-space:nowrap;padding-left:10px}
 .rc tr.g td{color:var(--ink-2)} .rc tr.g td.a{color:var(--acc)}
+.rc td.s{width:34px;padding-left:6px;text-align:right}
+.rc td.s .star{width:28px;height:28px;flex:none;background:transparent;font-size:15px}
+.icard>summary .star{width:28px;height:28px;flex:none;background:transparent;font-size:15px}
 .rc .method{font-size:14.5px;line-height:1.5;color:var(--ink-2)}
 .rc .method b{color:var(--ink)}
 .rc .formula{font-family:var(--mono);font-size:12.5px;line-height:1.5;background:var(--card-2);
@@ -223,6 +226,9 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rrow .comp dd{margin:0;font-family:var(--mono);font-size:12.5px;color:var(--ink);
   line-height:1.5;white-space:nowrap;text-align:right}
+.rrow .comp dt.hd{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.rrow .comp dd.hd{border-top:1px solid var(--line);margin-top:6px;padding-top:6px}
 .rrow .comp .g dt,.rrow .comp dt.g{color:var(--ink-3)}
 .rrow .comp dd.g{color:var(--acc)}
 details.cheatbox{margin-bottom:10px}
@@ -528,7 +534,7 @@ const BY_ID = {}; BANK.forEach(q=>BY_ID[q.id]=q);
 // fav — избранные коктейли, favQ — избранные вопросы, skip — напитки, убранные из тренировки,
 // solved — что уже решено верно (для режима «только нерешённые»), sess — незаконченная тренировка.
 let store = {errors:{}, stats:{runs:0, best:0, right:0, total:0},
-             fav:{}, favQ:{}, skip:{}, skipQ:{}, skipSh:{}, solved:{}, sess:null, showTotal:true,
+             fav:{}, favQ:{}, skip:{}, skipQ:{}, skipSh:{}, favI:{}, solved:{}, sess:null, showTotal:true,
              opt:null, qb:null, ref:null};
 try{
   const raw=localStorage.getItem(KEY);
@@ -549,7 +555,7 @@ try{
     localStorage.setItem(KEY, JSON.stringify(store));
   }
 }catch(e){}
-for(const k of ['fav','favQ','skip','skipQ','skipSh','solved','errors']) if(!store[k]) store[k]={};
+for(const k of ['fav','favQ','skip','skipQ','skipSh','favI','solved','errors']) if(!store[k]) store[k]={};
 const save = ()=>{
   try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
   if(typeof pushProgress === 'function') pushProgress();
@@ -575,9 +581,22 @@ const offHTML = (on,attr) => `<button class="star off${on?' on':''}" ${attr}
 // Единый фильтр «что вообще может попасться»: применяем и в тренировке, и на экзамене.
 const playable = q => !isSkipQ(q.id) && !isSkip(q.drink) && !isSkipSh(q.sh);
 const starHTML = (on,attr) => `<button class="star${on?' on':''}" ${attr}>${on?'★':'☆'}</button>`;
+/* Избранное на уровне ингредиента: «хочу дорешать всё про суперджус», а не про коктейль
+   целиком. Ключ нормализован — в таблице встречаются «СуперДжус» и «Суперджус»,
+   а у украшений к названию приписана форма нарезки. */
+const ingKey = n => (n||'').toLowerCase().replace(/ё/g,'е').replace(/\s*·.*$/,'')
+                      .replace(/\s+/g,' ').trim();
+const isFavI = n => !!store.favI[ingKey(n)];
+function toggleFavI(n){
+  const k = ingKey(n);
+  if(store.favI[k]) delete store.favI[k]; else store.favI[k]=1;
+  save();
+}
 // Вопрос считается избранным и сам по себе, и когда в избранном весь коктейль:
 // «избранное» в тренировке должно поднимать и то, и другое.
-const favQuestion = q => isFavQ(q.id) || isFav(q.drink);
+// sk устроен как «напиток|строка рецепта|вид», поэтому ингредиент вопроса берём оттуда.
+const qIng = q => { const p=(q.sk||'').split('|'); return p.length>1 ? p[1] : ''; };
+const favQuestion = q => isFavQ(q.id) || isFav(q.drink) || (qIng(q) && isFavI(qIng(q)));
 
 let REF_SORT = store.refSort==='src' ? 'src' : 'ch';   // порядок справочника: главы или таблица
 
@@ -1225,9 +1244,11 @@ const mark = t => t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<b
 function recipeHTML(r){
   const chips = [r.tech, r.glass, r.straw].filter(Boolean)
       .map((c,i)=>`<span class="${i?'':'a'}">${c}</span>`).join('');
-  const rows = r.ing.map(([n,a])=>`<tr><td>${n}</td><td class="a">${a}</td></tr>`).join('');
+  const irow = ([n,a],g)=>`<tr class="${g?'g':''}"><td>${n}</td><td class="a">${a}</td>` +
+      `<td class="s">${starHTML(isFavI(n), 'data-favi="'+n.replace(/"/g,'&quot;')+'"')}</td></tr>`;
+  const rows = r.ing.map(x=>irow(x,0)).join('');
   const gars = r.gar.length ? `<div class="lbl">Украшение</div><table>`+
-      r.gar.map(([n,a])=>`<tr class="g"><td>${n}</td><td class="a">${a}</td></tr>`).join('')+`</table>` : '';
+      r.gar.map(x=>irow(x,1)).join('')+`</table>` : '';
   const vars = (r.var||[]).map(v=>`<div class="var"><b>${v.name}${
       v.total?` <span style="font-family:var(--mono);font-size:13px;color:var(--acc)">${v.total}</span>`:''
     }</b><p>${mark(v.method)}</p></div>`).join('');
@@ -1286,7 +1307,12 @@ const match = (r,f) => !f ||
 function compHTML(r){
   const row = ([n,a],g) =>
     `<dt class="${g?'g':''}">${n}</dt><dd class="${g?'g':''}">${a||'—'}</dd>`;
-  return `<dl class="comp">${r.ing.map(x=>row(x,0)).join('')}${r.gar.map(x=>row(x,1)).join('')}</dl>`;
+  // Украшения отделены подзаголовком: без него «Лимон 25 гр» в конце списка читался
+  // как ещё один ингредиент напитка.
+  const gar = r.gar.length
+    ? `<dt class="hd">Украшение</dt><dd class="hd"></dd>` + r.gar.map(x=>row(x,1)).join('')
+    : '';
+  return `<dl class="comp">${r.ing.map(x=>row(x,0)).join('')}${gar}</dl>`;
 }
 
 function rowHTML(r,i){
@@ -1351,7 +1377,8 @@ function ingHTML(f){
   return list.map(x=>`<details class="icard">
     <summary><b>${x.title}</b>
       <span class="d">${x.doses.slice(0,3).join(' · ')}${x.doses.length>3?' …':''}</span>
-      <span class="n">${x.rows.length}</span></summary>
+      <span class="n">${x.rows.length}</span>
+      ${starHTML(isFavI(x.title), 'data-favi="'+x.title.replace(/"/g,'&quot;')+'"')}</summary>
     <table>${x.rows.map(r=>`<tr class="${r.g?'g':''}"><td data-r="${r.r}">${r.name}${
         r.tag?` <span style="color:var(--ink-3);font-size:11.5px">${r.tag}</span>`:''}${
         r.g?' <span style="font-size:11px">укр.</span>':''}</td>
@@ -1744,6 +1771,10 @@ document.addEventListener('click', e=>{
   if(fq){ e.stopPropagation(); toggleFavQ(fq.dataset.favq);
     fq.classList.toggle('on'); fq.textContent = isFavQ(fq.dataset.favq)?'★':'☆';
     if(QB.fav) renderQB(); return; }
+  const fi = e.target.closest('[data-favi]');
+  if(fi){ e.stopPropagation(); e.preventDefault(); toggleFavI(fi.dataset.favi);
+    fi.classList.toggle('on', isFavI(fi.dataset.favi));
+    fi.textContent = isFavI(fi.dataset.favi)?'★':'☆'; return; }
   const sk = e.target.closest('[data-skip]');
   if(sk){ e.stopPropagation(); const n=sk.dataset.skip; toggleSkip(n);
     sk.textContent = isSkip(n)?'🚫':'⃠';

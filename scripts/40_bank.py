@@ -46,6 +46,8 @@ def clean_gar(n):
 # и не кратен ему — форму не пишем.
 GAR_FORMS = {}          # (продукт, вес) -> форма
 
+GAR_FORMS_PCS = {}      # (продукт, штук) -> форма; для того, что меряется не в граммах
+
 def _load_forms():
     rows = {r[0]: r[1:] for r in cells['Украшения']}
     for r0 in (1, 17, 33, 51, 67, 83):
@@ -54,14 +56,39 @@ def _load_forms():
             continue
         for col in (1, 3, 5, 7):
             lab = re.sub(r'\s*\(на фото[^)]*\)', '', head[col - 1]).strip()
-            m = re.search(r'(\d+[.,]?\d*)\s*гр', wline[col])
-            if not lab or ' - ' not in lab or not m:
+            if not lab or ' - ' not in lab:
                 continue
             prod, _, form = lab.partition(' - ')
-            GAR_FORMS[(prod.strip().lower(), float(m.group(1).replace(',', '.')))] = form.strip()
+            m = re.search(r'(\d+[.,]?\d*)\s*гр', wline[col])
+            if m:
+                GAR_FORMS[(prod.strip().lower(), float(m.group(1).replace(',', '.')))] = form.strip()
+                continue
+            # «Бамбук лист - две половинки» весит не в граммах, а «1 шт»:
+            # форма подачи от этого не перестаёт существовать
+            m = re.match(r'^(\d+)\s*шт', wline[col].strip())
+            if m:
+                GAR_FORMS_PCS[(prod.strip().lower(), int(m.group(1)))] = form.strip()
 
 _load_forms()
 PLURAL = {'вейдж': 'вейджа', 'кольцо': 'кольца', 'полкольца': 'полукольца'}
+
+def gar_form_pcs(name, amount):
+    """'Бамбуковый лист', '1 шт' -> 'две половинки'. Для двух листов — «2 × две половинки»,
+    потому что эталон описывает ровно один лист."""
+    m = re.match(r'^(\d+)\s*шт', (amount or '').strip())
+    if not m:
+        return ''
+    n, prod = int(m.group(1)), name.strip().lower()
+    for (p_, base), form in GAR_FORMS_PCS.items():
+        # в рецептах «Бамбуковый лист», в эталоне «Бамбук лист» — сверяем по корню слова
+        a_, b_ = p_.split()[0], prod.split()[0]
+        if not (a_.startswith(b_[:6]) or b_.startswith(a_[:6])) or base <= 0:
+            continue
+        if n == base:
+            return form
+        if n % base == 0:
+            return f'{n // base} × {form}'
+    return ''
 
 def gar_form(name, amount):
     """'Лимон', '50 гр' -> '2 вейджа'. Пусто, если форму не восстановить однозначно."""
@@ -85,9 +112,9 @@ def gar_form(name, amount):
     return f'{best[0]} {PLURAL[best[1]]}' if best else ''
 
 def gar_label(name, amount):
-    """Название украшения с формой нарезки: 'Лимон · вейдж'."""
+    """Название украшения с формой нарезки: 'Лимон · вейдж', 'Бамбуковый лист · две половинки'."""
     base = clean_gar(name)
-    f = gar_form(base, amount)
+    f = gar_form(base, amount) or gar_form_pcs(base, amount)
     return f'{base} · {f}' if f else base
 
 def pretty(name):
@@ -273,6 +300,18 @@ for d in drinks:
         add(t='garset', cat='garnish', drink=nm, tag=tg, sh=sh, img=im,
             q='Чем украшается напиток?', ans=' + '.join(gars), sk=f'{nm}|garset')
 
+# Правило нарезки бамбука лежит на листе «ПФ» отдельной строкой-инструкцией.
+# Берём его дословно и показываем подсказкой к вопросу — иначе «1 шт» ничего не говорит
+# о том, целым листом украшать или половинками.
+def _bamboo_rule():
+    for row in cells['ПФ']:
+        cellsr = [c.strip() for c in row[1:] if c.strip()]
+        if cellsr and 'бамбук' in cellsr[0].lower() and 'порезать' in cellsr[0].lower():
+            return '. '.join(c.rstrip('.') for c in cellsr) + '.'
+    return ''
+
+BAMBOO_RULE = _bamboo_rule()
+
 # ------------------------------------------------- количество и форма украшений
 # Штучные украшения (бамбуковый лист, зонтик, сахарная картинка, мармеладное желе)
 # в исходнике записаны без граммов — «1 шт», «2 шт», — поэтому в вопросы про вес они
@@ -323,7 +362,10 @@ for d in drinks:
         if len(opts) < 4:
             continue
         rnd.shuffle(opts)
-        add(t='choice', cat='garnish', drink=nm, tag=tg, sh=sh, img=im, hint='',
+        add(t='choice', cat='garnish', drink=nm, tag=tg, sh=sh, img=im,
+            hint=(BAMBOO_RULE if 'бамбук' in label.lower() else ''),
+            # В самом вопросе только название: форма вида «2 × две половинки»
+            # выдавала бы ответ. Правило нарезки уходит в подсказку.
             q=f'Сколько штук «{label}» идёт на украшение?',
             opts=opts, ai=opts.index(cnt), sk=f'{nm}|{label}|pcs')
         piece_n += 1
