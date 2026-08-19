@@ -5,10 +5,12 @@ from playwright.sync_api import sync_playwright
 
 APP = pathlib.Path.cwd() / 'build' / 'app' / 'index.html'
 html = APP.read_text(encoding='utf-8')
-# включаем вход, не трогая рабочую сборку
-patched = html.replace('const SB = {"url":"","key":""};',
-                       'const SB = {"url":"https://fake.supabase.co","key":"testkey"};')
-assert patched != html, 'не найден конфиг SB в сборке'
+# Подменяем адрес проекта на поддельный: тест проверяет логику входа, а не Supabase,
+# и не должен зависеть от того, заполнен ли data/auth.json.
+import re as _re
+patched, n = _re.subn(r'const SB = \{[^}]*\};',
+                      'const SB = {"url":"https://fake.supabase.co","key":"testkey"};', html)
+assert n == 1, 'не найден конфиг SB в сборке'
 tmp = APP.parent / '_auth_test.html'
 tmp.write_text(patched, encoding='utf-8')
 

@@ -19,9 +19,10 @@ BG, ACC = '#0F0D0B', '#E0A45B'
 FILES = ['index.html', 'bank.js', 'recipes.js', 'media.js', 'manifest.webmanifest']
 
 MANIFEST = {
-    'name': 'Бар · тренажёр граммовок',
-    'short_name': 'Бар',
-    'description': 'Тренажёр по граммовкам, украшениям и посуде + справочник рецептов',
+    'name': 'Тренажёр Tokyo-City',
+    'short_name': 'Tokyo-City',
+    'description': 'Тренажёр и база знаний Tokyo-City: технологические карты бара, '
+                   'граммовки, украшения и посуда',
     'start_url': './',
     'scope': './',
     'display': 'standalone',

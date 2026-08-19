@@ -619,6 +619,22 @@ for x in extras['serve']:
         continue
     extra_n += ask_amount('serve', 'Подача', nm, 'порция', x['amount'])
 
+# В чём выносить — такой же проверяемый факт, как граммовка. Варианты берём
+# из реальных ответов других строк подачи.
+WARES = sorted({x['ware'] for x in extras['serve'] if x.get('ware')})
+for x in extras['serve']:
+    w = x.get('ware')
+    if not w or len(WARES) < 4:
+        continue
+    others = [o for o in WARES if o != w]
+    rnd.shuffle(others)
+    opts = others[:3] + [w]
+    rnd.shuffle(opts)
+    add(t='choice', cat='serve', drink=x['name'].strip(), tag='', sh='Подача', img='', hint='',
+        q='В чём выносится Гостю?', opts=opts, ai=opts.index(w),
+        sk=f"{x['name'].strip()}|посуда|serve")
+    extra_n += 1
+
 print('кофе/чай/ПФ/подача:', extra_n)
 
 # ------------------------------------------------- справочник для приложения
@@ -746,10 +762,13 @@ for m in extras['tea']['mixes']:
 for x in extras['pf']:
     extra_card(x['name'].strip(), 'Заготовки (ПФ)', x['ing'], x['total'], x['method'])
 for x in extras['serve']:
-    extra_card(x['name'].strip(), 'Подача', [['Порция', x['amount']]], '', x['rule'],
-               [x['section'].capitalize()] if x['section'] else [])
-for x in extras['straws']:
-    extra_card(x['name'].strip(), 'Подача', [], '', x['rule'])
+    rows = [['Порция', x['amount']]]
+    if x.get('ware'):
+        rows.append(['Посуда', x['ware']])
+    extra_card(x['name'].strip(), 'Подача', rows, '', x['rule'],
+               [c for c in (x['section'].capitalize() if x['section'] else '', x.get('ware', '')) if c])
+# Трубочки своих карточек не получают: заказчик просил не выносить их в справочник
+# отдельно — они и так подписаны у каждого коктейля.
 
 json.dump({'chapters': CH_LIST, 'sheets': SHEETS, 'glassware': glassware, 'recipes': recipes},
           open(f'{W}/data/recipes.json', 'w', encoding='utf-8'), ensure_ascii=False)

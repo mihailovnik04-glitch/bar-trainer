@@ -141,6 +141,25 @@ def parse_pf():
 SECTION = re.compile(r'^[А-ЯЁ \d.,"/-]{6,}$')
 
 
+# В какой посуде выносить — написано внутри правила («налить в шот», «на цветном
+# кофейном блюдце»). Отдельного поля нет, поэтому ищем известные названия по тексту.
+# Список закрытый: ничего не додумываем, если ни одно не встретилось — посуду не пишем.
+WARE = ['порто гласс', 'замороженный шот', 'кружке эспрессо', 'цветном кофейном блюдце',
+        'графине без ручки 1,18л', 'индивидуальной упаковке', 'шот']
+WARE_NAME = {'кружке эспрессо': 'кружка эспрессо',
+             'цветном кофейном блюдце': 'цветное кофейное блюдце',
+             'графине без ручки 1,18л': 'графин без ручки 1,18 л',
+             'индивидуальной упаковке': 'индивидуальная упаковка'}
+
+
+def ware_of(text):
+    low = (text or '').lower()
+    for w in WARE:                      # длинные варианты стоят раньше короткого «шот»
+        if w in low:
+            return WARE_NAME.get(w, w)
+    return ''
+
+
 def parse_serve():
     rows = rows_of('Спец. подачи')
     out, section = [], ''
@@ -152,8 +171,8 @@ def parse_serve():
         name = a or b
         if not name or not c:
             continue
-        out.append({'name': name.strip(), 'amount': c.strip(),
-                    'section': section, 'rule': d.strip()})
+        out.append({'name': name.strip(), 'amount': c.strip(), 'section': section,
+                    'rule': d.strip(), 'ware': ware_of(d)})
     return out
 
 
@@ -190,7 +209,8 @@ for x in data['coffee']:
           f"кнопка: {x['button'][:28] or '—'} · {x['extract'] or '—'}")
 for x in data['pf']:
     print(f"  ПФ {x['name'][:32]:32} {len(x['ing'])} ингр · выход {x['total'] or '—'}")
-print('подача:', len(data['serve']), '· трубочки:', len(data['straws']),
+print('подача:', len(data['serve']), '· с посудой:',
+      sum(1 for x in data['serve'] if x['ware']), '· трубочки:', len(data['straws']),
       '· сироп:', len(data['sugar']))
 for x in data['serve']:
     print(f"  {x['name'][:40]:40} {x['amount'][:22]:22} [{x['section'][:26]}]")

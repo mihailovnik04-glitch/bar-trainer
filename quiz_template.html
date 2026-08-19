@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#17140F">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Бар · тренажёр граммовок</title>
+<title>Tokyo-City · тренажёр</title>
 <style>
 :root{
   --bg:#0F0D0B; --card:#191612; --card-2:#211D18; --line:#2C2721;
@@ -24,7 +24,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .wrap{max-width:560px;margin:0 auto;padding:18px 16px 28px;min-height:100%;display:flex;flex-direction:column}
 
 /* ---------- шапка ---------- */
-.top{display:flex;align-items:center;gap:12px;margin-bottom:14px;min-height:34px}
+.top{display:flex;align-items:center;gap:12px;margin:0 -16px 14px;padding:0 16px;
+  min-height:34px;position:sticky;top:0;z-index:30;background:var(--bg)}
 .top .back{width:34px;height:34px;border-radius:11px;background:var(--card);display:grid;place-items:center;
   font-size:18px;color:var(--ink-2);transition:.18s}
 .top .back:active{transform:scale(.92)}
@@ -186,10 +187,16 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
 .rc .var b{display:block;font-size:14px;margin-bottom:4px}
 .rc .var p{margin:0;font-size:13px;color:var(--ink-2);line-height:1.45}
 .rc .serve{font-size:13px;color:var(--ink-3);font-style:italic;margin-top:8px}
+.rc .straw{font-size:11px;color:var(--ink-3);opacity:.65;margin-top:4px}
 
 /* ---------- справочник ---------- */
-/* шапка экрана: заголовок и возврат на главную (у quiz своя шапка #top) */
-.scrhead{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
+/* шапка экрана: заголовок и возврат на главную (у quiz своя шапка #top).
+   Липкая: в справочнике и базе вопросов список длинный, и без этого до кнопки
+   «назад» приходилось листать вверх через сотни строк. */
+.scrhead{display:flex;align-items:center;gap:10px;margin:0 -16px 12px;padding:6px 16px 8px;
+  position:sticky;top:0;z-index:30;background:var(--bg)}
+.scrhead::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:var(--line);opacity:.7}
 .scrhead h1{font-size:23px;margin:0}
 .scrhead .back{width:34px;height:34px;border-radius:11px;background:var(--card);display:grid;
   place-items:center;font-size:20px;color:var(--ink-2);flex:0 0 34px;transition:.18s}
@@ -251,6 +258,8 @@ details.cheat b{color:var(--ink)}
 .fbbtn{margin-top:9px;display:inline-block;background:#0004;border-radius:10px;padding:7px 12px;
   font-size:13px;color:var(--ink);border:1px solid var(--line)}
 .foot{margin-top:auto;padding-top:22px;text-align:center;color:var(--ink-3);font-size:11.5px}
+.handoff{font-family:var(--mono);font-size:11px;color:var(--acc);word-break:break-all;
+  background:#0004;border-radius:10px;padding:8px 10px;margin-top:8px;user-select:all}
 
 /* ---------- избранное ---------- */
 .star{flex:0 0 34px;width:34px;height:34px;border-radius:11px;background:var(--card-2);
@@ -362,6 +371,9 @@ details.cheat b{color:var(--ink)}
 .tagline{font-size:11px;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;
   background:#E0A45B14;border-radius:7px;padding:2px 7px;display:inline-block;margin-top:3px}
 .subhead{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px}
+.mode .sub2{margin-top:8px;padding-left:10px;border-left:2px solid var(--line);
+  font-size:12.5px;color:var(--ink-2);display:block}
+.mode .sub2 i{font-style:normal;color:var(--ink-3)}
 .note{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:12px 14px;
   font-size:13.5px;color:var(--ink-2);margin-bottom:10px}
 .qrow{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
@@ -393,8 +405,8 @@ details.cheat b{color:var(--ink)}
 
   <!-- ГЛАВНАЯ -->
   <div id="home">
-    <h1>Тренажёр<br>граммовок</h1>
-    <p class="lead">Составы, украшения и посуда из барного пособия. Только цифры и факты — ничего лишнего.</p>
+    <h1>Тренажёр<br>Tokyo-City</h1>
+    <p class="lead" id="homeLead">Бар: составы, украшения и посуда. Только цифры и факты — ничего лишнего.</p>
     <div class="stats">
       <div><b id="stTotal">0</b><span>ПОПЫТОК</span></div>
       <div><b id="stBest">—</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
@@ -411,10 +423,10 @@ details.cheat b{color:var(--ink)}
       <div class="tags"><i id="bankSize">0 вопросов</i><i>с настройками</i></div>
       <div id="fTrain"></div>
     </button>
-    <button class="mode" data-mode="ref">
-      <b>Справочник</b>
-      <span>Все карточки коктейлей целиком: состав, украшения, приготовление, ключ к запоминанию. И шпаргалки по системе.</span>
-      <div class="tags"><i id="refSize">0 рецептов</i><i>поиск по ингредиенту</i></div>
+    <button class="mode" data-mode="kb">
+      <b>База знаний</b>
+      <span>Технологические карты, теория и регламенты. Разделы открываются по мере готовности.</span>
+      <div class="tags"><i id="refSize">0 карт</i><i id="kbSize">4 раздела</i></div>
       <div id="fRef"></div>
     </button>
     <button class="mode" data-mode="qbase">
@@ -438,7 +450,7 @@ details.cheat b{color:var(--ink)}
 
   <!-- ВХОД -->
   <div id="login" class="hidden">
-    <h1>Тренажёр<br>граммовок</h1>
+    <h1>Тренажёр<br>Tokyo-City</h1>
     <p class="lead">Доступ по логину и паролю. Аккаунты заводит владелец — регистрация закрыта.</p>
     <input class="search" id="logMail" type="email" inputmode="email" autocomplete="username"
            placeholder="Почта" autocapitalize="off" spellcheck="false">
@@ -483,9 +495,16 @@ details.cheat b{color:var(--ink)}
     <div id="qbList"></div>
   </div>
 
-  <!-- СПРАВОЧНИК -->
+  <!-- БАЗА ЗНАНИЙ -->
+  <div id="kb" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>База знаний</h1></div>
+    <p class="lead" id="kbLead"></p>
+    <div id="kbList"></div>
+  </div>
+
+  <!-- ТЕХНОЛОГИЧЕСКИЕ КАРТЫ -->
   <div id="ref" class="hidden">
-    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Справочник</h1></div>
+    <div class="scrhead"><button class="back" data-kb="1">‹</button><h1>Технологические карты</h1></div>
     <input class="search" id="refQ" placeholder="Коктейль, ингредиент или украшение…" autocomplete="off">
     <div class="seg" id="refSort">
       <button data-sort="ch" class="on">По системе</button>
@@ -640,7 +659,7 @@ function pickExam(){
 
 /* ---------- состояние ---------- */
 let S = null, tick = null;
-const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login'];
+const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
@@ -664,11 +683,19 @@ function renderHome(){
   const offN = Object.keys(store.skipSh).length + Object.keys(store.skip).length
              + Object.keys(store.skipQ).length;
   if(offN) $('#fTrain').innerHTML += filtHTML(['выключено '+offN], 'setup', 'off');
+  if(authOn() && AUTH){
+    const dept = (DEPTS.find(d=>d.id===AUTH.dept)||{title:'Бар'}).title;
+    $('#homeLead').textContent =
+      `${dept} · ${AUTH.cat||1}-я категория. Составы, украшения и посуда — только цифры и факты.`;
+  }
   $('#homeFoot').innerHTML = (authOn() && AUTH)
-    ? `${AUTH.mail||''} · прогресс синхронизируется · <span class="fbbtn" id="logout"
-        style="margin-top:6px">Выйти</span>`
+    ? `${AUTH.mail||''} · прогресс синхронизируется<br>
+       <span class="fbbtn" id="handoff" style="margin-top:6px">Открыть на другом устройстве</span>
+       <span class="fbbtn" id="logout" style="margin-top:6px">Выйти</span>
+       <div id="handoffBox"></div>`
     : 'Работает без интернета · данные хранятся только в этом браузере';
   const lo = $('#logout'); if(lo) lo.onclick = logout;
+  const ho = $('#handoff'); if(ho) ho.onclick = showHandoff;
   show('home');
 }
 
@@ -1242,7 +1269,9 @@ const mark = t => t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<b
   .replace(/(Взбить|взбить|Перемешать|перемешать|Отфильтровать|отфильтровать|Украсить|украсить|Прогреть|прогреть|Охладить|охладить|размять мадлером|слить талую воду|не варить|проварить|слоями|Стир)/g,'<b>$1</b>');
 
 function recipeHTML(r){
-  const chips = [r.tech, r.glass, r.straw].filter(Boolean)
+  // Трубочка вынесена из крупных чипов: она подписью внизу карточки, чтобы не спорить
+  // за внимание с техникой и посудой, но и не теряться совсем.
+  const chips = [r.tech, r.glass].filter(Boolean)
       .map((c,i)=>`<span class="${i?'':'a'}">${c}</span>`).join('');
   const irow = ([n,a],g)=>`<tr class="${g?'g':''}"><td>${n}</td><td class="a">${a}</td>` +
       `<td class="s">${starHTML(isFavI(n), 'data-favi="'+n.replace(/"/g,'&quot;')+'"')}</td></tr>`;
@@ -1267,6 +1296,7 @@ function recipeHTML(r){
     ${gars}
     <div class="lbl">Приготовление</div><div class="method">${mark(r.method)}</div>
     ${r.serve?`<div class="serve">${r.serve}</div>`:''}
+    ${r.straw?`<div class="straw">${r.straw}</div>`:''}
     ${r.formula?`<div class="formula">${r.formula}${r.total?' = '+r.total:''}</div>`:''}
     ${r.key?`<div class="keyb"><b>Ключ</b>${r.key}</div>`:''}
     ${vars}
@@ -1297,7 +1327,54 @@ addEventListener('popstate', ()=>closeRecipe(true));
 $('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeRecipe(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRecipe(); });
 
-/* ---------- справочник ---------- */
+/* ---------- база знаний ---------- */
+/* Разделы заведены заранее: наполнение появится позже, но структура уже видна,
+   и по ней раздаётся доступ. Направления (бар, кухня, зал) тоже заложены — сейчас
+   работает только бар. `cat` — минимальная категория сотрудника, которой раздел виден;
+   категорию назначает владелец, сам сотрудник её не меняет. */
+const KB = [
+  {id:'tech',  title:'Технологические карты', sub:'Коктейли, кофе, чай, заготовки и подача — всё, что уже разобрано из таблицы', cat:1, ready:true},
+  {id:'video', title:'Видео', sub:'Записи разборов и приготовления', cat:1},
+  {id:'theory',title:'Теория алкоголя', sub:'Категории напитков, крепость, органолептика', cat:2},
+  {id:'sanpin',title:'СанПиН', sub:'Санитарные требования и проверки', cat:1, sub2:[
+      {id:'sanpin-in', title:'Внутренние проверки', sub:'Чек-листы смены и бара'},
+      {id:'sanpin-rpn',title:'РПН', sub:'Требования Роспотребнадзора'}]},
+];
+const DEPTS = [
+  {id:'bar', title:'Бар', ready:true},
+  {id:'kitchen', title:'Кухня'},
+  {id:'hall', title:'Зал'},
+];
+
+// Категория приходит из аккаунта (app_metadata.category) — по умолчанию 1, самая младшая.
+const myCat = () => (AUTH && AUTH.cat) || 1;
+const kbVisible = x => myCat() >= (x.cat || 1);
+
+function renderKB(){
+  $('#kbLead').textContent = 'Бар · ' + myCat() + '-я категория. Разделы ниже открыты для вашей категории.';
+  const card = (x, sub) => `<button class="mode${x.ready?'':' ghost'}" ${x.ready?`data-kbgo="${x.id}"`:''}>
+      <b>${x.title}${x.ready?'':' <span style="color:var(--ink-3);font-size:12px">скоро</span>'}</b>
+      <span>${x.sub||''}</span>
+      ${x.ready&&x.id==='tech'?`<div class="tags"><i>${REC.recipes.length} карт</i><i>поиск по ингредиенту</i></div>`:''}
+      ${sub||''}
+    </button>`;
+  const hidden = KB.filter(x=>!kbVisible(x)).length;
+  $('#kbList').innerHTML =
+    KB.filter(kbVisible).map(x=>card(x, (x.sub2||[]).map(y=>
+        `<div class="sub2">${y.title} · <i>${y.sub}</i></div>`).join(''))).join('') +
+    (hidden ? `<div class="note">Ещё ${hidden} раздел(а) откроются с повышением категории.</div>` : '') +
+    `<div class="subhead">Направления</div>` +
+    DEPTS.map(d=>`<div class="note" style="opacity:${d.ready?1:.55}">${d.title}${
+        d.ready?' · доступно':' · появится позже'}</div>`).join('');
+  show('kb');
+}
+
+$('#kbList').addEventListener('click', e=>{
+  const b = e.target.closest('[data-kbgo]'); if(!b) return;
+  if(b.dataset.kbgo==='tech') openRef();
+});
+
+/* ---------- технологические карты ---------- */
 const match = (r,f) => !f ||
   (r.name+' '+r.ing.map(x=>x[0]).join(' ')+' '+r.gar.map(x=>x[0]).join(' ')+' '+r.glass)
     .toLowerCase().includes(f);
@@ -1590,9 +1667,15 @@ async function sbAuth(path, body){
 }
 
 function setSession(j){
+  const meta = (j.user && (j.user.app_metadata||{})) || {};
   AUTH = {token:j.access_token, refresh:j.refresh_token,
           uid:(j.user&&j.user.id)||(AUTH&&AUTH.uid),
           mail:(j.user&&j.user.email)||(AUTH&&AUTH.mail),
+          // категория и направление назначаются владельцем в аккаунте,
+          // сотрудник их не выбирает
+          cat:meta.category || (AUTH&&AUTH.cat) || 1,
+          dept:meta.dept || (AUTH&&AUTH.dept) || 'bar',
+          role:meta.role || (AUTH&&AUTH.role) || 'staff',
           exp:Date.now() + (j.expires_in||3600)*1000};
   saveAuth();
 }
@@ -1642,18 +1725,22 @@ async function pullProgress(){
 }
 
 let pushTimer = null;
-function pushProgress(){
+async function sendProgress(){
+  try{
+    await sbRest('bar_progress', {method:'POST',
+      headers:{'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({user_id:AUTH.uid, data:store, updated_at:new Date().toISOString()})});
+  }catch(e){}
+}
+// now=true — отправить немедленно (после входа: там store мог вообще не меняться,
+// а выложить накопленное на устройстве в общий аккаунт нужно сразу).
+function pushProgress(now){
   if(!authOn() || !AUTH) return;
   clearTimeout(pushTimer);
-  // Пишем пачкой: во время теста store сохраняется после каждого ответа,
+  if(now) return sendProgress();
+  // Иначе пишем пачкой: во время теста store сохраняется после каждого ответа,
   // а базе достаточно одного запроса раз в несколько секунд.
-  pushTimer = setTimeout(async ()=>{
-    try{
-      await sbRest('bar_progress', {method:'POST',
-        headers:{'Prefer':'resolution=merge-duplicates'},
-        body:JSON.stringify({user_id:AUTH.uid, data:store, updated_at:new Date().toISOString()})});
-    }catch(e){}
-  }, 4000);
+  pushTimer = setTimeout(sendProgress, 4000);
 }
 
 function showLogin(msg){
@@ -1671,6 +1758,7 @@ $('#logGo').addEventListener('click', async ()=>{
     setSession(await sbAuth('token?grant_type=password', {email:mail, password:pass}));
     $('#logGo').textContent = 'Войти';
     await pullProgress();
+    await pushProgress(true);      // то, что накопилось до входа, тоже уходит в аккаунт
     renderHome();
   }catch(e){
     $('#logGo').textContent = 'Войти';
@@ -1678,6 +1766,27 @@ $('#logGo').addEventListener('click', async ()=>{
   }
 });
 $('#logPass').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#logGo').click(); });
+
+// Ссылку показываем текстом: библиотеку QR тянуть некуда, а ссылку удобно
+// отправить себе в мессенджер. Копирование — одним тапом.
+function showHandoff(){
+  if(!AUTH || !AUTH.refresh) return;
+  const url = location.origin + location.pathname + '#s=' + encodeURIComponent(AUTH.refresh);
+  $('#handoffBox').innerHTML = `<div class="note" style="margin-top:10px;text-align:left">
+      Откройте эту ссылку на телефоне — вход перенесётся без пароля, а весь прогресс
+      с этого устройства сольётся с телефонным. Ссылка срабатывает один раз.
+      <div class="handoff" id="hoUrl">${url}</div>
+      <button class="ghostbtn" id="hoCopy" style="margin-top:8px">Скопировать ссылку</button>
+    </div>`;
+  $('#hoCopy').onclick = async ()=>{
+    try{ await navigator.clipboard.writeText(url); $('#hoCopy').textContent = 'Скопировано'; }
+    catch(e){
+      const r = document.createRange(); r.selectNodeContents($('#hoUrl'));
+      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      $('#hoCopy').textContent = 'Выделено — скопируйте вручную';
+    }
+  };
+}
 
 function logout(){
   AUTH = null;
@@ -1754,6 +1863,7 @@ document.addEventListener('click', e=>{
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
   if(m==='errors') openErrors();
+  else if(m==='kb') renderKB();
   else if(m==='ref') openRef();
   else if(m==='setup') renderSetup();
   else if(m==='qbase') openQB();
@@ -1788,7 +1898,9 @@ $('#back').addEventListener('click',()=>{ clearInterval(tick); saveSession(); cl
 $('#prev').addEventListener('click', e=>{ e.stopPropagation(); prevQ(); });
 // «‹» в шапке справочника, базы вопросов и списка ошибок — возврат на главный экран
 document.addEventListener('click', e=>{
-  if(e.target.closest('.scrhead .back')){ closeRecipe(); renderHome(); }
+  const b = e.target.closest('.scrhead .back'); if(!b) return;
+  closeRecipe();
+  if(b.dataset.kb) renderKB(); else renderHome();
 });
 document.addEventListener('keydown',e=>{
   if($('#quiz').classList.contains('hidden')) return;
@@ -1806,13 +1918,31 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='ArrowLeft') prevQ();
 });
+/* Перенос входа: на компьютере жмём «Открыть на телефоне», получаем ссылку с
+   refresh-токеном в хеше. Телефон меняет его на свою сессию и сразу забывает ссылку.
+   Токен одноразовый — Supabase ротирует refresh при каждом обмене, так что
+   повторно ссылка не сработает. */
+async function takeHandoff(){
+  const m = (location.hash||'').match(/[#&]s=([^&]+)/);
+  if(!m || !authOn()) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  try{
+    setSession(await sbAuth('token?grant_type=refresh_token', {refresh_token:decodeURIComponent(m[1])}));
+    await pullProgress();
+    await pushProgress(true);
+    return true;
+  }catch(e){ return false; }
+}
+
 // Вход спрашиваем один раз: дальше сессия лежит в localStorage и обновляется молча,
 // поэтому в баре приложение открывается сразу и работает без интернета.
-if(authOn() && !AUTH){
+if(authOn() && !AUTH && /[#&]s=/.test(location.hash||'')){
+  takeHandoff().then(okk=>{ if(okk) renderHome(); else showLogin('Ссылка устарела, войдите паролем'); });
+} else if(authOn() && !AUTH){
   showLogin('');
 } else {
   renderHome();
-  pullProgress();
+  pullProgress().then(()=>pushProgress(true));
 }
 bindRails();
 </script>
