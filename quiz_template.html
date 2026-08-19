@@ -286,6 +286,23 @@ details.cheat b{color:var(--ink)}
 /* Ответ дан — клавиатура больше не нужна. Прячем её, иначе вердикт «Верно/Неверно»
    уезжает под нижний край экрана (проверяли на iPhone 12). */
 .numbox.answered .pad{display:none}
+/* Отклик на нажатие: на телефоне палец закрывает кнопку, и без вспышки непонятно,
+   засчиталось ли касание. Анимация короче времени между двумя нажатиями. */
+.pad button{position:relative;overflow:hidden}
+.pad button.hit{background:var(--acc);color:#17140F;transform:scale(.93)}
+.pad button.hit::after{content:'';position:absolute;inset:0;background:#fff;opacity:.35;
+  animation:flash .18s ease-out forwards}
+@keyframes flash{to{opacity:0}}
+.numbox .disp.hit{border-color:var(--acc)}
+/* На компьютере число набирают с клавиатуры — экранные цифры только занимают место.
+   Кнопка «Ответ» остаётся: ей же отвечает мышь. */
+/* базовое правило идёт до медиазапроса, иначе перебивает его при равной специфичности */
+.padhint{display:none;font-size:12.5px;color:var(--ink-3);margin-top:10px}
+@media (hover:hover) and (pointer:fine){
+  .pad{grid-template-columns:1fr}
+  .pad button[data-d], .pad button[data-del]{display:none}
+  .padhint{display:block}
+}
 /* Клавиатура ужимается по высоте экрана: на маленьком телефоне с длинным составом
    всё равно должна помещаться целиком, без прокрутки до кнопки «Ответ». */
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(5px,1vh,8px);
@@ -379,8 +396,8 @@ details.cheat b{color:var(--ink)}
     </div>
     <button class="mode" data-mode="exam">
       <b>Экзамен</b>
-      <span>75 вопросов, три ошибки — и стоп. Порядок случайный, время ограничено.</span>
-      <div class="tags"><i>75 вопросов</i><i>30:00</i><i>3 ошибки</i></div>
+      <span>75 вопросов, время ограничено. Экзамен идёт до конца, ошибки видно на счётчике: зачёт — не больше трёх.</span>
+      <div class="tags"><i>75 вопросов</i><i>30:00</i><i>зачёт до 3 ошибок</i></div>
     </button>
     <button class="mode" data-mode="setup">
       <b>Тренировка</b>
@@ -810,10 +827,12 @@ function renderQ(){
   const q = S.list[S.k];
   $('#prog').style.width = (S.k/S.list.length*100)+'%';
   $('#count').textContent = (S.k+1)+'/'+S.list.length;
-  $('#hearts').innerHTML = S.mode==='exam'
-    ? '<span style="color:var(--bad)">'+'●'.repeat(S.lives)+'</span><span style="color:var(--ink-3)">'+'○'.repeat(EX_LIVES-S.lives)+'</span>'
-    : '';
-  $('#prev').classList.toggle('hidden', S.mode==='exam' || S.k===0);
+  // Экзамен больше не обрывается после трёх ошибок — их просто видно на счётчике,
+  // а зачёт считается в конце. Так человек дорешивает до конца и видит все пробелы.
+  $('#hearts').innerHTML = S.wrong
+    ? `<span style="color:var(--bad)">${S.wrong} ошиб.</span>`
+    : '<span style="color:var(--ink-3)">без ошибок</span>';
+  $('#prev').classList.toggle('hidden', S.k===0);
   const img = q.img ? `<img src="${src(q.img)}" alt="">` : '';
   const nBlanks = q.t==='mfill' ? q.a.length : (q.t==='fill' ? 1 : 0);
   let bi = -1;
@@ -861,6 +880,8 @@ function padHTML(q, nBlanks){
       <span class="unit">${q.unit||''}</span>
     </div>
     ${many?`<div class="hint" id="slotHint"></div>`:''}
+    <div class="padhint">Введите число с клавиатуры · Enter — ответить${
+      many?' · Tab или Enter — следующее поле':''}</div>
     <div class="pad">
       ${[1,2,3,4,5,6,7,8,9].map(d=>`<button data-d="${d}">${d}</button>`).join('')}
       <button data-d="," class="sub">,</button>
@@ -896,6 +917,7 @@ function initPad(q, nBlanks){
          many:nBlanks>1, locked:false};
   $('#numbox').addEventListener('click', e=>{
     const b=e.target.closest('button'); if(!b || PAD.locked) return;
+    hit(b);
     if(b.dataset.d!=null){
       const d=b.dataset.d;
       if(d===',' && (PAD.vals[PAD.i].includes(',')||!PAD.vals[PAD.i])) return;
@@ -915,6 +937,19 @@ function initPad(q, nBlanks){
     PAD.i=+tr.dataset.b; padDraw();
   });
   padDraw();
+}
+
+// Вспышка на кнопке. Вызывается и при клике, и при вводе с физической клавиатуры,
+// чтобы на компьютере было видно, какая цифра ушла в поле.
+function hit(b){
+  if(!b) return;
+  b.classList.remove('hit');
+  void b.offsetWidth;                   // перезапуск анимации при быстрых нажатиях
+  b.classList.add('hit');
+  setTimeout(()=>b.classList.remove('hit'), 170);
+  const d = $('#disp');
+  if(d){ d.classList.add('hit'); setTimeout(()=>d.classList.remove('hit'), 170); }
+  if(navigator.vibrate) try{ navigator.vibrate(8); }catch(e){}
 }
 
 const numOf = t => parseFloat((t||'').replace(',','.'));
@@ -988,7 +1023,7 @@ function grade(ok){
     if(store.errors[q.id]){ delete store.errors[q.id]; }
     fb.className='fb ok show'; fb.innerHTML='Верно';
   } else {
-    S.wrong++; if(S.mode==='exam') S.lives--;
+    S.wrong++;
     delete store.solved[q.id];
     store.errors[q.id] = (store.errors[q.id]||0)+1;
     // Ошибку надо переспросить, пока она свежая: вставляем копию в ближайшие 50 вопросов.
@@ -1000,14 +1035,15 @@ function grade(ok){
     fb.className='fb bad show';
     fb.innerHTML = 'Правильный ответ: <b>'+answerText(q)+'</b>'
       + '<span style="opacity:.55;font-size:12px"> · тап или Enter — дальше</span>'
-      + (q.r!=null ? '<br><span class="fbbtn" id="showRec" data-r="'+q.r+'">Открыть рецепт целиком</span>' : '');
+      + (q.r!=null ? '<br><span class="fbbtn" id="showRec" data-r="'+q.r+'">Открыть рецепт целиком</span>' : '')
+      + '<br><span class="next" id="fbNext">Дальше</span>';
+    const nx = $('#fbNext'); if(nx) nx.onclick = ()=>next();
     $('#qc').classList.add('shake');
   }
   save();
-  if(S.mode==='exam' && S.lives<=0){ setTimeout(()=>finish('lives'), 1200); return; }
-  // Пауза только чтобы прочитать вердикт: заказчик просил листать быстрее.
-  const delay = ok ? 300 : 1300;
-  S.timer = setTimeout(next, delay);
+  // Верный ответ листается сам — там читать нечего. Неверный ждёт человека:
+  // нужно успеть посмотреть правильное значение и при желании открыть рецепт.
+  if(ok) S.timer = setTimeout(next, 300);
   setTimeout(()=>{ if(!S.ended){ S.armed=true; document.addEventListener('pointerdown', onAdvance, {once:true}); } }, 150);
 }
 
@@ -1052,9 +1088,9 @@ function finish(why){
     if(S.right>store.stats.best) store.stats.best=S.right;
   }
   save();
-  const passed = S.mode!=='exam' ? null : (why==='end' && S.lives>0);
+  const passed = S.mode!=='exam' ? null : (why==='end' && S.wrong <= EX_LIVES);
   const title = S.mode==='exam'
-      ? (passed ? 'Экзамен сдан' : (why==='time' ? 'Время вышло' : (why==='lives'?'Три ошибки':'Экзамен завершён')))
+      ? (passed ? 'Экзамен сдан' : (why==='time' ? 'Время вышло' : `Не сдан · ошибок ${S.wrong}`))
       : (S.mode==='train' ? 'Тренировка завершена' : 'Разбор ошибок завершён');
   const acc = S.done.length ? Math.round(S.right/S.done.length*100) : 0;
   const errN = Object.keys(store.errors).length;
@@ -1730,10 +1766,12 @@ document.addEventListener('keydown',e=>{
   if(opts.length && /^[1-4]$/.test(e.key)){ const b=opts[+e.key-1]; if(b&&!b.disabled) b.click(); }
   // своя клавиатура слушает и физическую: цифры, запятая, Backspace, Enter
   if(PAD && !PAD.locked && $('#numbox')){
-    if(/^[0-9]$/.test(e.key)) $('#numbox').querySelector(`[data-d="${e.key}"]`).click();
-    else if(e.key===','||e.key==='.') $('#numbox').querySelector('[data-d=","]').click();
-    else if(e.key==='Backspace'){ e.preventDefault(); $('#numbox').querySelector('[data-del]').click(); }
-    else if(e.key==='Enter'){ e.preventDefault(); $('#ok').click(); }
+    const press = sel => { const b=$('#numbox').querySelector(sel); if(b){ hit(b); b.click(); } };
+    if(/^[0-9]$/.test(e.key)) press(`[data-d="${e.key}"]`);
+    else if(e.key===','||e.key==='.') press('[data-d=","]');
+    else if(e.key==='Backspace'){ e.preventDefault(); press('[data-del]'); }
+    else if(e.key==='Enter'){ e.preventDefault(); press('#ok'); }
+    else if(e.key==='Tab' && PAD.many){ e.preventDefault(); press('#ok'); }
   }
   if(e.key==='ArrowLeft') prevQ();
 });

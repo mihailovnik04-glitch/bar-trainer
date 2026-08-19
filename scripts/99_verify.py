@@ -139,6 +139,20 @@ for q in bank:
     elif not any(abs(v - q['a']) < 0.01 for v in vals):
         fails.append(f'неверный ответ (extras): {q["drink"]} / {label} = {q["a"]}, в файле {vals}')
 
+# ---------- 3б3. метод приготовления сверяем с TECH_FIX, а не с сырым полем
+# «Рафунтелла» взбивается на пароотводе, «Бамбл» и «Криспи Айс Латте» только упоминают
+# питчер — распознавание по тексту здесь ошибается, и правильные значения лежат в config.
+from config import TECH_FIX
+d2 = json.load(open(ROOT / 'data' / 'drinks2.json', encoding='utf-8'))
+TECH_OF = {re.sub(r'\s+/\s+', ' · ', x['name']): TECH_FIX.get(x['name'], x['tech']) for x in d2}
+for q in bank:
+    if q['cat'] != 'method':
+        continue
+    want = TECH_OF.get(q['drink'])
+    got = q['opts'][q['ai']]
+    if want and want != got:
+        fails.append(f'неверный метод: {q["drink"]} — в банке {got}, верно {want}')
+
 # ---------- 3в. пак «впиши весь состав»: сумма показанного и всех ответов = выход
 for q in bank:
     if q['t'] != 'mfill':

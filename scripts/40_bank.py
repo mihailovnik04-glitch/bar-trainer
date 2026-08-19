@@ -11,6 +11,10 @@ cells = json.load(open(f'{W}/data/data.json', encoding='utf-8'))
 imgs = json.load(open(f'{W}/data/images.json', encoding='utf-8'))
 extras = json.load(open(f'{W}/data/extras.json', encoding='utf-8'))
 
+import sys
+sys.path.insert(0, f'{W}/scripts')
+from config import CHAPTERS, MNEMO, FAMILY_NOTE, TECH_FIX
+
 SIMPLE = re.compile(r'^(\d+[.,]?\d*)\s*(мл|гр)\.?$')
 WITHGR = re.compile(r'(\d+[.,]?\d*)\s*гр')
 
@@ -403,7 +407,11 @@ method_n = 0
 for i, d in enumerate(drinks):
     if 'Безо льда' in d['name'] or i % 5:
         continue
-    nm, tech = pretty(d['name']), d['tech']
+    # d['tech'] распознан регуляркой и в трёх местах ошибается: у «Рафунтеллы» написано
+    # «взбить» (пароотвод, а не шейкер), у «Бамбла» и «Криспи Айс Латте» упомянут питчер.
+    # Правильные значения лежат в TECH_FIX — вопрос обязан брать их, как и справочник.
+    nm = pretty(d['name'])
+    tech = TECH_FIX.get(d['name'], d['tech'])
     if tech not in TECHS:
         continue
     others = [t for t in TECHS if t != tech]
@@ -572,10 +580,6 @@ for x in extras['serve']:
 print('кофе/чай/ПФ/подача:', extra_n)
 
 # ------------------------------------------------- справочник для приложения
-import sys
-sys.path.insert(0, f'{W}/scripts')
-from config import CHAPTERS, MNEMO, FAMILY_NOTE, TECH_FIX
-
 CH_OF, CH_LIST = {}, []
 for ch in CHAPTERS:
     CH_LIST.append({'id': ch['id'], 'title': ch['title'], 'color': ch['color'], 'sub': ch['sub']})
