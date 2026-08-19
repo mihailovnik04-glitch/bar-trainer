@@ -607,9 +607,20 @@ function dedupKey(q){
   const kind = p[p.length-1]==='g' ? 'g' : 'i';   // украшение и состав — всё-таки разные факты
   return p.slice(0,-1).join('|')+'|'+kind;
 }
+// У зелёных чаёв доза и температура одинаковы (8 гр, 80 °C), у чёрных — свои 10 гр
+// и 100 °C. Три подряд одинаковых вопроса про разные сорта ничему не учат, поэтому
+// такой факт в сессии показывается один раз. Крафтовые смеси не страдают: у них состав
+// уникальный, значит и ответы разные, и в сессию попадают все.
+// Кофе сюда намеренно не входит: заказчик просил спрашивать дозу у каждого напитка,
+// даже если «15-16 гр» повторяется — это разные технологические карты.
+const EQ_CATS = {tea:1};
+const eqKey = q => EQ_CATS[q.cat] ? q.cat+'|'+q.q+'|'+answerText(q) : null;
+
 function dedupe(list){
-  const seen = new Set(), full = new Set(), taken = {}, out = [];
+  const seen = new Set(), full = new Set(), taken = {}, eq = new Set(), out = [];
   for(const q of list){
+    const ek = eqKey(q);
+    if(ek){ if(eq.has(ek)) continue; eq.add(ek); }
     const isAll = /\|all\|mfill$/.test(q.sk||'');
     // «Впиши весь состав» перекрывает все граммовки этого коктейля — вместе они дубли
     if(isAll && taken[q.drink]) continue;
