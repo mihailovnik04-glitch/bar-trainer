@@ -288,6 +288,20 @@ details.cheat b{color:var(--ink)}
 .fillt tr.wrong td .slot{border-color:var(--bad);color:var(--bad)}
 .fillt tr.right td .slot{border-color:var(--ok);color:var(--ok)}
 
+/* ---------- ингредиент во всех коктейлях ---------- */
+.icard{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:8px;overflow:hidden}
+.icard>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;align-items:baseline;gap:10px}
+.icard>summary::-webkit-details-marker{display:none}
+.icard>summary b{flex:1;font-size:14.5px;font-weight:600}
+.icard>summary .n{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+.icard>summary .d{font-family:var(--mono);font-size:12.5px;color:var(--acc)}
+.icard[open]>summary{border-bottom:1px solid var(--line)}
+.icard table{width:100%;border-collapse:collapse;padding:0 14px}
+.icard td{padding:7px 14px;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--ink-2)}
+.icard tr:last-child td{border-bottom:0}
+.icard td+td{text-align:right;font-family:var(--mono);color:var(--ink);white-space:nowrap}
+.icard tr.g td{color:var(--ink-3)} .icard tr.g td+td{color:var(--acc)}
+
 /* ---------- прочее ---------- */
 .tagline{font-size:11px;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;
   background:#E0A45B14;border-radius:7px;padding:2px 7px;display:inline-block;margin-top:3px}
@@ -398,11 +412,12 @@ details.cheat b{color:var(--ink)}
   <!-- СПРАВОЧНИК -->
   <div id="ref" class="hidden">
     <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Справочник</h1></div>
-    <input class="search" id="refQ" placeholder="Коктейль или ингредиент…" autocomplete="off">
+    <input class="search" id="refQ" placeholder="Коктейль, ингредиент или украшение…" autocomplete="off">
     <div class="seg" id="refSort">
       <button data-sort="ch" class="on">По системе</button>
       <button data-sort="src">Как в таблице</button>
       <button data-sort="glass">Посуда</button>
+      <button data-sort="ing">Ингредиенты</button>
     </div>
     <div class="chips-row" id="refSheet"></div>
     <div id="cheats"></div>
@@ -1129,6 +1144,47 @@ function renderRefChips(){
       .map(([v,t])=>`<button class="chip${REF_SHEET===v?' on':''}" data-sheet="${v}">${t}</button>`).join('');
 }
 
+/* Ингредиент целиком: где он встречается и в какой дозе. Раньше, чтобы понять,
+   сколько суперджуса идёт в билд и сколько в шейк, приходилось открывать карточки по одной.
+   Названия в таблице пишутся по-разному («СуперДжус» и «Суперджус»), поэтому группируем
+   по нормализованному ключу, а показываем самое частое написание. */
+function ingIndex(){
+  const map = {};
+  REC.recipes.forEach((r,i)=>{
+    const put = ([n,a],g)=>{
+      const key = n.toLowerCase().replace(/ё/g,'е').replace(/\s+/g,' ').trim()
+                   .replace(/\s*·.*$/,'');          // «Лимон · вейдж» -> «лимон»
+      const e = map[key] || (map[key] = {names:{}, rows:[], gar:g});
+      e.names[n.replace(/\s*·.*$/,'')] = (e.names[n]||0)+1;
+      e.rows.push({r:i, name:r.name, amt:a, g, tag:r.tag});
+      if(!g) e.gar = false;
+    };
+    r.ing.forEach(x=>put(x,0));
+    r.gar.forEach(x=>put(x,1));
+  });
+  return Object.entries(map).map(([k,e])=>{
+    const title = Object.entries(e.names).sort((a,b)=>b[1]-a[1])[0][0];
+    const doses = [...new Set(e.rows.map(x=>x.amt))];
+    return {key:k, title, rows:e.rows, doses, gar:e.gar};
+  }).sort((a,b)=>b.rows.length-a.rows.length || a.title.localeCompare(b.title,'ru'));
+}
+let ING = null;
+
+function ingHTML(f){
+  if(!ING) ING = ingIndex();
+  const list = ING.filter(x=>!f || x.title.toLowerCase().includes(f) ||
+                             x.rows.some(r=>r.name.toLowerCase().includes(f)));
+  if(!list.length) return '<div class="empty">Такого ингредиента нет</div>';
+  return list.map(x=>`<details class="icard">
+    <summary><b>${x.title}</b>
+      <span class="d">${x.doses.slice(0,3).join(' · ')}${x.doses.length>3?' …':''}</span>
+      <span class="n">${x.rows.length}</span></summary>
+    <table>${x.rows.map(r=>`<tr class="${r.g?'g':''}"><td data-r="${r.r}">${r.name}${
+        r.tag?` <span style="color:var(--ink-3);font-size:11.5px">${r.tag}</span>`:''}${
+        r.g?' <span style="font-size:11px">укр.</span>':''}</td>
+      <td>${r.amt||'—'}</td></tr>`).join('')}</table></details>`).join('');
+}
+
 // Справочник посуды: собран из самих карточек — какой бокал, какая трубочка, что в нём подаётся.
 function glassHTML(){
   const gw = REC.glassware || [];
@@ -1141,7 +1197,12 @@ function glassHTML(){
 function renderRef(filter){
   const f = (filter||'').trim().toLowerCase();
   renderRefChips();
-  $('#refSheet').classList.toggle('hidden', REF_SORT==='glass');
+  $('#refSheet').classList.toggle('hidden', REF_SORT==='glass' || REF_SORT==='ing');
+  if(REF_SORT==='ing'){
+    $('#refList').innerHTML = ingHTML(f);
+    $('#cheats').classList.toggle('hidden', !!f);
+    return;
+  }
   if(REF_SORT==='glass'){
     $('#refList').innerHTML = glassHTML();
     $('#cheats').classList.toggle('hidden', !!f);
@@ -1185,7 +1246,7 @@ function openRef(){
 $('#refSort').addEventListener('click', e=>{
   const b = e.target.closest('button[data-sort]'); if(!b) return;
   REF_SORT = b.dataset.sort;
-  if(REF_SORT!=='glass'){ store.refSort = REF_SORT; save(); }   // выбор порядка переживает перезагрузку
+  if(REF_SORT!=='glass' && REF_SORT!=='ing'){ store.refSort = REF_SORT; save(); }   // выбор порядка переживает перезагрузку
   $('#refSort').querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
   renderRef($('#refQ').value);
 });
