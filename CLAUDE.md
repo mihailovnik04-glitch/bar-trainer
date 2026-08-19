@@ -259,6 +259,40 @@ Excel состоит из 13 листов. Листы с напитками (`Л
 * Фото в модалке выводится через `object-fit:contain` — коктейли сняты вертикально, `cover` резал бокал.
 * PWA нет: ни манифеста, ни service worker. Для «добавить на экран» нужен хостинг (Netlify Drop / GitHub Pages).
 
+## Хостинг
+
+Репозиторий: https://github.com/mihailovnik04-glitch/bar-trainer (публичный).
+Живая ссылка: **https://mihailovnik04-glitch.github.io/bar-trainer/**
+
+GitHub Pages настроен на ветку `main`, папку `/docs`. В `docs/index.html` лежит
+однофайловая сборка тренажёра (то же, что `build/quiz.html`) — всё внутри одного файла,
+никаких внешних запросов, поэтому Pages раздаёт его как есть.
+
+`build/` в `.gitignore`, поэтому после пересборки файл нужно скопировать руками:
+
+```bash
+./build.sh
+cp build/quiz.html docs/index.html
+git add docs/index.html && git commit -m "обновлён тренажёр" && git push
+```
+
+Через минуту-две Pages пересоберётся. Статус: `gh api repos/mihailovnik04-glitch/bar-trainer/pages/builds/latest --jq .status`.
+
+`data/source.xlsx` (41 МБ) в гит не попадает — он в `.gitignore`.
+На новой машине его надо положить руками, иначе `./build.sh --full` не отработает.
+
+### Python на машине разработки
+
+На текущей Windows-машине настоящего Python нет — `python.exe` в `WindowsApps` это заглушка
+Microsoft Store. Пересборка (`build.sh`) без него невозможна. Ставить так:
+
+```powershell
+winget install --id Python.Python.3.12 -e
+# перезапустить терминал, затем:
+pip install -r requirements.txt
+python -m playwright install chromium
+```
+
 ## Что можно сделать дальше
 
 * Стабильные id вопросов и версия схемы хранилища.
