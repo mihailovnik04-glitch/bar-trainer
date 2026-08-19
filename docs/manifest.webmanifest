@@ -1,7 +1,7 @@
 {
- "name": "Бар · тренажёр граммовок",
- "short_name": "Бар",
- "description": "Тренажёр по граммовкам, украшениям и посуде + справочник рецептов",
+ "name": "Тренажёр Tokyo-City",
+ "short_name": "Tokyo-City",
+ "description": "Тренажёр и база знаний Tokyo-City: технологические карты бара, граммовки, украшения и посуда",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",

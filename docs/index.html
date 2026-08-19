@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#17140F">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Бар · тренажёр граммовок</title>
+<title>Tokyo-City · тренажёр</title>
 <style>
 :root{
   --bg:#0F0D0B; --card:#191612; --card-2:#211D18; --line:#2C2721;
@@ -371,6 +371,9 @@ details.cheat b{color:var(--ink)}
 .tagline{font-size:11px;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;
   background:#E0A45B14;border-radius:7px;padding:2px 7px;display:inline-block;margin-top:3px}
 .subhead{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px}
+.mode .sub2{margin-top:8px;padding-left:10px;border-left:2px solid var(--line);
+  font-size:12.5px;color:var(--ink-2);display:block}
+.mode .sub2 i{font-style:normal;color:var(--ink-3)}
 .note{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:12px 14px;
   font-size:13.5px;color:var(--ink-2);margin-bottom:10px}
 .qrow{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
@@ -406,8 +409,8 @@ details.cheat b{color:var(--ink)}
 
   <!-- ГЛАВНАЯ -->
   <div id="home">
-    <h1>Тренажёр<br>граммовок</h1>
-    <p class="lead">Составы, украшения и посуда из барного пособия. Только цифры и факты — ничего лишнего.</p>
+    <h1>Тренажёр<br>Tokyo-City</h1>
+    <p class="lead" id="homeLead">Бар: составы, украшения и посуда. Только цифры и факты — ничего лишнего.</p>
     <div class="stats">
       <div><b id="stTotal">0</b><span>ПОПЫТОК</span></div>
       <div><b id="stBest">—</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
@@ -424,10 +427,10 @@ details.cheat b{color:var(--ink)}
       <div class="tags"><i id="bankSize">0 вопросов</i><i>с настройками</i></div>
       <div id="fTrain"></div>
     </button>
-    <button class="mode" data-mode="ref">
-      <b>Справочник</b>
-      <span>Все карточки коктейлей целиком: состав, украшения, приготовление, ключ к запоминанию. И шпаргалки по системе.</span>
-      <div class="tags"><i id="refSize">0 рецептов</i><i>поиск по ингредиенту</i></div>
+    <button class="mode" data-mode="kb">
+      <b>База знаний</b>
+      <span>Технологические карты, теория и регламенты. Разделы открываются по мере готовности.</span>
+      <div class="tags"><i id="refSize">0 карт</i><i id="kbSize">4 раздела</i></div>
       <div id="fRef"></div>
     </button>
     <button class="mode" data-mode="qbase">
@@ -451,7 +454,7 @@ details.cheat b{color:var(--ink)}
 
   <!-- ВХОД -->
   <div id="login" class="hidden">
-    <h1>Тренажёр<br>граммовок</h1>
+    <h1>Тренажёр<br>Tokyo-City</h1>
     <p class="lead">Доступ по логину и паролю. Аккаунты заводит владелец — регистрация закрыта.</p>
     <input class="search" id="logMail" type="email" inputmode="email" autocomplete="username"
            placeholder="Почта" autocapitalize="off" spellcheck="false">
@@ -496,9 +499,16 @@ details.cheat b{color:var(--ink)}
     <div id="qbList"></div>
   </div>
 
-  <!-- СПРАВОЧНИК -->
+  <!-- БАЗА ЗНАНИЙ -->
+  <div id="kb" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>База знаний</h1></div>
+    <p class="lead" id="kbLead"></p>
+    <div id="kbList"></div>
+  </div>
+
+  <!-- ТЕХНОЛОГИЧЕСКИЕ КАРТЫ -->
   <div id="ref" class="hidden">
-    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Справочник</h1></div>
+    <div class="scrhead"><button class="back" data-kb="1">‹</button><h1>Технологические карты</h1></div>
     <input class="search" id="refQ" placeholder="Коктейль, ингредиент или украшение…" autocomplete="off">
     <div class="seg" id="refSort">
       <button data-sort="ch" class="on">По системе</button>
@@ -653,7 +663,7 @@ function pickExam(){
 
 /* ---------- состояние ---------- */
 let S = null, tick = null;
-const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login'];
+const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
@@ -677,6 +687,11 @@ function renderHome(){
   const offN = Object.keys(store.skipSh).length + Object.keys(store.skip).length
              + Object.keys(store.skipQ).length;
   if(offN) $('#fTrain').innerHTML += filtHTML(['выключено '+offN], 'setup', 'off');
+  if(authOn() && AUTH){
+    const dept = (DEPTS.find(d=>d.id===AUTH.dept)||{title:'Бар'}).title;
+    $('#homeLead').textContent =
+      `${dept} · ${AUTH.cat||1}-я категория. Составы, украшения и посуда — только цифры и факты.`;
+  }
   $('#homeFoot').innerHTML = (authOn() && AUTH)
     ? `${AUTH.mail||''} · прогресс синхронизируется<br>
        <span class="fbbtn" id="handoff" style="margin-top:6px">Открыть на другом устройстве</span>
@@ -1316,7 +1331,54 @@ addEventListener('popstate', ()=>closeRecipe(true));
 $('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeRecipe(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRecipe(); });
 
-/* ---------- справочник ---------- */
+/* ---------- база знаний ---------- */
+/* Разделы заведены заранее: наполнение появится позже, но структура уже видна,
+   и по ней раздаётся доступ. Направления (бар, кухня, зал) тоже заложены — сейчас
+   работает только бар. `cat` — минимальная категория сотрудника, которой раздел виден;
+   категорию назначает владелец, сам сотрудник её не меняет. */
+const KB = [
+  {id:'tech',  title:'Технологические карты', sub:'Коктейли, кофе, чай, заготовки и подача — всё, что уже разобрано из таблицы', cat:1, ready:true},
+  {id:'video', title:'Видео', sub:'Записи разборов и приготовления', cat:1},
+  {id:'theory',title:'Теория алкоголя', sub:'Категории напитков, крепость, органолептика', cat:2},
+  {id:'sanpin',title:'СанПиН', sub:'Санитарные требования и проверки', cat:1, sub2:[
+      {id:'sanpin-in', title:'Внутренние проверки', sub:'Чек-листы смены и бара'},
+      {id:'sanpin-rpn',title:'РПН', sub:'Требования Роспотребнадзора'}]},
+];
+const DEPTS = [
+  {id:'bar', title:'Бар', ready:true},
+  {id:'kitchen', title:'Кухня'},
+  {id:'hall', title:'Зал'},
+];
+
+// Категория приходит из аккаунта (app_metadata.category) — по умолчанию 1, самая младшая.
+const myCat = () => (AUTH && AUTH.cat) || 1;
+const kbVisible = x => myCat() >= (x.cat || 1);
+
+function renderKB(){
+  $('#kbLead').textContent = 'Бар · ' + myCat() + '-я категория. Разделы ниже открыты для вашей категории.';
+  const card = (x, sub) => `<button class="mode${x.ready?'':' ghost'}" ${x.ready?`data-kbgo="${x.id}"`:''}>
+      <b>${x.title}${x.ready?'':' <span style="color:var(--ink-3);font-size:12px">скоро</span>'}</b>
+      <span>${x.sub||''}</span>
+      ${x.ready&&x.id==='tech'?`<div class="tags"><i>${REC.recipes.length} карт</i><i>поиск по ингредиенту</i></div>`:''}
+      ${sub||''}
+    </button>`;
+  const hidden = KB.filter(x=>!kbVisible(x)).length;
+  $('#kbList').innerHTML =
+    KB.filter(kbVisible).map(x=>card(x, (x.sub2||[]).map(y=>
+        `<div class="sub2">${y.title} · <i>${y.sub}</i></div>`).join(''))).join('') +
+    (hidden ? `<div class="note">Ещё ${hidden} раздел(а) откроются с повышением категории.</div>` : '') +
+    `<div class="subhead">Направления</div>` +
+    DEPTS.map(d=>`<div class="note" style="opacity:${d.ready?1:.55}">${d.title}${
+        d.ready?' · доступно':' · появится позже'}</div>`).join('');
+  show('kb');
+}
+
+$('#kbList').addEventListener('click', e=>{
+  const b = e.target.closest('[data-kbgo]'); if(!b) return;
+  if(b.dataset.kbgo==='tech') openRef();
+});
+
+/* ---------- технологические карты ---------- */
 const match = (r,f) => !f ||
   (r.name+' '+r.ing.map(x=>x[0]).join(' ')+' '+r.gar.map(x=>x[0]).join(' ')+' '+r.glass)
     .toLowerCase().includes(f);
@@ -1609,9 +1671,15 @@ async function sbAuth(path, body){
 }
 
 function setSession(j){
+  const meta = (j.user && (j.user.app_metadata||{})) || {};
   AUTH = {token:j.access_token, refresh:j.refresh_token,
           uid:(j.user&&j.user.id)||(AUTH&&AUTH.uid),
           mail:(j.user&&j.user.email)||(AUTH&&AUTH.mail),
+          // категория и направление назначаются владельцем в аккаунте,
+          // сотрудник их не выбирает
+          cat:meta.category || (AUTH&&AUTH.cat) || 1,
+          dept:meta.dept || (AUTH&&AUTH.dept) || 'bar',
+          role:meta.role || (AUTH&&AUTH.role) || 'staff',
           exp:Date.now() + (j.expires_in||3600)*1000};
   saveAuth();
 }
@@ -1799,6 +1867,7 @@ document.addEventListener('click', e=>{
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
   if(m==='errors') openErrors();
+  else if(m==='kb') renderKB();
   else if(m==='ref') openRef();
   else if(m==='setup') renderSetup();
   else if(m==='qbase') openQB();
@@ -1833,7 +1902,9 @@ $('#back').addEventListener('click',()=>{ clearInterval(tick); saveSession(); cl
 $('#prev').addEventListener('click', e=>{ e.stopPropagation(); prevQ(); });
 // «‹» в шапке справочника, базы вопросов и списка ошибок — возврат на главный экран
 document.addEventListener('click', e=>{
-  if(e.target.closest('.scrhead .back')){ closeRecipe(); renderHome(); }
+  const b = e.target.closest('.scrhead .back'); if(!b) return;
+  closeRecipe();
+  if(b.dataset.kb) renderKB(); else renderHome();
 });
 document.addEventListener('keydown',e=>{
   if($('#quiz').classList.contains('hidden')) return;
