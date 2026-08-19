@@ -36,7 +36,9 @@ with sync_playwright() as pw:
     check('банк загружен', pg.evaluate('BANK.length') > 900, str(pg.evaluate('BANK.length')))
 
     # --- справочник: виды, избранное, посуда
-    pg.click('[data-mode="kb"]'); pg.wait_for_timeout(200)
+    pg.click('[data-mode="learn"]'); pg.wait_for_timeout(200)
+    check('обучение открылось', pg.locator('#learn').is_visible())
+    pg.click('#learn [data-mode="kb"]'); pg.wait_for_timeout(200)
     check('база знаний открылась', pg.locator('#kb').is_visible())
     check('разделы базы знаний на месте', pg.locator('#kbList .mode').count() >= 3)
     pg.click('[data-kbgo="tech"]'); pg.wait_for_timeout(250)
@@ -62,9 +64,9 @@ with sync_playwright() as pw:
     pg.click('#ref .scrhead .back'); pg.wait_for_timeout(200)
     pg.click('#kb .scrhead .back'); pg.wait_for_timeout(200)
 
-    # --- база вопросов (живёт внутри тренажёра)
-    pg.click('[data-mode="setup"]'); pg.wait_for_timeout(300)
-    pg.click('#setup [data-mode="qbase"]'); pg.wait_for_timeout(300)
+    # --- база вопросов (живёт внутри базы знаний)
+    pg.click('#learn [data-mode="kb"]'); pg.wait_for_timeout(250)
+    pg.click('[data-kbgo="qbase"]'); pg.wait_for_timeout(300)
     check('база вопросов открылась', pg.locator('#qbase').is_visible())
     n_all = pg.locator('.qrow').count()
     pg.click('#qbCat [data-cat="glass"]'); pg.wait_for_timeout(200)
@@ -72,9 +74,10 @@ with sync_playwright() as pw:
     pg.locator('.qrow .star').first.click(); pg.wait_for_timeout(100)
     check('вопрос в избранном', pg.evaluate('Object.keys(store.favQ).length') == 1)
     pg.click('#qbase .scrhead .back'); pg.wait_for_timeout(200)
+    pg.click('#kb .scrhead .back'); pg.wait_for_timeout(200)
 
     # --- настройка тренажёра
-    pg.click('[data-mode="setup"]'); pg.wait_for_timeout(300)
+    pg.click('#learn [data-mode="setup"]'); pg.wait_for_timeout(300)
     check('экран настройки', pg.locator('#setup').is_visible())
     n_all = int(pg.evaluate('trainPool(OPT).length'))
     check('пул вопросов набран', n_all > 300, str(n_all))
@@ -141,7 +144,8 @@ with sync_playwright() as pw:
     pg.evaluate('saveSession()')
     check('сессия сохранена', pg.evaluate('!!JSON.parse(localStorage.getItem("barquiz.v3")).sess'))
     pg.reload(); pg.wait_for_timeout(500)
-    pg.click('[data-mode="setup"]'); pg.wait_for_timeout(300)
+    pg.click('[data-mode="learn"]'); pg.wait_for_timeout(200)
+    pg.click('#learn [data-mode="setup"]'); pg.wait_for_timeout(300)
     check('предложено продолжить', pg.locator('#resGo').count() == 1)
     pg.click('#resGo'); pg.wait_for_timeout(400)
     check('сессия продолжилась', pg.locator('#quiz').is_visible() and pg.evaluate('S.k') > 0)

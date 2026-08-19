@@ -22,6 +22,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .wrap{max-width:560px;margin:0 auto;padding:18px 16px 28px;min-height:100%;display:flex;flex-direction:column}
+/* Экраны — flex-элементы колонки, а у них min-width:auto: горизонтальная лента чипсов
+   растягивала весь экран до своей длины (на телефоне страница уезжала до 714 px
+   и всё казалось мелким). Ограничиваем — тогда ленты скроллятся внутри себя. */
+.wrap > *{min-width:0;max-width:100%}
+.chips-row{max-width:100%}
 
 /* ---------- шапка ---------- */
 .top{display:flex;align-items:center;gap:12px;margin:0 -16px 14px;padding:0 16px;
@@ -367,6 +372,24 @@ details.cheat b{color:var(--ink)}
   padding:1px 6px;font-size:12px;color:var(--acc);line-height:1.4}
 .filt .x:active{transform:scale(.9)}
 
+.rm-done{color:var(--ok)} .rm-work{color:var(--acc)} .rm-plan{color:var(--ink-3)}
+
+/* ---------- профиль ---------- */
+.pcard{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:14px;margin-bottom:14px}
+.pav{width:52px;height:52px;border-radius:16px;background:#E0A45B1f;color:var(--acc);
+  display:grid;place-items:center;font-size:22px;font-weight:700;flex:0 0 52px}
+.pcard b{display:block;font-size:15px;overflow-wrap:anywhere}
+.pcard span{font-size:12.5px;color:var(--ink-3)}
+.pbar{margin-bottom:10px}
+.pbar .t{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-2);margin-bottom:5px}
+.pbar .t b{font-family:var(--mono);color:var(--ink)}
+.pbar i{display:block;height:8px;border-radius:8px;background:var(--card-2);overflow:hidden}
+.pbar u{display:block;height:100%;border-radius:8px;text-decoration:none;
+  transition:width .5s cubic-bezier(.4,0,.2,1)}
+.qrwrap{background:#fff;border-radius:16px;padding:14px;display:grid;place-items:center;margin:6px 0 4px}
+.qrwrap canvas{width:100%;max-width:260px;height:auto;image-rendering:pixelated}
+
 /* ---------- прочее ---------- */
 .tagline{font-size:11px;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;
   background:#E0A45B14;border-radius:7px;padding:2px 7px;display:inline-block;margin-top:3px}
@@ -379,9 +402,14 @@ details.cheat b{color:var(--ink)}
 .qrow{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
   border-radius:13px;padding:11px 13px;margin-bottom:7px;transition:transform .14s}
 .qrow:active{transform:scale(.985)}
-.qrow .hd{display:flex;gap:10px;align-items:flex-start}
-.qrow .hd b{flex:1;font-size:14px;font-weight:600;line-height:1.3}
-.qrow .hd .a{font-family:var(--mono);font-size:13.5px;color:var(--ok);white-space:nowrap}
+/* Длинные ответы («Малина + Ежевика + Апельсин…») с nowrap распирали строку,
+   а вместе с ней и всю страницу: на телефоне вёрстка уезжала вбок и мельчала.
+   Ответ переносится и занимает не больше половины строки. */
+.qrow .hd{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.qrow .hd b{flex:1 1 55%;min-width:0;font-size:14px;font-weight:600;line-height:1.3;
+  overflow-wrap:anywhere}
+.qrow .hd .a{font-family:var(--mono);font-size:13.5px;color:var(--ok);
+  flex:0 1 auto;max-width:100%;text-align:right;margin-left:auto;overflow-wrap:anywhere}
 .qrow .mt{font-size:11.5px;color:var(--ink-3);margin-top:5px}
 .gcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
 .gcard .hd{display:flex;gap:12px;align-items:center}
@@ -406,45 +434,65 @@ details.cheat b{color:var(--ink)}
   <!-- ГЛАВНАЯ -->
   <div id="home">
     <h1>Tokyo-City<br>для сотрудников</h1>
-    <p class="lead" id="homeLead">Бар: составы, украшения и посуда. Только цифры и факты — ничего лишнего.</p>
-    <div class="stats">
-      <div><b id="stTotal">0</b><span>ПОПЫТОК</span></div>
-      <div><b id="stBest">—</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
-      <div><b id="stAcc">—</b><span>ТОЧНОСТЬ</span></div>
-    </div>
-    <button class="mode" data-mode="attest">
-      <b>Аттестация</b>
-      <span>Пробная — когда угодно и сколько угодно раз. Назначенную ставит управляющий.</span>
-      <div class="tags"><i>75 вопросов</i><i>30:00</i><i>зачёт до 3 ошибок</i></div>
-    </button>
-    <button class="mode" data-mode="setup">
-      <b>Тренажёр</b>
-      <span>Без таймера и лимита ошибок. Внутри — настройки, разбор ошибок и вся база вопросов.</span>
-      <div class="tags"><i id="bankSize">0 вопросов</i><i>с настройками</i></div>
+    <p class="lead" id="homeLead">Бар</p>
+    <button class="mode" data-mode="learn">
+      <b>Обучение</b>
+      <span>Тренажёр, аттестация и база знаний — всё, что нужно выучить и где это посмотреть.</span>
+      <div class="tags"><i id="bankSize">0 вопросов</i><i id="refSize">0 карт</i></div>
       <div id="fTrain"></div>
-    </button>
-    <button class="mode" data-mode="kb">
-      <b>База знаний</b>
-      <span>Технологические карты, теория и регламенты. Разделы открываются по мере готовности.</span>
-      <div class="tags"><i id="refSize">0 карт</i><i id="kbSize">4 раздела</i></div>
-      <div id="fRef"></div>
     </button>
     <button class="mode" data-mode="sched">
       <b>График</b>
       <span>Смены по точке, как в таблице. Смотрят бармены, менеджер и директор.</span>
       <div class="tags"><i>скоро</i></div>
     </button>
-    <button class="mode" data-mode="paystat">
-      <b>Статистика</b>
-      <span>Зарплата, опоздания и часы за период.</span>
-      <div class="tags"><i>скоро</i></div>
+    <button class="mode" data-mode="profile">
+      <b>Мой профиль</b>
+      <span>Данные аккаунта, код для входа на другом устройстве и личная статистика.</span>
+      <div class="tags"><i id="profTag">—</i></div>
     </button>
-    <button class="mode" data-mode="card">
-      <b>Моя карта</b>
-      <span>Скидочная карта сотрудника и код для отметки о приходе.</span>
-      <div class="tags"><i>скоро</i></div>
+    <button class="mode ghost hidden" data-mode="roadmap" id="rmBtn">
+      <b>Роадмап</b>
+      <span>План развития: что готово, что в работе, что впереди. Видите только вы.</span>
     </button>
     <div class="foot" id="homeFoot">Работает без интернета · данные хранятся только в этом браузере</div>
+  </div>
+
+  <!-- ОБУЧЕНИЕ -->
+  <div id="learn" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Обучение</h1></div>
+    <div class="stats">
+      <div><b id="stTotal">0</b><span>ПОПЫТОК</span></div>
+      <div><b id="stBest">—</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
+      <div><b id="stAcc">—</b><span>ТОЧНОСТЬ</span></div>
+    </div>
+    <button class="mode" data-mode="setup">
+      <b>Тренажёр</b>
+      <span>Без таймера и лимита ошибок. Внутри — настройки подбора и разбор ошибок.</span>
+      <div class="tags"><i id="bankSize2">0 вопросов</i><i>с настройками</i></div>
+      <div id="fTrain2"></div>
+    </button>
+    <button class="mode" data-mode="attest">
+      <b>Аттестация</b>
+      <span>Пробная — когда угодно и сколько угодно раз. Назначенную ставит управляющий.</span>
+      <div class="tags"><i>75 вопросов</i><i>30:00</i><i>зачёт до 3 ошибок</i></div>
+    </button>
+    <button class="mode" data-mode="kb">
+      <b>База знаний</b>
+      <span>Технологические карты, база вопросов, теория и регламенты.</span>
+      <div class="tags"><i id="refSize2">0 карт</i><i id="kbSize">разделы</i></div>
+      <div id="fRef"></div>
+    </button>
+    <button class="mode ghost" data-mode="training">
+      <b>Тренинги <span style="color:var(--ink-3);font-size:12px">скоро</span></b>
+      <span>Календарь очных тренингов и запись на них.</span>
+    </button>
+  </div>
+
+  <!-- МОЙ ПРОФИЛЬ -->
+  <div id="profile" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Мой профиль</h1></div>
+    <div id="profBody"></div>
   </div>
 
   <!-- ТЕСТ -->
@@ -456,7 +504,12 @@ details.cheat b{color:var(--ink)}
   <!-- ВХОД -->
   <div id="login" class="hidden">
     <h1>Тренажёр<br>Tokyo-City</h1>
-    <p class="lead">Доступ по логину и паролю. Аккаунты заводит владелец — регистрация закрыта.</p>
+    <p class="lead" id="logLead">Войдите или заведите аккаунт — по этой ссылке пока может
+      зарегистрироваться любой. Позже вход будет только по пригласительной ссылке.</p>
+    <div class="seg" id="logMode">
+      <button data-lm="in" class="on">Вход</button>
+      <button data-lm="up">Регистрация</button>
+    </div>
     <input class="search" id="logMail" type="email" inputmode="email" autocomplete="username"
            placeholder="Почта" autocapitalize="off" spellcheck="false">
     <input class="search" id="logPass" type="password" autocomplete="current-password"
@@ -468,7 +521,7 @@ details.cheat b{color:var(--ink)}
 
   <!-- НАСТРОЙКА ТРЕНИРОВКИ -->
   <div id="setup" class="hidden">
-    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Тренажёр</h1></div>
+    <div class="scrhead"><button class="back" data-learn="1">‹</button><h1>Тренажёр</h1></div>
     <div id="resume"></div>
     <div class="subhead">Что показывать</div>
     <div class="seg" id="setPool">
@@ -494,17 +547,11 @@ details.cheat b{color:var(--ink)}
       <b>Мои ошибки <span style="display:inline;color:var(--bad)" id="errCount"></span></b>
       <span>Разбор, слабые коктейли и повторное решение того, что не получилось.</span>
     </button>
-    <button class="mode ghost" data-mode="qbase">
-      <b>База вопросов</b>
-      <span>Все вопросы с ответами списком, без теста. Фильтры по виду и теме.</span>
-      <div class="tags"><i id="qbSize">0 вопросов</i></div>
-      <div id="fQbase"></div>
-    </button>
   </div>
 
   <!-- БАЗА ВОПРОСОВ -->
   <div id="qbase" class="hidden">
-    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>База вопросов</h1></div>
+    <div class="scrhead"><button class="back" data-kb="1">‹</button><h1>База вопросов</h1></div>
     <input class="search" id="qbQ" placeholder="Коктейль или ингредиент…" autocomplete="off">
     <div class="chips-row" id="qbSheet"></div>
     <div class="chips-row" id="qbCat"></div>
@@ -513,7 +560,7 @@ details.cheat b{color:var(--ink)}
 
   <!-- АТТЕСТАЦИЯ -->
   <div id="attest" class="hidden">
-    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Аттестация</h1></div>
+    <div class="scrhead"><button class="back" data-learn="1">‹</button><h1>Аттестация</h1></div>
     <p class="lead">Порядок вопросов случайный, время ограничено. Аттестация идёт до конца:
       ошибки видно на счётчике, зачёт — не больше трёх.</p>
     <button class="mode" id="attTry">
@@ -527,16 +574,23 @@ details.cheat b{color:var(--ink)}
     </button>
   </div>
 
+  <!-- РОАДМАП (только владельцу) -->
+  <div id="roadmap" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Роадмап</h1></div>
+    <p class="lead">План развития приложения. Виден только вам — сотрудники этот раздел не видят.</p>
+    <div id="rmBody"></div>
+  </div>
+
   <!-- ЗАГЛУШКИ РАЗДЕЛОВ -->
   <div id="stub" class="hidden">
-    <div class="scrhead"><button class="back" data-home="1">‹</button><h1 id="stubTitle"></h1></div>
+    <div class="scrhead"><button class="back" id="stubBack">‹</button><h1 id="stubTitle"></h1></div>
     <p class="lead" id="stubLead"></p>
     <div id="stubBody"></div>
   </div>
 
   <!-- БАЗА ЗНАНИЙ -->
   <div id="kb" class="hidden">
-    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>База знаний</h1></div>
+    <div class="scrhead"><button class="back" data-learn="1">‹</button><h1>База знаний</h1></div>
     <p class="lead" id="kbLead"></p>
     <div id="kbList"></div>
   </div>
@@ -698,7 +752,8 @@ function pickExam(){
 
 /* ---------- состояние ---------- */
 let S = null, tick = null;
-const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb','attest','stub'];
+const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb','attest','stub',
+                 'learn','profile','roadmap'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
@@ -708,33 +763,39 @@ function show(id){
 
 function renderHome(){
   const st=store.stats;
-  $('#stTotal').textContent = st.runs;
-  $('#stBest').textContent = st.best ? st.best+'/'+EX_N : '—';
-  $('#stAcc').textContent = st.total ? Math.round(st.right/st.total*100)+'%' : '—';
-  $('#bankSize').textContent = BANK.length+' вопросов';
-  $('#qbSize').textContent = BANK.length+' вопросов';
-  $('#refSize').textContent = REC.recipes.length+' карт';
+  const setTxt = (id,t)=>{ const el=$('#'+id); if(el) el.textContent=t; };
+  setTxt('stTotal', st.runs);
+  setTxt('stBest', st.best ? st.best+'/'+EX_N : '—');
+  setTxt('stAcc', st.total ? Math.round(st.right/st.total*100)+'%' : '—');
+  const put = (id,t)=>{ const el=$('#'+id); if(el) el.textContent=t; };
+  put('bankSize', BANK.length+' вопросов');
+  put('bankSize2', BANK.length+' вопросов');
+  put('refSize2', REC.recipes.length+' карт');
+  put('profTag', (AUTH && AUTH.mail) ? AUTH.cat+'-я категория' : 'без входа');
+  $('#rmBtn').classList.toggle('hidden', !isOwner());
+  // #qbSize и #errCount живут внутри базы знаний и тренажёра — их может не быть в DOM
+  put('qbSize', BANK.length+' вопросов');
+  put('refSize', REC.recipes.length+' карт');
   const n = Object.keys(store.errors).length;
-  $('#errCount').textContent = n ? '· '+n : '';
-  $('#fTrain').innerHTML = filtHTML(filtWords(OPT,'train'), 'setup', 'opt');
-  $('#fQbase').innerHTML = filtHTML(filtWords(QB,'qb'), 'qbase', 'qb');
-  $('#fRef').innerHTML   = filtHTML(filtWords({sheet:REF_SHEET, fav:REF_FAV},'ref'), 'ref', 'ref');
+  put('errCount', n ? '· '+n : '');
+  // значки живут на разных экранах, часть из них может быть не отрисована
+  const setHTML = (id, html) => { const el = $('#'+id); if(el) el.innerHTML = html; };
+  const trainF = filtHTML(filtWords(OPT,'train'), 'setup', 'opt');
   const offN = Object.keys(store.skipSh).length + Object.keys(store.skip).length
              + Object.keys(store.skipQ).length;
-  if(offN) $('#fTrain').innerHTML += filtHTML(['выключено '+offN], 'setup', 'off');
+  const offF = offN ? filtHTML(['выключено '+offN], 'setup', 'off') : '';
+  setHTML('fTrain', trainF + offF);
+  setHTML('fTrain2', trainF + offF);
+  setHTML('fQbase', filtHTML(filtWords(QB,'qb'), 'qbase', 'qb'));
+  setHTML('fRef', filtHTML(filtWords({sheet:REF_SHEET, fav:REF_FAV},'ref'), 'ref', 'ref'));
   if(authOn() && AUTH){
     const dept = (DEPTS.find(d=>d.id===AUTH.dept)||{title:'Бар'}).title;
-    $('#homeLead').textContent =
-      `${dept} · ${AUTH.cat||1}-я категория. Составы, украшения и посуда — только цифры и факты.`;
+    $('#homeLead').textContent = `${dept} · ${AUTH.cat||1}-я категория`;
   }
   $('#homeFoot').innerHTML = (authOn() && AUTH)
-    ? `${AUTH.mail||''} · прогресс синхронизируется<br>
-       <span class="fbbtn" id="handoff" style="margin-top:6px">Открыть на другом устройстве</span>
-       <span class="fbbtn" id="logout" style="margin-top:6px">Выйти</span>
-       <div id="handoffBox"></div>`
+    ? `${AUTH.mail||''} · прогресс синхронизируется · вход и статистика — в профиле`
     : 'Работает без интернета · данные хранятся только в этом браузере';
-  const lo = $('#logout'); if(lo) lo.onclick = logout;
-  const ho = $('#handoff'); if(ho) ho.onclick = showHandoff;
+
   show('home');
 }
 
@@ -1366,6 +1427,128 @@ addEventListener('popstate', ()=>closeRecipe(true));
 $('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeRecipe(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRecipe(); });
 
+/* ---------- перенос входа ---------- */
+// Ссылка с refresh-токеном: телефон подхватывает сессию без пароля.
+// К отметке прихода на смену это отношения не имеет — та живёт во внешней системе учёта.
+function renderQR(){
+  const box = $('#qrBox'); if(!box) return;
+  if(!AUTH || !AUTH.refresh){
+    box.innerHTML = '<div class="note">Код появится после входа в аккаунт.</div>';
+    return;
+  }
+  const url = location.origin + location.pathname + '#s=' + encodeURIComponent(AUTH.refresh);
+  box.innerHTML = `<div class="note" style="text-align:left">
+      Откройте ссылку на телефоне — он войдёт в аккаунт без пароля. Ссылка одноразовая:
+      после использования откройте её заново.
+      <div class="handoff" id="hoUrl">${url}</div>
+      <button class="ghostbtn" id="hoCopy" style="margin-top:8px">Скопировать ссылку</button>
+    </div>`;
+  $('#hoCopy').onclick = async ()=>{
+    try{ await navigator.clipboard.writeText(url); $('#hoCopy').textContent='Скопировано'; }
+    catch(e){ $('#hoCopy').textContent='Скопируйте ссылку вручную'; }
+  };
+}
+
+/* ---------- мой профиль ---------- */
+// Личная статистика считается из того же store, что и всё остальное: сколько фактов
+// закрыто, где слабые места, сколько в избранном. Никаких отдельных счётчиков,
+// чтобы цифры не разъезжались.
+function myStats(){
+  const solved = Object.keys(store.solved).length;
+  const errs = Object.keys(store.errors).filter(id=>BY_ID[id]);
+  const byCat = {};
+  errs.forEach(id=>{ const q=BY_ID[id]; byCat[q.cat]=(byCat[q.cat]||0)+store.errors[id]; });
+  const byDrink = {};
+  errs.forEach(id=>{ const q=BY_ID[id]; byDrink[q.drink]=(byDrink[q.drink]||0)+store.errors[id]; });
+  const weak = Object.entries(byDrink).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return {solved, total:BANK.length, errs:errs.length, byCat, weak,
+          fav:Object.keys(store.fav).length + Object.keys(store.favQ).length
+              + Object.keys(store.favI).length};
+}
+
+function bar(label, val, max, color){
+  const pct = max ? Math.round(val/max*100) : 0;
+  return `<div class="pbar"><div class="t"><span>${label}</span><b>${val}</b></div>
+    <i><u style="width:${pct}%;background:${color||'var(--acc)'}"></u></i></div>`;
+}
+
+function renderProfile(){
+  const st = store.stats, m = myStats();
+  const acc = st.total ? Math.round(st.right/st.total*100) : 0;
+  const catName = {grams:'состав', garnish:'украшения', glass:'посуда', method:'метод',
+                   coffee:'кофе', tea:'чай', pf:'заготовки', serve:'подача'};
+  const maxCat = Math.max(1, ...Object.values(m.byCat));
+  const acc_ = AUTH || {};
+  $('#profBody').innerHTML = `
+    <div class="pcard">
+      <div class="pav">${(acc_.mail||'?').slice(0,1).toUpperCase()}</div>
+      <div><b>${acc_.mail || 'без входа'}</b>
+        <span>${ROLE_NAME[acc_.role||'staff']} · ${acc_.cat||1}-я категория${
+          acc_.venue?' · '+acc_.venue:''}</span></div>
+    </div>
+    <div class="stats">
+      <div><b>${st.runs}</b><span>АТТЕСТАЦИЙ</span></div>
+      <div><b>${st.best||'—'}</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
+      <div><b>${acc}%</b><span>ТОЧНОСТЬ</span></div>
+    </div>
+    <div class="subhead">Прогресс по банку</div>
+    ${bar('Решено верно хотя бы раз', m.solved, m.total, 'var(--ok)')}
+    ${bar('Осталось ошибок в разборе', m.errs, Math.max(m.errs, 40), 'var(--bad)')}
+    ${bar('В избранном', m.fav, Math.max(m.fav, 20))}
+    ${Object.keys(m.byCat).length ? `<div class="subhead">Где ошибаюсь</div>` +
+      Object.entries(m.byCat).sort((a,b)=>b[1]-a[1])
+        .map(([c,n])=>bar(catName[c]||c, n, maxCat, 'var(--bad)')).join('') : ''}
+    ${m.weak.length ? `<div class="subhead">Слабые позиции</div>` +
+      m.weak.map(([n,c])=>`<div class="qrow"><div class="hd"><b>${n}</b>
+          <div class="a" style="color:var(--bad)">${c}</div></div></div>`).join('') : ''}
+    <div class="subhead">Вход на другом устройстве</div>
+    <div id="qrBox"></div>
+    <div class="row"><button class="ghostbtn" id="profLogout">Выйти из аккаунта</button></div>`;
+  const lo = $('#profLogout'); if(lo) lo.onclick = logout;
+  renderQR();
+  show('profile');
+}
+
+/* ---------- роадмап ---------- */
+/* Виден только владельцу: это план развития, а не справка для смены.
+   Здесь собраны все заглушки приложения — когда раздел готов, строка переезжает в «Готово». */
+const ROADMAP = [
+  {st:'done', t:'Тренажёр и аттестация', d:'1134 вопроса по бару: составы, украшения, посуда, метод, кофе, чай, заготовки, подача'},
+  {st:'done', t:'База знаний · технологические карты', d:'139 карточек из таблицы, поиск по ингредиенту, справочник посуды'},
+  {st:'done', t:'База вопросов', d:'весь банк списком с фильтрами и выключением лишнего'},
+  {st:'done', t:'Аккаунты и синхронизация', d:'вход по паролю, прогресс между устройствами, перенос входа ссылкой'},
+  {st:'done', t:'Категории и роли', d:'категория назначается владельцем, разделы раздаются по ней'},
+  {st:'work', t:'Аттестация · назначенная', d:'управляющий ставит дату и состав, результат уходит в отчёт'},
+  {st:'plan', t:'База знаний · видео', d:'записи разборов и приготовления'},
+  {st:'plan', t:'База знаний · теория алкоголя', d:'категории напитков, крепость, органолептика'},
+  {st:'plan', t:'База знаний · СанПиН', d:'внутренние проверки и требования РПН'},
+  {st:'plan', t:'Тренинги', d:'календарь очных занятий и запись на них'},
+  {st:'plan', t:'Пригласительные ссылки', d:'сейчас по ссылке может зарегистрироваться любой — заменить на приглашения от владельца'},
+  {st:'plan', t:'График', d:'смены по точке; смотрят бармены, менеджер и директор'},
+  {st:'plan', t:'Статистика', d:'зарплата, опоздания, часы за период'},
+  {st:'plan', t:'Моя карта', d:'скидочная карта сотрудника для скидки на кассе'},
+  {st:'plan', t:'Отметка о приходе', d:'связать с готовой внешней системой учёта: QR-код в приложении, отпечаток пальца, карточка сотрудника'},
+  {st:'plan', t:'Направления', d:'кухня и зал: свои карты, вопросы и аттестации'},
+  {st:'plan', t:'Отчёт по смене', d:'кто как сдаёт: сводка по сотрудникам для управляющего'},
+];
+const RM_NAME = {done:'готово', work:'в работе', plan:'план'};
+
+const isOwner = () => (AUTH && AUTH.role) === 'owner';
+
+function renderRoadmap(){
+  if(!isOwner()){ renderHome(); return; }
+  const group = st => ROADMAP.filter(x=>x.st===st);
+  $('#rmBody').innerHTML = ['done','work','plan'].map(st=>{
+    const list = group(st);
+    if(!list.length) return '';
+    return `<div class="subhead">${RM_NAME[st]} · ${list.length}</div>` +
+      list.map(x=>`<div class="qrow"><div class="hd">
+          <b>${x.t}</b><div class="a rm-${st}">${RM_NAME[st]}</div></div>
+        <div class="mt">${x.d}</div></div>`).join('');
+  }).join('');
+  show('roadmap');
+}
+
 /* ---------- разделы, которых ещё нет ---------- */
 /* Каркас заведён заранее: сотрудники видят, что будет, а доступ уже раздаётся
    по роли и категории. Роль и точка приходят из аккаунта, сам сотрудник их не меняет. */
@@ -1380,6 +1563,11 @@ const STUBS = {
     items:[['Зарплата','Начисления по сменам и итог за период'],
            ['Опоздания','Отметки прихода и задержки'],
            ['Часы','Отработанные часы по дням и итогом']]},
+  training: {title:'Тренинги', lead:'Очные занятия: расписание и запись.',
+    roles:['staff','manager','director','owner'],
+    items:[['Календарь','Даты, тема и кто ведёт'],
+           ['Запись','Занять место в группе'],
+           ['Мои тренинги','История посещений и отметки']]},
   card: {title:'Моя карта', lead:'Карта сотрудника и отметка о приходе.',
     roles:['staff','manager','director','owner'],
     items:[['Скидочная карта','Показать на кассе — скидка сотрудника'],
@@ -1388,6 +1576,9 @@ const STUBS = {
 
 function openStub(id){
   const x = STUBS[id]; if(!x) return;
+  // тренинги живут внутри «Обучения», остальные заглушки — на главной
+  $('#stubBack').dataset.learn = (id === 'training') ? '1' : '';
+  if(id !== 'training') delete $('#stubBack').dataset.learn;
   $('#stubTitle').textContent = x.title;
   $('#stubLead').textContent = x.lead;
   const venue = (AUTH && AUTH.venue) || 'точка не назначена';
@@ -1409,6 +1600,7 @@ const ROLE_NAME = {staff:'сотрудник', manager:'менеджер', direc
    категорию назначает владелец, сам сотрудник её не меняет. */
 const KB = [
   {id:'tech',  title:'Технологические карты', sub:'Коктейли, кофе, чай, заготовки и подача — всё, что уже разобрано из таблицы', cat:1, ready:true},
+  {id:'qbase', title:'База вопросов', sub:'Все вопросы с ответами списком, без теста: фильтры по виду и теме', cat:1, ready:true},
   {id:'video', title:'Видео', sub:'Записи разборов и приготовления', cat:1},
   {id:'theory',title:'Теория алкоголя', sub:'Категории напитков, крепость, органолептика', cat:2},
   {id:'sanpin',title:'СанПиН', sub:'Санитарные требования и проверки', cat:1, sub2:[
@@ -1431,6 +1623,7 @@ function renderKB(){
       <b>${x.title}${x.ready?'':' <span style="color:var(--ink-3);font-size:12px">скоро</span>'}</b>
       <span>${x.sub||''}</span>
       ${x.ready&&x.id==='tech'?`<div class="tags"><i>${REC.recipes.length} карт</i><i>поиск по ингредиенту</i></div>`:''}
+      ${x.id==='qbase'?`<div class="tags"><i>${BANK.length} вопросов</i></div><div id="fQbase"></div>`:''}
       ${sub||''}
     </button>`;
   const hidden = KB.filter(x=>!kbVisible(x)).length;
@@ -1447,6 +1640,7 @@ function renderKB(){
 $('#kbList').addEventListener('click', e=>{
   const b = e.target.closest('[data-kbgo]'); if(!b) return;
   if(b.dataset.kbgo==='tech') openRef();
+  else if(b.dataset.kbgo==='qbase') openQB();
 });
 
 /* ---------- технологические карты ---------- */
@@ -1826,43 +2020,47 @@ function showLogin(msg){
   if(msg) $('#logErr').textContent = msg;
 }
 
+// Регистрация открыта временно: пока приложение раздаётся просто ссылкой.
+// Когда появятся пригласительные ссылки, вкладка «Регистрация» будет требовать код.
+let LOG_MODE = 'in';
+$('#logMode').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-lm]'); if(!b) return;
+  LOG_MODE = b.dataset.lm;
+  $('#logMode').querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
+  $('#logGo').textContent = LOG_MODE==='in' ? 'Войти' : 'Зарегистрироваться';
+  $('#logPass').setAttribute('autocomplete', LOG_MODE==='in' ? 'current-password' : 'new-password');
+  $('#logErr').classList.add('hidden');
+});
+
 $('#logGo').addEventListener('click', async ()=>{
   const mail = $('#logMail').value.trim(), pass = $('#logPass').value;
+  const label = LOG_MODE==='in' ? 'Войти' : 'Зарегистрироваться';
   if(!mail || !pass){ showLogin('Введите почту и пароль'); return; }
-  $('#logGo').textContent = 'Проверяем…';
+  if(LOG_MODE==='up' && pass.length < 6){ showLogin('Пароль короче шести символов'); return; }
+  $('#logGo').textContent = LOG_MODE==='in' ? 'Проверяем…' : 'Создаём аккаунт…';
   try{
-    setSession(await sbAuth('token?grant_type=password', {email:mail, password:pass}));
-    $('#logGo').textContent = 'Войти';
+    if(LOG_MODE==='up'){
+      const r = await sbAuth('signup', {email:mail, password:pass});
+      // при включённом автоподтверждении signup сразу отдаёт сессию;
+      // если нет — логинимся отдельным запросом
+      if(r.access_token) setSession(r);
+      else setSession(await sbAuth('token?grant_type=password', {email:mail, password:pass}));
+    } else {
+      setSession(await sbAuth('token?grant_type=password', {email:mail, password:pass}));
+    }
+    $('#logGo').textContent = label;
     await pullProgress();
     await pushProgress(true);      // то, что накопилось до входа, тоже уходит в аккаунт
     renderHome();
   }catch(e){
-    $('#logGo').textContent = 'Войти';
-    showLogin(String(e.message||e).includes('credentials') ? 'Неверная почта или пароль' : e.message);
+    $('#logGo').textContent = label;
+    const msg = String(e.message||e);
+    showLogin(msg.includes('credentials') ? 'Неверная почта или пароль'
+            : msg.includes('already registered') ? 'Такая почта уже зарегистрирована — войдите'
+            : msg);
   }
 });
 $('#logPass').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#logGo').click(); });
-
-// Ссылку показываем текстом: библиотеку QR тянуть некуда, а ссылку удобно
-// отправить себе в мессенджер. Копирование — одним тапом.
-function showHandoff(){
-  if(!AUTH || !AUTH.refresh) return;
-  const url = location.origin + location.pathname + '#s=' + encodeURIComponent(AUTH.refresh);
-  $('#handoffBox').innerHTML = `<div class="note" style="margin-top:10px;text-align:left">
-      Откройте эту ссылку на телефоне — вход перенесётся без пароля, а весь прогресс
-      с этого устройства сольётся с телефонным. Ссылка срабатывает один раз.
-      <div class="handoff" id="hoUrl">${url}</div>
-      <button class="ghostbtn" id="hoCopy" style="margin-top:8px">Скопировать ссылку</button>
-    </div>`;
-  $('#hoCopy').onclick = async ()=>{
-    try{ await navigator.clipboard.writeText(url); $('#hoCopy').textContent = 'Скопировано'; }
-    catch(e){
-      const r = document.createRange(); r.selectNodeContents($('#hoUrl'));
-      const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-      $('#hoCopy').textContent = 'Выделено — скопируйте вручную';
-    }
-  };
-}
 
 function logout(){
   AUTH = null;
@@ -1941,8 +2139,11 @@ document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
   if(!m) return;
   if(m==='errors') openErrors();
+  else if(m==='learn') show('learn');
+  else if(m==='profile') renderProfile();
+  else if(m==='roadmap') renderRoadmap();
   else if(m==='attest') show('attest');
-  else if(m==='sched' || m==='paystat' || m==='card') openStub(m);
+  else if(m==='sched' || m==='paystat' || m==='card' || m==='training') openStub(m);
   else if(m==='kb') renderKB();
   else if(m==='ref') openRef();
   else if(m==='setup') renderSetup();
@@ -1980,7 +2181,9 @@ $('#prev').addEventListener('click', e=>{ e.stopPropagation(); prevQ(); });
 document.addEventListener('click', e=>{
   const b = e.target.closest('.scrhead .back'); if(!b) return;
   closeRecipe();
-  if(b.dataset.kb) renderKB(); else renderHome();
+  if(b.dataset.kb) renderKB();
+  else if(b.dataset.learn) show('learn');
+  else renderHome();
 });
 document.addEventListener('keydown',e=>{
   if($('#quiz').classList.contains('hidden')) return;
