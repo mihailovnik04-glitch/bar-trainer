@@ -1,0 +1,16 @@
+// собирается scripts/42_pwa.py — руками не править
+const CACHE = 'barquiz-d9967fae';
+const FILES = ["./", "index.html", "bank.js", "recipes.js", "media.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys()
+    .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    .then(() => self.clients.claim()));
+});
+// Кеш первым: тренажёр обязан открываться в баре без сети. Свежесть даёт новый CACHE.
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});
