@@ -286,6 +286,23 @@ details.cheat b{color:var(--ink)}
 /* Ответ дан — клавиатура больше не нужна. Прячем её, иначе вердикт «Верно/Неверно»
    уезжает под нижний край экрана (проверяли на iPhone 12). */
 .numbox.answered .pad{display:none}
+/* Отклик на нажатие: на телефоне палец закрывает кнопку, и без вспышки непонятно,
+   засчиталось ли касание. Анимация короче времени между двумя нажатиями. */
+.pad button{position:relative;overflow:hidden}
+.pad button.hit{background:var(--acc);color:#17140F;transform:scale(.93)}
+.pad button.hit::after{content:'';position:absolute;inset:0;background:#fff;opacity:.35;
+  animation:flash .18s ease-out forwards}
+@keyframes flash{to{opacity:0}}
+.numbox .disp.hit{border-color:var(--acc)}
+/* На компьютере число набирают с клавиатуры — экранные цифры только занимают место.
+   Кнопка «Ответ» остаётся: ей же отвечает мышь. */
+/* базовое правило идёт до медиазапроса, иначе перебивает его при равной специфичности */
+.padhint{display:none;font-size:12.5px;color:var(--ink-3);margin-top:10px}
+@media (hover:hover) and (pointer:fine){
+  .pad{grid-template-columns:1fr}
+  .pad button[data-d], .pad button[data-del]{display:none}
+  .padhint{display:block}
+}
 /* Клавиатура ужимается по высоте экрана: на маленьком телефоне с длинным составом
    всё равно должна помещаться целиком, без прокрутки до кнопки «Ответ». */
 .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(5px,1vh,8px);
@@ -867,6 +884,8 @@ function padHTML(q, nBlanks){
       <span class="unit">${q.unit||''}</span>
     </div>
     ${many?`<div class="hint" id="slotHint"></div>`:''}
+    <div class="padhint">Введите число с клавиатуры · Enter — ответить${
+      many?' · Tab или Enter — следующее поле':''}</div>
     <div class="pad">
       ${[1,2,3,4,5,6,7,8,9].map(d=>`<button data-d="${d}">${d}</button>`).join('')}
       <button data-d="," class="sub">,</button>
@@ -902,6 +921,7 @@ function initPad(q, nBlanks){
          many:nBlanks>1, locked:false};
   $('#numbox').addEventListener('click', e=>{
     const b=e.target.closest('button'); if(!b || PAD.locked) return;
+    hit(b);
     if(b.dataset.d!=null){
       const d=b.dataset.d;
       if(d===',' && (PAD.vals[PAD.i].includes(',')||!PAD.vals[PAD.i])) return;
@@ -921,6 +941,19 @@ function initPad(q, nBlanks){
     PAD.i=+tr.dataset.b; padDraw();
   });
   padDraw();
+}
+
+// Вспышка на кнопке. Вызывается и при клике, и при вводе с физической клавиатуры,
+// чтобы на компьютере было видно, какая цифра ушла в поле.
+function hit(b){
+  if(!b) return;
+  b.classList.remove('hit');
+  void b.offsetWidth;                   // перезапуск анимации при быстрых нажатиях
+  b.classList.add('hit');
+  setTimeout(()=>b.classList.remove('hit'), 170);
+  const d = $('#disp');
+  if(d){ d.classList.add('hit'); setTimeout(()=>d.classList.remove('hit'), 170); }
+  if(navigator.vibrate) try{ navigator.vibrate(8); }catch(e){}
 }
 
 const numOf = t => parseFloat((t||'').replace(',','.'));
@@ -1737,10 +1770,12 @@ document.addEventListener('keydown',e=>{
   if(opts.length && /^[1-4]$/.test(e.key)){ const b=opts[+e.key-1]; if(b&&!b.disabled) b.click(); }
   // своя клавиатура слушает и физическую: цифры, запятая, Backspace, Enter
   if(PAD && !PAD.locked && $('#numbox')){
-    if(/^[0-9]$/.test(e.key)) $('#numbox').querySelector(`[data-d="${e.key}"]`).click();
-    else if(e.key===','||e.key==='.') $('#numbox').querySelector('[data-d=","]').click();
-    else if(e.key==='Backspace'){ e.preventDefault(); $('#numbox').querySelector('[data-del]').click(); }
-    else if(e.key==='Enter'){ e.preventDefault(); $('#ok').click(); }
+    const press = sel => { const b=$('#numbox').querySelector(sel); if(b){ hit(b); b.click(); } };
+    if(/^[0-9]$/.test(e.key)) press(`[data-d="${e.key}"]`);
+    else if(e.key===','||e.key==='.') press('[data-d=","]');
+    else if(e.key==='Backspace'){ e.preventDefault(); press('[data-del]'); }
+    else if(e.key==='Enter'){ e.preventDefault(); press('#ok'); }
+    else if(e.key==='Tab' && PAD.many){ e.preventDefault(); press('#ok'); }
   }
   if(e.key==='ArrowLeft') prevQ();
 });
