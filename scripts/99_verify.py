@@ -50,17 +50,25 @@ for n in BY:
 bank = json.load(open(ROOT / 'data' / 'bank.json', encoding='utf-8'))
 by = {re.sub(r'\s+/\s+', ' · ', d['name']): d for d in src}
 for q in bank:
-    if q['drink'] == 'Эталон украшения' or q['cat'] == 'glass' or q['t'] != 'num':
+    if q['drink'] == 'Эталон украшения' or q['cat'] in ('glass', 'method') or q['t'] != 'num':
         continue
     d = by.get(q['drink'])
     if not d: fails.append(f'вопрос про несуществующий напиток: {q["drink"]}'); continue
-    label = re.search(r'«(.+?)»', q['q']).group(1)
+    m0 = re.search(r'«(.+?)»', q['q'])
+    if not m0: continue
+    # в вопросе про украшение к названию приписана форма нарезки: «Лимон · вейдж»
+    label = m0.group(1).split(' · ')[0]
+    is_gar = 'на украшение' in q['q']
+    is_sum = 'ВСЕГО' in q['q']
     vals = []
     for n, a in d['ing']:
-        if re.sub(r'\s*укр\.?\s*\*?$', '', n.strip()) == label:
-            m = re.search(r'(\d+[.,]?\d*)\s*(?:мл|гр)', a.replace(',', '.'))
-            if m: vals.append(float(m.group(1)))
-    if not any(abs(v - q['a']) < 0.01 for v in vals):
+        gar = 'укр' in n.lower()
+        if re.sub(r'\s*укр\.?\s*\*?$', '', n.strip()) != label: continue
+        if not is_sum and gar != is_gar: continue
+        m = re.search(r'(\d+[.,]?\d*)\s*(?:мл|гр)', a.replace(',', '.'))
+        if m: vals.append(float(m.group(1)))
+    ok = abs(sum(vals) - q['a']) < 0.01 if is_sum else any(abs(v - q['a']) < 0.01 for v in vals)
+    if not ok:
         fails.append(f'неверный ответ в банке: {q["drink"]} / {label} = {q["a"]}, в файле {vals}')
 
 # ---------- 3б. пак «пропущенная граммовка»: показанное + ответ должны дать выход
@@ -80,6 +88,32 @@ for q in bank:
         fails.append(f'в fill-вопросе не одна пропущенная строка: {q["drink"]} ({blanks})')
     elif abs(shown + q['a'] - total) > 0.01:
         fails.append(f'fill не сходится с выходом: {q["drink"]} — {shown}+{q["a"]} != {total}')
+
+# ---------- 3в. пак «впиши весь состав»: сумма показанного и всех ответов = выход
+for q in bank:
+    if q['t'] != 'mfill':
+        continue
+    shown, blanks = 0.0, 0
+    for n, a in q['rows']:
+        if a == '':
+            blanks += 1
+            continue
+        m = re.match(r'^(\d+[.,]?\d*)\s*мл\.?$', a.strip())
+        if m: shown += float(m.group(1).replace(',', '.'))
+    total = float(re.match(r'^(\d+[.,]?\d*)', q['total']).group(1).replace(',', '.'))
+    if blanks != len(q['a']):
+        fails.append(f'mfill: пропусков {blanks}, ответов {len(q["a"])} — {q["drink"]}')
+    elif abs(shown + sum(q['a']) - total) > 0.01:
+        fails.append(f'mfill не сходится с выходом: {q["drink"]}')
+
+# ---------- 3г. в банке не должно быть двух одинаковых вопросов
+seen_q = {}
+for q in bank:
+    k = (q['drink'], q['t'], q['q'])
+    seen_q.setdefault(k, 0)
+    seen_q[k] += 1
+for k, n in seen_q.items():
+    if n > 1: fails.append(f'вопрос повторяется {n} раза: {k}')
 
 # ---------- 4. разброс дистракторов
 for q in bank:

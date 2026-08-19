@@ -34,6 +34,57 @@ def fmtnum(v):
 def clean_gar(n):
     return re.sub(r'\s*укр\.?\s*\*?$', '', n.strip())
 
+# ------------------------------------------------- формы нарезки украшений
+# Лист «Украшения» — это эталон «продукт + форма = вес» (Апельсин вейдж 30, кольцо 25,
+# полкольца 12,5 …). В рецептах форма не написана, есть только вес, поэтому форму
+# восстанавливаем по весу. Ничего не досочиняем: если вес не совпал с эталоном
+# и не кратен ему — форму не пишем.
+GAR_FORMS = {}          # (продукт, вес) -> форма
+
+def _load_forms():
+    rows = {r[0]: r[1:] for r in cells['Украшения']}
+    for r0 in (1, 17, 33, 51, 67, 83):
+        head, wline = rows.get(r0), rows.get(r0 + 1)
+        if not head or not wline:
+            continue
+        for col in (1, 3, 5, 7):
+            lab = re.sub(r'\s*\(на фото[^)]*\)', '', head[col - 1]).strip()
+            m = re.search(r'(\d+[.,]?\d*)\s*гр', wline[col])
+            if not lab or ' - ' not in lab or not m:
+                continue
+            prod, _, form = lab.partition(' - ')
+            GAR_FORMS[(prod.strip().lower(), float(m.group(1).replace(',', '.')))] = form.strip()
+
+_load_forms()
+PLURAL = {'вейдж': 'вейджа', 'кольцо': 'кольца', 'полкольца': 'полукольца'}
+
+def gar_form(name, amount):
+    """'Лимон', '50 гр' -> '2 вейджа'. Пусто, если форму не восстановить однозначно."""
+    m = re.search(r'(\d+[.,]?\d*)\s*гр', (amount or '').replace(',', '.'))
+    if not m:
+        return ''
+    v, prod = float(m.group(1)), name.strip().lower()
+    if (prod, v) in GAR_FORMS:                       # вес совпал с эталоном
+        return GAR_FORMS[(prod, v)]
+    # кратные порции: «2 вейджа», «3 кольца». Только цитрусовая лестница — у веточек
+    # и соцветий кратность из веса не выводится.
+    best = None
+    for (p, base), form in GAR_FORMS.items():
+        if p != prod or form not in PLURAL or base <= 0:
+            continue
+        k = v / base
+        if abs(k - round(k)) < 1e-9 and 2 <= round(k) <= 4:
+            k = round(k)
+            if best is None or k < best[0]:
+                best = (k, form)
+    return f'{best[0]} {PLURAL[best[1]]}' if best else ''
+
+def gar_label(name, amount):
+    """Название украшения с формой нарезки: 'Лимон · вейдж'."""
+    base = clean_gar(name)
+    f = gar_form(base, amount)
+    return f'{base} · {f}' if f else base
+
 def pretty(name):
     return re.sub(r'\s+/\s+', ' · ', name)
 
@@ -72,70 +123,131 @@ def steps_for(v):
     if v <= 60: return [10, 15, 20, 30]
     return [20, 25, 30, 40]
 
-def distractors(v, unit, rnd):
-    """3 неверных варианта: отклонение 10–40 в зависимости от масштаба"""
+def distractors(v, unit, rnd, fine=False):
+    """3 неверных варианта. Обычно отклонение 10–40, а для веса украшений (fine)
+    шаг 1–3 грамма: розмарин 4 гр против варианта 24 гр — не вопрос, а подарок."""
     out = []
     tries = 0
-    while len(out) < 3 and tries < 300:
+    steps = [1, 2, 3] if fine else None
+    while len(out) < 3 and tries < 400:
         tries += 1
-        d = rnd.choice(steps_for(v)) * rnd.choice([-1, 1])
-        cand = v + d
+        d = rnd.choice(steps or steps_for(v)) * rnd.choice([-1, 1])
+        cand = round(v + d, 1)
         if cand <= 0: continue
-        if v >= 100: cand = round(cand / 5) * 5
+        if not fine and v >= 100: cand = round(cand / 5) * 5
         if cand == v or cand in out: continue
-        if abs(cand - v) < 10: continue
+        if not fine and abs(cand - v) < 10: continue
         out.append(cand)
+    k = 0
+    while len(out) < 3:                  # веса 1–2 гр не дают трёх вариантов вниз
+        k += 1
+        cand = round(v + k, 1)
+        if cand not in out and cand != v: out.append(cand)
     return out
 
 rnd = random.Random(7)
 GLASS_SKIP = {'', 'Шоты', 'Шоты (4 шт)', 'Стакан с собой', 'Бутылка ПЭТ', 'Ступенька М', 'Кувшин 1 л'}
+# «Хайбол 620», «Ступенька XL» и «Стакан XL» — одна и та же посуда, в исходнике
+# записана тремя способами. Сводим к одному варианту, иначе у вопроса про посуду
+# оказывается два правильных ответа сразу.
+XL = 'Хайбол 620 (Стакан XL)'
 GLASS_NORM = {'Олд фешн': 'Олд Фешн', 'Банка c ручкой': 'Банка с ручкой',
-              'Хайбол 620 / Ступенька XL': 'Хайбол 620 (Ступенька XL)'}
+              'Хайбол 620 / Ступенька XL': XL, 'Ступенька XL': XL, 'Стакан XL': XL}
 GLASS_RARE = {'Айриш', 'Сова', 'Череп', 'Шейкер', 'Стэмлесс', 'Слинг', 'Жестяная банка',
-              'Ступенька XL', 'Ступенька L', 'Хайбол 620 (Ступенька XL)', 'Олд Фешн',
+              'Ступенька L', XL, 'Олд Фешн',
               'Джин Тоник', 'Цветная чашка', 'Банка с ручкой'}
+
+# ------------------------------------------------- вид отдачи
+# «Клубничный лимонад 1 л» и «Клубничный лимонад» — разные напитки с разными граммовками.
+# Без пометки вопрос неотличим, поэтому вид отдачи пишем всегда, где он есть.
+ICED = {d['name'].split(' / Безо льда')[0] for d in drinks if 'Безо льда' in d['name']}
+
+def tag_of(d):
+    nm = d['name']
+    if d['sheet'] == 'Самовывоз':
+        return 'на самовывоз · бутылка ПЭТ'
+    if 'с собой' in nm.lower():
+        return 'с собой'
+    parts = []
+    if 'Кувшин' in nm: parts.append('кувшин 1 л')
+    if 'Безо льда' in nm: parts.append('безо льда')
+    elif nm in ICED: parts.append('со льдом')     # у напитка есть парный вариант безо льда
+    return ' · '.join(parts)
 
 for d in drinks:
     if 'Безо льда' in d['name']:
         continue
     nm = pretty(d['name'])
+    tg = tag_of(d)
+    sh = d['sheet']
     im = thumb(d['photos'][0] if d['photos'] else '')
     seen = {}
     for n, a in d['ing']:
         seen[n] = seen.get(n, 0) + 1
-    # --- граммовки компонентов и украшений
+    # Один и тот же продукт может идти и в состав, и на украшение — с разными весами
+    # (розмарин во взваре: 3 гр внутрь, 4 гр сверху). Суммировать их нельзя, поэтому
+    # такие строки спрашиваем раздельно и обязательно уточняем, о чём речь.
+    both = {clean_gar(n).lower() for n, _ in d['ing'] if 'укр' in n.lower()} &            {n.strip().lower() for n, _ in d['ing'] if 'укр' not in n.lower()}
+
+    def ask(n, a, is_gar):
+        p = parse_amount(a)
+        if not p: return
+        v, unit, hint = p
+        label = clean_gar(n)
+        dual = label.lower() in both
+        if is_gar:
+            cat = 'garnish'
+            title = gar_label(n, a)
+            q = (f'Сколько «{title}» идёт ТОЛЬКО на украшение?' if dual
+                 else f'Сколько «{title}» идёт на украшение?')
+            hint = ''            # «указано как 4 шт - 8 гр» просили убрать
+        else:
+            cat = 'grams'
+            q = (f'Сколько «{label}» идёт в состав, не считая украшения?' if dual
+                 else f'Сколько «{label}»?')
+        kw = dict(cat=cat, drink=nm, tag=tg, sh=sh, q=q, hint=hint, img=im,
+                  sk=f'{nm}|{label}|{"g" if is_gar else "i"}')
+        # 60% — ввод точного значения, 40% — выбор из четырёх (заказчик просил больше выбора)
+        if rnd.random() < 0.40:
+            opts = distractors(v, unit, rnd, fine=(is_gar and unit == 'гр' and v <= 30)) + [v]
+            rnd.shuffle(opts)
+            add(t='choice', opts=[f'{fmtnum(o)} {unit}' for o in opts], ai=opts.index(v), **kw)
+        else:
+            add(t='num', unit=unit, a=v, **kw)
+
     for n, a in d['ing']:
         if seen[n] > 1:      # неоднозначные повторы (напр. водка в двух парах шотов)
             continue
-        p = parse_amount(a)
-        if not p: continue
-        v, unit, hint = p
-        is_gar = 'укр' in n.lower()
-        label = clean_gar(n)
-        cat = 'garnish' if is_gar else 'grams'
-        q = (f'Сколько «{label}» идёт в украшение?' if is_gar
-             else f'Сколько «{label}»?')
-        # 60% — ввод точного значения, 40% — выбор из четырёх (заказчик просил больше выбора)
-        if rnd.random() < 0.40:
-            opts = distractors(v, unit, rnd) + [v]
-            rnd.shuffle(opts)
-            add(t='choice', cat=cat, drink=nm, q=q, hint=hint, img=im,
-                opts=[f'{fmtnum(o)} {unit}' for o in opts],
-                ai=opts.index(v))
-        else:
-            add(t='num', cat=cat, drink=nm, q=q, hint=hint, img=im, unit=unit, a=v)
-    # --- посуда (немного, только характерная)
+        ask(n, a, 'укр' in n.lower())
+
+    # --- суммарный вес продукта, который идёт и внутрь, и на украшение
+    for prod in sorted(both):
+        vals = []
+        for n, a in d['ing']:
+            if clean_gar(n).lower() != prod: continue
+            p = parse_amount(a)
+            if p: vals.append(p)
+        if len(vals) != 2 or vals[0][1] != vals[1][1]: continue
+        total_v, unit = vals[0][0] + vals[1][0], vals[0][1]
+        label = next(clean_gar(n) for n, _ in d['ing'] if clean_gar(n).lower() == prod)
+        add(t='num', cat='grams', drink=nm, tag=tg, sh=sh, img=im, unit=unit, a=total_v,
+            q=f'Сколько «{label}» уходит на напиток ВСЕГО — и в состав, и на украшение?',
+            hint='', sk=f'{nm}|{label}|sum')
+
+    # --- посуда (немного, только характерная). Картинку не показываем:
+    # по фото бокал угадывается без знания рецептуры.
     gl = GLASS_NORM.get(d['glass'], d['glass'])
     if gl not in GLASS_SKIP and gl in GLASS_RARE:
-        add(t='glass', cat='glass', drink=nm, q='В какой посуде подаётся напиток?', img=im, ans=gl)
+        add(t='glass', cat='glass', drink=nm, tag=tg, sh=sh, img='',
+            q='В какой посуде подаётся напиток?', ans=gl, sk=f'{nm}|glass')
     # --- чем украшается
-    gars = [clean_gar(n) for n, a in d['ing'] if 'укр' in n.lower()]
+    gars = [gar_label(n, a) for n, a in d['ing'] if 'укр' in n.lower()]
     if len(gars) >= 2:
-        add(t='garset', cat='garnish', drink=nm, q='Чем украшается напиток?', img=im,
-            ans=' + '.join(gars))
+        add(t='garset', cat='garnish', drink=nm, tag=tg, sh=sh, img=im,
+            q='Чем украшается напиток?', ans=' + '.join(gars), sk=f'{nm}|garset')
 
-# ------------------------------------------------- пак «пропущенная граммовка»
-# Показываем состав целиком, одну строку прячем — её нужно вписать. Вопрос честный только там,
+# ------------------------------------------------- паки на состав целиком
+# Показываем состав, часть строк прячем — их нужно вписать. Вопрос честный только там,
 # где выход равен сумме жидкостей: тогда пропуск действительно вычисляется, а не угадывается.
 ML = re.compile(r'^(\d+[.,]?\d*)\s*мл\.?$')
 
@@ -143,7 +255,7 @@ def ml(a):
     m = ML.match((a or '').strip())
     return float(m.group(1).replace(',', '.')) if m else None
 
-fill_n = 0
+fill_n = mfill_n = 0
 for d in drinks:
     if 'Безо льда' in d['name']:
         continue
@@ -156,15 +268,58 @@ for d in drinks:
         continue                                  # мало строк или повторы названий
     if abs(sum(r[2] for r in liq) - out) > 0.01:
         continue                                  # выход не сходится — пропуск не вычислить
-    nm = pretty(d['name'])
-    hide = rnd.choice(liq)                        # какую строку прячем
-    add(t='fill', cat='grams', drink=nm,
-        q='Одна граммовка стёрлась. Какая?',
-        unit='мл', a=hide[2], total=d['total'],
-        rows=[[n, ('' if (n, a) == (hide[0], hide[1]) else a)] for n, a, _ in rows],
+    nm, tg, sh = pretty(d['name']), tag_of(d), d['sheet']
+    im = thumb(d['photos'][0] if d['photos'] else '')
+
+    # 1. одна стёртая строка. Раньше брали одну случайную на напиток — теперь до трёх разных,
+    # каждая со своим id: банк растёт, а вопросы остаются разными.
+    for hide in rnd.sample(liq, min(3, len(liq))):
+        add(t='fill', cat='grams', drink=nm, tag=tg, sh=sh,
+            q=f'Одна граммовка стёрлась. Сколько «{hide[0]}»?',
+            unit='мл', a=hide[2], total=d['total'],
+            rows=[[n, ('' if (n, a) == (hide[0], hide[1]) else a)] for n, a, _ in rows],
+            img=im, hint='выход = сумма всех жидкостей',
+            sk=f'{nm}|{hide[0]}|fill')
+        fill_n += 1
+
+    # 2. вписать несколько граммовок сразу: 3–4 строки или весь состав.
+    #    Ответ — список чисел в порядке строк, проверяется каждое поле отдельно.
+    packs = []
+    if len(liq) >= 4:
+        packs.append(('part', rnd.sample(liq, min(4, len(liq)))))
+    packs.append(('all', liq))
+    for kind, chosen in packs:
+        hidden = {(r[0], r[1]) for r in chosen}
+        order = [r for r in rows if (r[0], r[1]) in hidden]
+        add(t='mfill', cat='grams', drink=nm, tag=tg, sh=sh,
+            q=('Впишите все граммовки состава' if kind == 'all'
+               else f'Впишите граммовки: {len(order)} строки'),
+            unit='мл', total=d['total'],
+            a=[r[2] for r in order],
+            rows=[[n, ('' if (n, a) in hidden else a)] for n, a, _ in rows],
+            img=im, hint='', sk=f'{nm}|{kind}|mfill')
+        mfill_n += 1
+
+# ------------------------------------------------- метод приготовления (редко)
+# CLAUDE.md раньше запрещал такие вопросы; заказчик 20.08.2026 попросил добавить их,
+# но именно редко — один вопрос на каждый пятый напиток.
+TECHS = ['Билд', 'Шейк', 'Стир', 'Блендер', 'Питчер']
+method_n = 0
+for i, d in enumerate(drinks):
+    if 'Безо льда' in d['name'] or i % 5:
+        continue
+    nm, tech = pretty(d['name']), d['tech']
+    if tech not in TECHS:
+        continue
+    others = [t for t in TECHS if t != tech]
+    rnd.shuffle(others)
+    opts = others[:3] + [tech]
+    rnd.shuffle(opts)
+    add(t='choice', cat='method', drink=nm, tag=tag_of(d), sh=d['sheet'],
+        q='Каким способом готовится напиток?', hint='',
         img=thumb(d['photos'][0] if d['photos'] else ''),
-        hint='выход = сумма всех жидкостей')
-    fill_n += 1
+        opts=opts, ai=opts.index(tech), sk=f'{nm}|tech')
+    method_n += 1
 
 # ------------------------------------------------- эталонные веса украшений
 G = {}
@@ -184,8 +339,18 @@ for bi, r0 in enumerate(rows_):
         if not p: continue
         v, unit, _ = p
         cand = sorted([i for i in pics if r0 <= i['row'] <= r1 and i['col'] == col], key=lambda i: i['row'])
-        add(t='num', cat='garnish', drink='Эталон украшения', q=f'Сколько весит: {label}?',
-            hint='', img=thumb(cand[0]['file'] if cand else ''), unit=unit, a=v)
+        im = thumb(cand[0]['file'] if cand else '')
+        add(t='num', cat='garnish', drink='Эталон украшения', tag='эталон', sh='Украшения',
+            q=f'Сколько весит: {label}?', hint='', img=im, unit=unit, a=v,
+            sk=f'эталон|{label}|num')
+        # Заказчик просил больше вопросов про вес ягод и украшений: тот же эталон
+        # ещё раз в виде выбора, с шагом в 1–3 грамма.
+        opts = distractors(v, unit, rnd, fine=True) + [v]
+        rnd.shuffle(opts)
+        add(t='choice', cat='garnish', drink='Эталон украшения', tag='эталон', sh='Украшения',
+            q=f'Какой вес у: {label}?', hint='', img=im,
+            opts=[f'{fmtnum(o)} {unit}' for o in opts], ai=opts.index(v),
+            sk=f'эталон|{label}|choice')
 
 # ------------------------------------------------- варианты для посуды
 glasses = sorted({q['ans'] for q in bank if q['t'] == 'glass'})
@@ -242,11 +407,11 @@ for ch in CHAPTERS:
             'name': pretty(nm), 'ch': ch['id'],
             # порядок исходника: справочник умеет показывать карточки так же, как они идут
             # в Excel (лист + строка), а не только по главам пособия
-            'sh': d['sheet'], 'si': SRC_ORDER[nm],
+            'sh': d['sheet'], 'si': SRC_ORDER[nm], 'tag': tag_of(d),
             'tech': TECH_FIX.get(nm, d['tech']), 'glass': GLASS_NORM.get(d['glass'], d['glass']),
             'straw': d['straw'], 'total': d['total'],
             'ing': [[n, a] for n, a in d['ing_main']],
-            'gar': [[clean_gar(n), a] for n, a in d['garnish']],
+            'gar': [[gar_label(n, a), a] for n, a in d['garnish']],
             'method': d['method'], 'serve': d['serve'],
             'formula': ' + '.join(f'{v} {n}' for v, n in d['formula']),
             'key': MNEMO.get(nm) or FAMILY_NOTE.get(nm, ''),
@@ -264,18 +429,38 @@ for q in bank:                       # связываем вопрос с кар
 import hashlib
 seen = {}
 for q in bank:
-    q['id'] = hashlib.sha1(f"{q['drink']}|{q['cat']}|{q['q']}".encode()).hexdigest()[:10]
+    q['id'] = hashlib.sha1(f"{q.get('sk','')}|{q['drink']}|{q['cat']}|{q['t']}|{q['q']}".encode()).hexdigest()[:10]
     seen.setdefault(q['id'], []).append(q['q'])
 dupes = {k: v for k, v in seen.items() if len(v) > 1}
 if dupes:
     raise SystemExit(f'Коллизия id вопросов: {dupes}')
 
-json.dump({'chapters': CH_LIST, 'sheets': SHEETS, 'recipes': recipes},
+# ------------------------------------------------- справочник посуды
+# Отдельного листа с посудой в исходнике нет, поэтому собираем её из самих напитков:
+# бокал -> какая трубочка -> что в нём подаётся. Никакой отсебятины, только связки из карточек.
+GLASSWARE = {}
+for r in recipes:
+    g = r['glass']
+    if not g: continue
+    e = GLASSWARE.setdefault(g, {'name': g, 'straw': {}, 'drinks': [], 'img': ''})
+    if r['straw']: e['straw'][r['straw']] = e['straw'].get(r['straw'], 0) + 1
+    e['drinks'].append(r['name'])
+    if not e['img']: e['img'] = r['img']
+glassware = []
+for g in sorted(GLASSWARE, key=lambda k: -len(GLASSWARE[k]['drinks'])):
+    e = GLASSWARE[g]
+    straws = sorted(e['straw'].items(), key=lambda kv: -kv[1])
+    glassware.append({'name': e['name'], 'img': e['img'],
+                      'straw': ' · '.join(k for k, _ in straws),
+                      'n': len(e['drinks']), 'drinks': e['drinks']})
+
+json.dump({'chapters': CH_LIST, 'sheets': SHEETS, 'glassware': glassware, 'recipes': recipes},
           open(f'{W}/data/recipes.json', 'w', encoding='utf-8'), ensure_ascii=False)
 json.dump(MEDIA, open(f'{W}/data/media.json', 'w', encoding='utf-8'), ensure_ascii=False)
 json.dump(bank, open(f'{W}/data/bank.json', 'w', encoding='utf-8'), ensure_ascii=False)
 from collections import Counter
 print('вопросов:', len(bank), Counter((q['cat'], q['t']) for q in bank))
-print('пак «пропущенная граммовка»:', fill_n)
+print('пак «пропущенная граммовка»:', fill_n, '· «впиши состав»:', mfill_n, '· метод:', method_n)
 print('рецептов:', len(recipes), '· картинок:', len(MEDIA))
 print('посуда:', glasses)
+print('справочник посуды:', len(glassware), 'видов')
