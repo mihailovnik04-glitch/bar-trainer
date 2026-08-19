@@ -62,8 +62,9 @@ with sync_playwright() as pw:
     pg.click('#ref .scrhead .back'); pg.wait_for_timeout(200)
     pg.click('#kb .scrhead .back'); pg.wait_for_timeout(200)
 
-    # --- база вопросов
-    pg.click('[data-mode="qbase"]'); pg.wait_for_timeout(300)
+    # --- база вопросов (живёт внутри тренажёра)
+    pg.click('[data-mode="setup"]'); pg.wait_for_timeout(300)
+    pg.click('#setup [data-mode="qbase"]'); pg.wait_for_timeout(300)
     check('база вопросов открылась', pg.locator('#qbase').is_visible())
     n_all = pg.locator('.qrow').count()
     pg.click('#qbCat [data-cat="glass"]'); pg.wait_for_timeout(200)
@@ -72,7 +73,7 @@ with sync_playwright() as pw:
     check('вопрос в избранном', pg.evaluate('Object.keys(store.favQ).length') == 1)
     pg.click('#qbase .scrhead .back'); pg.wait_for_timeout(200)
 
-    # --- настройка тренировки
+    # --- настройка тренажёра
     pg.click('[data-mode="setup"]'); pg.wait_for_timeout(300)
     check('экран настройки', pg.locator('#setup').is_visible())
     n_all = int(pg.evaluate('trainPool(OPT).length'))
