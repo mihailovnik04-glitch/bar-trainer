@@ -409,21 +409,21 @@ details.cheat b{color:var(--ink)}
 
   <!-- ГЛАВНАЯ -->
   <div id="home">
-    <h1>Тренажёр<br>Tokyo-City</h1>
+    <h1>Tokyo-City<br>для сотрудников</h1>
     <p class="lead" id="homeLead">Бар: составы, украшения и посуда. Только цифры и факты — ничего лишнего.</p>
     <div class="stats">
       <div><b id="stTotal">0</b><span>ПОПЫТОК</span></div>
       <div><b id="stBest">—</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
       <div><b id="stAcc">—</b><span>ТОЧНОСТЬ</span></div>
     </div>
-    <button class="mode" data-mode="exam">
-      <b>Экзамен</b>
-      <span>75 вопросов, время ограничено. Экзамен идёт до конца, ошибки видно на счётчике: зачёт — не больше трёх.</span>
+    <button class="mode" data-mode="attest">
+      <b>Аттестация</b>
+      <span>Пробная — когда угодно и сколько угодно раз. Назначенную ставит управляющий.</span>
       <div class="tags"><i>75 вопросов</i><i>30:00</i><i>зачёт до 3 ошибок</i></div>
     </button>
     <button class="mode" data-mode="setup">
-      <b>Тренировка</b>
-      <span>Без таймера и лимита ошибок. Можно выбрать вид напитков, только избранное или только то, что ещё не решено.</span>
+      <b>Тренажёр</b>
+      <span>Без таймера и лимита ошибок. Внутри — настройки, разбор ошибок и вся база вопросов.</span>
       <div class="tags"><i id="bankSize">0 вопросов</i><i>с настройками</i></div>
       <div id="fTrain"></div>
     </button>
@@ -433,15 +433,20 @@ details.cheat b{color:var(--ink)}
       <div class="tags"><i id="refSize">0 карт</i><i id="kbSize">4 раздела</i></div>
       <div id="fRef"></div>
     </button>
-    <button class="mode" data-mode="qbase">
-      <b>База вопросов</b>
-      <span>Все вопросы с ответами списком — просто посмотреть, без теста. Фильтр по виду напитка и по теме.</span>
-      <div class="tags"><i id="qbSize">0 вопросов</i><i>с ответами</i></div>
-      <div id="fQbase"></div>
+    <button class="mode" data-mode="sched">
+      <b>График</b>
+      <span>Смены по точке, как в таблице. Смотрят бармены, менеджер и директор.</span>
+      <div class="tags"><i>скоро</i></div>
     </button>
-    <button class="mode ghost" data-mode="errors">
-      <b>Мои ошибки <span style="display:inline;color:var(--bad)" id="errCount"></span></b>
-      <span>Разбор, статистика по коктейлям и повторное решение того, что не получилось.</span>
+    <button class="mode" data-mode="paystat">
+      <b>Статистика</b>
+      <span>Зарплата, опоздания и часы за период.</span>
+      <div class="tags"><i>скоро</i></div>
+    </button>
+    <button class="mode" data-mode="card">
+      <b>Моя карта</b>
+      <span>Скидочная карта сотрудника и код для отметки о приходе.</span>
+      <div class="tags"><i>скоро</i></div>
     </button>
     <div class="foot" id="homeFoot">Работает без интернета · данные хранятся только в этом браузере</div>
   </div>
@@ -467,7 +472,7 @@ details.cheat b{color:var(--ink)}
 
   <!-- НАСТРОЙКА ТРЕНИРОВКИ -->
   <div id="setup" class="hidden">
-    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Тренировка</h1></div>
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Тренажёр</h1></div>
     <div id="resume"></div>
     <div class="subhead">Что показывать</div>
     <div class="seg" id="setPool">
@@ -488,6 +493,17 @@ details.cheat b{color:var(--ink)}
     </label>
     <div class="note" id="setCount"></div>
     <button class="go wide" id="setGo">Начать</button>
+    <div class="subhead">Ещё в тренажёре</div>
+    <button class="mode ghost" data-mode="errors">
+      <b>Мои ошибки <span style="display:inline;color:var(--bad)" id="errCount"></span></b>
+      <span>Разбор, слабые коктейли и повторное решение того, что не получилось.</span>
+    </button>
+    <button class="mode ghost" data-mode="qbase">
+      <b>База вопросов</b>
+      <span>Все вопросы с ответами списком, без теста. Фильтры по виду и теме.</span>
+      <div class="tags"><i id="qbSize">0 вопросов</i></div>
+      <div id="fQbase"></div>
+    </button>
   </div>
 
   <!-- БАЗА ВОПРОСОВ -->
@@ -497,6 +513,29 @@ details.cheat b{color:var(--ink)}
     <div class="chips-row" id="qbSheet"></div>
     <div class="chips-row" id="qbCat"></div>
     <div id="qbList"></div>
+  </div>
+
+  <!-- АТТЕСТАЦИЯ -->
+  <div id="attest" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Аттестация</h1></div>
+    <p class="lead">Порядок вопросов случайный, время ограничено. Аттестация идёт до конца:
+      ошибки видно на счётчике, зачёт — не больше трёх.</p>
+    <button class="mode" id="attTry">
+      <b>Пробная</b>
+      <span>Тренировочный прогон: проходить можно сколько угодно раз, результат остаётся на устройстве.</span>
+      <div class="tags"><i>75 вопросов</i><i>30:00</i></div>
+    </button>
+    <button class="mode ghost">
+      <b>Назначенная <span style="color:var(--ink-3);font-size:12px">скоро</span></b>
+      <span>Аттестацию ставит управляющий: дата, состав вопросов и результат уходят в общий отчёт.</span>
+    </button>
+  </div>
+
+  <!-- ЗАГЛУШКИ РАЗДЕЛОВ -->
+  <div id="stub" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1 id="stubTitle"></h1></div>
+    <p class="lead" id="stubLead"></p>
+    <div id="stubBody"></div>
   </div>
 
   <!-- БАЗА ЗНАНИЙ -->
@@ -663,7 +702,7 @@ function pickExam(){
 
 /* ---------- состояние ---------- */
 let S = null, tick = null;
-const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb'];
+const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb','attest','stub'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
@@ -678,7 +717,7 @@ function renderHome(){
   $('#stAcc').textContent = st.total ? Math.round(st.right/st.total*100)+'%' : '—';
   $('#bankSize').textContent = BANK.length+' вопросов';
   $('#qbSize').textContent = BANK.length+' вопросов';
-  $('#refSize').textContent = REC.recipes.length+' рецептов';
+  $('#refSize').textContent = REC.recipes.length+' карт';
   const n = Object.keys(store.errors).length;
   $('#errCount').textContent = n ? '· '+n : '';
   $('#fTrain').innerHTML = filtHTML(filtWords(OPT,'train'), 'setup', 'opt');
@@ -1140,8 +1179,8 @@ function finish(why){
   save();
   const passed = S.mode!=='exam' ? null : (why==='end' && S.wrong <= EX_LIVES);
   const title = S.mode==='exam'
-      ? (passed ? 'Экзамен сдан' : (why==='time' ? 'Время вышло' : `Не сдан · ошибок ${S.wrong}`))
-      : (S.mode==='train' ? 'Тренировка завершена' : 'Разбор ошибок завершён');
+      ? (passed ? 'Аттестация сдана' : (why==='time' ? 'Время вышло' : `Не сдано · ошибок ${S.wrong}`))
+      : (S.mode==='train' ? 'Тренажёр завершён' : 'Разбор ошибок завершён');
   const acc = S.done.length ? Math.round(S.right/S.done.length*100) : 0;
   const errN = Object.keys(store.errors).length;
   $('#result').innerHTML = `
@@ -1331,6 +1370,42 @@ addEventListener('popstate', ()=>closeRecipe(true));
 $('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeRecipe(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRecipe(); });
 
+/* ---------- разделы, которых ещё нет ---------- */
+/* Каркас заведён заранее: сотрудники видят, что будет, а доступ уже раздаётся
+   по роли и категории. Роль и точка приходят из аккаунта, сам сотрудник их не меняет. */
+const STUBS = {
+  sched: {title:'График', lead:'Смены по точке — как в таблице, только читать.',
+    roles:['staff','manager','director','owner'],
+    items:[['Моя точка','Смены, подмены и кто на смене'],
+           ['Все точки','Видят менеджер и директор'],
+           ['Заявки','Отгул, подмена, перенос смены']]},
+  paystat: {title:'Статистика', lead:'Деньги и дисциплина за выбранный период.',
+    roles:['staff','manager','director','owner'],
+    items:[['Зарплата','Начисления по сменам и итог за период'],
+           ['Опоздания','Отметки прихода и задержки'],
+           ['Часы','Отработанные часы по дням и итогом']]},
+  card: {title:'Моя карта', lead:'Карта сотрудника и отметка о приходе.',
+    roles:['staff','manager','director','owner'],
+    items:[['Скидочная карта','Показать на кассе — скидка сотрудника'],
+           ['Код прихода','QR для отметки начала смены']]},
+};
+
+function openStub(id){
+  const x = STUBS[id]; if(!x) return;
+  $('#stubTitle').textContent = x.title;
+  $('#stubLead').textContent = x.lead;
+  const venue = (AUTH && AUTH.venue) || 'точка не назначена';
+  const role = ROLE_NAME[(AUTH && AUTH.role) || 'staff'] || 'сотрудник';
+  $('#stubBody').innerHTML =
+    x.items.map(([t,d])=>`<button class="mode ghost"><b>${t}
+        <span style="color:var(--ink-3);font-size:12px">скоро</span></b>
+      <span>${d}</span></button>`).join('') +
+    `<div class="note">Доступ: ${role} · ${venue}. Раздел появится позже — сейчас это каркас.</div>`;
+  show('stub');
+}
+
+const ROLE_NAME = {staff:'сотрудник', manager:'менеджер', director:'директор', owner:'владелец'};
+
 /* ---------- база знаний ---------- */
 /* Разделы заведены заранее: наполнение появится позже, но структура уже видна,
    и по ней раздаётся доступ. Направления (бар, кухня, зал) тоже заложены — сейчас
@@ -1512,7 +1587,7 @@ function renderRef(filter){
 }
 
 function openRef(){
-  $('#refSize').textContent = REC.recipes.length+' рецептов';
+  $('#refSize').textContent = REC.recipes.length+' карт';
   // Шпаргалки свёрнуты в одну строку: раскрытые, они занимали весь первый экран,
   // и до составов коктейлей приходилось листать.
   $('#cheats').innerHTML =
@@ -1679,6 +1754,7 @@ function setSession(j){
           // сотрудник их не выбирает
           cat:meta.category || (AUTH&&AUTH.cat) || 1,
           dept:meta.dept || (AUTH&&AUTH.dept) || 'bar',
+          venue:meta.venue || (AUTH&&AUTH.venue) || '',
           role:meta.role || (AUTH&&AUTH.role) || 'staff',
           exp:Date.now() + (j.expires_in||3600)*1000};
   saveAuth();
@@ -1864,9 +1940,13 @@ document.addEventListener('click', e=>{
   }
 }, true);
 
+$('#attTry').addEventListener('click', ()=>start('exam'));
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
+  if(!m) return;
   if(m==='errors') openErrors();
+  else if(m==='attest') show('attest');
+  else if(m==='sched' || m==='paystat' || m==='card') openStub(m);
   else if(m==='kb') renderKB();
   else if(m==='ref') openRef();
   else if(m==='setup') renderSetup();
