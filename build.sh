@@ -1,19 +1,55 @@
 #!/usr/bin/env bash
-# Полная сборка. Шаги 00–02 нужны только если менялся исходный .xlsx.
+# Полная сборка.
+#   ./build.sh            обычная пересборка из готовых data/*.json
+#   ./build.sh --full     + заново распарсить data/source.xlsx (нужен исходник)
+#   ./build.sh --deploy   + положить тренажёр в docs/ и запушить на GitHub Pages
+# Флаги можно совмещать: ./build.sh --full --deploy
 set -e
 cd "$(dirname "$0")"
+
+# Интерпретатор: сначала venv проекта (Windows и Unix кладут его по-разному), потом системный.
+if   [ -x .venv/Scripts/python.exe ]; then PY=.venv/Scripts/python.exe
+elif [ -x .venv/bin/python ];        then PY=.venv/bin/python
+elif command -v python3 >/dev/null;  then PY=python3
+else echo 'Не найден Python. Создайте venv: python -m venv .venv && .venv/Scripts/pip install -r requirements.txt'; exit 1
+fi
+export PYTHONUTF8=1   # без него Windows читает json в cp1251 и портит кириллицу
+
+FULL=; DEPLOY=
+for a in "$@"; do
+  case "$a" in
+    --full)   FULL=1 ;;
+    --deploy) DEPLOY=1 ;;
+    *) echo "Неизвестный флаг: $a"; exit 1 ;;
+  esac
+done
+
 mkdir -p build
 
-if [ "$1" = "--full" ]; then
-  python3 scripts/00_extract.py
-  python3 scripts/01_parse.py > /dev/null
-  python3 scripts/02_enrich.py > /dev/null
+if [ -n "$FULL" ]; then
+  $PY scripts/00_extract.py
+  $PY scripts/01_parse.py > /dev/null
+  $PY scripts/02_enrich.py > /dev/null
 fi
 
-python3 scripts/assemble.py      # data/*.json + scripts/pages*.py -> build/index.html
-python3 scripts/30_pdf.py        # build/index.html -> build/manual.pdf
-python3 scripts/31_stamp.py      # + номера страниц -> build/manual_final.pdf
-python3 scripts/40_bank.py       # -> data/bank.json + thumb/
-python3 scripts/41_app.py        # -> build/app/{index.html,bank.js} + build/quiz.html
-python3 scripts/99_verify.py     # проверки; ненулевой код = сборка невалидна
+$PY scripts/assemble.py      # data/*.json + scripts/pages*.py -> build/index.html
+$PY scripts/30_pdf.py        # build/index.html -> build/manual.pdf
+$PY scripts/31_stamp.py      # + номера страниц -> build/manual_final.pdf
+$PY scripts/40_bank.py       # -> data/bank.json + thumb/
+$PY scripts/41_app.py        # -> build/app/{index.html,bank.js} + build/quiz.html
+$PY scripts/42_pwa.py        # -> build/app/{manifest.webmanifest,sw.js,icon-*.png}
+$PY scripts/99_verify.py     # проверки; ненулевой код = сборка невалидна
 echo "Готово: build/manual_final.pdf, build/app/, build/quiz.html"
+
+if [ -n "$DEPLOY" ]; then
+  rm -f docs/*
+  cp build/app/* docs/
+  git add -A docs/                       # add до проверки: новые файлы diff иначе не видит
+  if git diff --cached --quiet -- docs/; then
+    echo "Публикация: в docs/ ничего не изменилось, пуш не нужен."
+  else
+    git commit -q -m "тренажёр: пересборка $(date +%Y-%m-%d)"
+    git push -q origin main
+    echo "Опубликовано: https://mihailovnik04-glitch.github.io/bar-trainer/ (обновится за 1-2 минуты)"
+  fi
+fi

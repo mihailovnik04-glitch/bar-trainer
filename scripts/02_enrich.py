@@ -2,7 +2,7 @@
 import json, re
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
-d=json.load(open(ROOT/'data'/'drinks.json'))
+d=json.load(open(ROOT/'data'/'drinks.json', encoding='utf-8'))
 
 GLASS_FIX = {
  'Кабуки':'Жестяная банка',
@@ -68,6 +68,6 @@ for x in d:
         if v: parts.append((v.group(1), short(n).lower()))
     x['formula']=parts
     out.append(x)
-json.dump(out, open(ROOT/'data'/'drinks2.json','w'), ensure_ascii=False, indent=1)
+json.dump(out, open(ROOT/'data'/'drinks2.json','w', encoding='utf-8'), ensure_ascii=False, indent=1)
 for x in out:
     print(f"{x['name'][:33]:35}|{x['tech']:8}|{x['glass'][:20]:22}|{x['straw'][:20]:22}|{x['total']}")

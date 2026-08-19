@@ -35,7 +35,7 @@ def dump_cells():
                 rows.append([r] + row)
         out[ws.title] = rows
         print(f'  {ws.title}: {len(rows)} строк')
-    json.dump(out, open(ROOT / 'data' / 'data.json', 'w'), ensure_ascii=False)
+    json.dump(out, open(ROOT / 'data' / 'data.json', 'w', encoding='utf-8'), ensure_ascii=False)
 
 
 def dump_images():
@@ -73,7 +73,7 @@ def dump_images():
         imgs.sort(key=lambda i: (i['row'], i['col']))
         result[name] = imgs
         print(f'  {name}: {len(imgs)} картинок')
-    json.dump(result, open(ROOT / 'data' / 'images.json', 'w'), ensure_ascii=False, indent=1)
+    json.dump(result, open(ROOT / 'data' / 'images.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 
 
 def dump_media():

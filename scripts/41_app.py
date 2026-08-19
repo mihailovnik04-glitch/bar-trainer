@@ -16,16 +16,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 J = dict(ensure_ascii=False, separators=(',', ':'))
 
-bank = json.load(open(ROOT / 'data' / 'bank.json'))
+bank = json.load(open(ROOT / 'data' / 'bank.json', encoding='utf-8'))
 for q in bank:                       # выкидываем пустые поля
     for k in list(q):
         if q[k] in ('', None):
             del q[k]
 bank_blob = json.dumps(bank, **J)
-media_blob = json.dumps(json.load(open(ROOT / 'data' / 'media.json')), **J)
-rec_blob = json.dumps(json.load(open(ROOT / 'data' / 'recipes.json')), **J)
+media_blob = json.dumps(json.load(open(ROOT / 'data' / 'media.json', encoding='utf-8')), **J)
+rec_blob = json.dumps(json.load(open(ROOT / 'data' / 'recipes.json', encoding='utf-8')), **J)
 
-tpl = (ROOT / 'quiz_template.html').read_text()
+tpl = (ROOT / 'quiz_template.html').read_text(encoding='utf-8')
 out = ROOT / 'build' / 'app'
 out.mkdir(parents=True, exist_ok=True)
 
@@ -34,10 +34,10 @@ split = tpl.replace('<script id="bank" type="application/json">__BANK__</script>
                     '<script src="bank.js"></script>')
 split = split.replace("const BANK = JSON.parse(document.getElementById('bank').textContent);",
                       'const BANK = window.BANK;')
-(out / 'index.html').write_text(split)
-(out / 'media.js').write_text('window.IMG=' + media_blob + ';')
-(out / 'recipes.js').write_text('window.RECIPES=' + rec_blob + ';')
-(out / 'bank.js').write_text('window.BANK=' + bank_blob + ';')
+(out / 'index.html').write_text(split, encoding='utf-8')
+(out / 'media.js').write_text('window.IMG=' + media_blob + ';', encoding='utf-8')
+(out / 'recipes.js').write_text('window.RECIPES=' + rec_blob + ';', encoding='utf-8')
+(out / 'bank.js').write_text('window.BANK=' + bank_blob + ';', encoding='utf-8')
 
 # --- всё одним файлом
 single = tpl.replace('<script src="media.js"></script>',
@@ -45,7 +45,7 @@ single = tpl.replace('<script src="media.js"></script>',
 single = single.replace('<script src="recipes.js"></script>',
                         '<script>window.RECIPES=' + rec_blob + ';</script>')
 single = single.replace('__BANK__', bank_blob)
-(ROOT / 'build' / 'quiz.html').write_text(single)
+(ROOT / 'build' / 'quiz.html').write_text(single, encoding='utf-8')
 
 kb = lambda s: f'{len(s)//1024} КБ'
 print(f'index.html {kb(split)} · media.js {kb(media_blob)} · recipes.js {kb(rec_blob)} · '

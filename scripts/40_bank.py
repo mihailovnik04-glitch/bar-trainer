@@ -6,9 +6,9 @@ from PIL import Image
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 W = str(ROOT)
-drinks = json.load(open(f'{W}/data/drinks2.json'))
-cells = json.load(open(f'{W}/data/data.json'))
-imgs = json.load(open(f'{W}/data/images.json'))
+drinks = json.load(open(f'{W}/data/drinks2.json', encoding='utf-8'))
+cells = json.load(open(f'{W}/data/data.json', encoding='utf-8'))
+imgs = json.load(open(f'{W}/data/images.json', encoding='utf-8'))
 
 SIMPLE = re.compile(r'^(\d+[.,]?\d*)\s*(мл|гр)\.?$')
 WITHGR = re.compile(r'(\d+[.,]?\d*)\s*гр')
@@ -215,10 +215,22 @@ for q in bank:                       # связываем вопрос с кар
     if q['drink'] in R_INDEX:
         q['r'] = R_INDEX[q['drink']]
 
+# Стабильный id: позиция в массиве меняется при любой перегенерации банка, и тогда
+# сохранённые ошибки «съезжали» на чужие вопросы. Хеш от напитка и текста вопроса
+# переживает пересборку; меняется только если сам вопрос переформулирован.
+import hashlib
+seen = {}
+for q in bank:
+    q['id'] = hashlib.sha1(f"{q['drink']}|{q['cat']}|{q['q']}".encode()).hexdigest()[:10]
+    seen.setdefault(q['id'], []).append(q['q'])
+dupes = {k: v for k, v in seen.items() if len(v) > 1}
+if dupes:
+    raise SystemExit(f'Коллизия id вопросов: {dupes}')
+
 json.dump({'chapters': CH_LIST, 'recipes': recipes},
-          open(f'{W}/data/recipes.json', 'w'), ensure_ascii=False)
-json.dump(MEDIA, open(f'{W}/data/media.json', 'w'), ensure_ascii=False)
-json.dump(bank, open(f'{W}/data/bank.json', 'w'), ensure_ascii=False)
+          open(f'{W}/data/recipes.json', 'w', encoding='utf-8'), ensure_ascii=False)
+json.dump(MEDIA, open(f'{W}/data/media.json', 'w', encoding='utf-8'), ensure_ascii=False)
+json.dump(bank, open(f'{W}/data/bank.json', 'w', encoding='utf-8'), ensure_ascii=False)
 from collections import Counter
 print('вопросов:', len(bank), Counter((q['cat'], q['t']) for q in bank))
 print('рецептов:', len(recipes), '· картинок:', len(MEDIA))

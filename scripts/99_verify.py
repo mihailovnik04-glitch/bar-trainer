@@ -18,8 +18,8 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 fails = []
 
 # ---------- 1. дословность
-src = json.load(open(ROOT / 'data' / 'drinks.json'))
-page = (ROOT / 'build' / 'index.html').read_text()
+src = json.load(open(ROOT / 'data' / 'drinks.json', encoding='utf-8'))
+page = (ROOT / 'build' / 'index.html').read_text(encoding='utf-8')
 plain = html.unescape(re.sub(r'<[^>]+>', '', page))
 for x in src:
     for n, a in x['ing']:
@@ -47,7 +47,7 @@ for n in BY:
     if n not in used: fails.append(f'напиток не попал ни в одну главу: {n}')
 
 # ---------- 3. ответы банка
-bank = json.load(open(ROOT / 'data' / 'bank.json'))
+bank = json.load(open(ROOT / 'data' / 'bank.json', encoding='utf-8'))
 by = {re.sub(r'\s+/\s+', ' · ', d['name']): d for d in src}
 for q in bank:
     if q['drink'] == 'Эталон украшения' or q['cat'] == 'glass' or q['t'] != 'num':

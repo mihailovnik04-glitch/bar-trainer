@@ -268,10 +268,28 @@ const src = k => IMG[k] || '';
 const $ = s=>document.querySelector(s);
 const EX_N = 75, EX_LIVES = 3, EX_SEC = 30*60;
 
-/* ---------- хранилище ---------- */
-const KEY='barquiz.v1';
+/* ---------- хранилище ----------
+   v2: ошибки хранятся по стабильному q.id (хеш от напитка и текста вопроса), а не по
+   позиции в BANK — позиция меняется при каждой перегенерации банка, и ошибки съезжали
+   на чужие вопросы. Данные из v1 переносим один раз: там ключ — старый индекс. */
+const KEY='barquiz.v2', KEY_OLD='barquiz.v1';
+const BY_ID = {}; BANK.forEach(q=>BY_ID[q.id]=q);
 let store = {errors:{}, stats:{runs:0, best:0, right:0, total:0}};
-try{ const raw=localStorage.getItem(KEY); if(raw) store=Object.assign(store, JSON.parse(raw)); }catch(e){}
+try{
+  const raw=localStorage.getItem(KEY);
+  if(raw){ store=Object.assign(store, JSON.parse(raw)); }
+  else{
+    const old=localStorage.getItem(KEY_OLD);
+    if(old){
+      const o=JSON.parse(old);
+      store.stats=Object.assign(store.stats, o.stats||{});
+      for(const [i,n] of Object.entries(o.errors||{})){
+        const q=BANK[+i]; if(q) store.errors[q.id]=n;   // индекс -> id по текущему банку
+      }
+      localStorage.setItem(KEY, JSON.stringify(store));
+    }
+  }
+}catch(e){}
 const save = ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
 
 /* ---------- утилиты ---------- */
@@ -323,7 +341,7 @@ function start(mode){
   let list;
   if(mode==='exam') list = pickExam();
   else if(mode==='train') list = shuffle(BANK.slice());
-  else list = shuffle(Object.keys(store.errors).map(i=>BANK[+i]).filter(Boolean));
+  else list = shuffle(Object.keys(store.errors).map(id=>BY_ID[id]).filter(Boolean));
   if(!list.length){ renderHome(); return; }
   S = {mode, list, k:0, right:0, wrong:0, lives:EX_LIVES, left:EX_SEC, done:[], t0:Date.now()};
   show('quiz');
@@ -401,11 +419,11 @@ function grade(ok){
   store.stats.total++; if(ok) store.stats.right++;
   if(ok){
     S.right++;
-    if(store.errors[q.i]){ delete store.errors[q.i]; }
+    if(store.errors[q.id]){ delete store.errors[q.id]; }
     fb.className='fb ok show'; fb.innerHTML='Верно';
   } else {
     S.wrong++; if(S.mode==='exam') S.lives--;
-    store.errors[q.i] = (store.errors[q.i]||0)+1;
+    store.errors[q.id] = (store.errors[q.id]||0)+1;
     fb.className='fb bad show';
     fb.innerHTML = 'Правильный ответ: <b>'+answerText(q)+'</b>'
       + '<span style="opacity:.55;font-size:12px"> · тап или Enter — дальше</span>'
@@ -644,19 +662,19 @@ function openRef(){
 
 /* ---------- ошибки ---------- */
 function openErrors(){
-  const ids = Object.keys(store.errors).map(Number).filter(i=>BANK[i]);
+  const ids = Object.keys(store.errors).filter(id=>BY_ID[id]);
   $('#errLead').textContent = ids.length
     ? 'Здесь остаются вопросы, где вы ошиблись. Ответите верно — вопрос уйдёт из списка.'
     : 'Пока пусто. Ошибки будут появляться здесь автоматически.';
   $('#errActions').innerHTML = ids.length
     ? '<button class="go" id="redo">Перерешать · '+ids.length+'</button><button class="ghostbtn" id="clear">Очистить</button>'
     : '<button class="ghostbtn" id="home2">На главную</button>';
-  $('#errList').innerHTML = ids.map(i=>{
-    const q=BANK[i];
+  $('#errList').innerHTML = ids.map(id=>{
+    const q=BY_ID[id];
     return `<button class="item" data-r="${q.r??''}">${q.img?`<img src="${src(q.img)}">`:''}
       <div class="txt"><b>${qLabel(q)}</b><span>${q.drink}</span></div>
       <div style="text-align:right"><div class="ans">${answerText(q)}</div>
-      <div class="cnt">×${store.errors[i]}</div></div></button>`;
+      <div class="cnt">×${store.errors[id]}</div></div></button>`;
   }).join('');
   show('errors');
   if(ids.length){

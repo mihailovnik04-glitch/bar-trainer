@@ -7,7 +7,7 @@ from pages2 import coffee_html, tea_html, pf_html, garnish_html, standards_html
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 W = str(ROOT)
-CSS = open(f'{W}/style.css').read()
+CSS = open(f'{W}/style.css', encoding='utf-8').read()
 
 REF = [
     dict(id='coffee', num='12', title='Кофе', sub='Матрица напитков и технология эспрессо-бара',
@@ -125,5 +125,5 @@ q&&q.addEventListener('input',()=>{{
 if __name__ == '__main__':
     (ROOT/'build').mkdir(exist_ok=True)
     h = build_html()
-    open(f'{W}/build/index.html', 'w').write(h)
+    open(f'{W}/build/index.html', 'w', encoding='utf-8').write(h)
     print('html', round(len(h) / 1e6, 2), 'MB')

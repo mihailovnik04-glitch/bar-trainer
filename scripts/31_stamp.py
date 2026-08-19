@@ -4,12 +4,24 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from pypdf import PdfReader, PdfWriter
 import io, glob
-
-f = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
-pdfmetrics.registerFont(TTFont('DJ', f))
-
 from pathlib import Path
+
 ROOT = Path(__file__).resolve().parent.parent
+
+# Во встроенных шрифтах reportlab нет кириллицы, поэтому подкладываем системный TTF.
+# Порядок: свой шрифт в fonts/ (если положат), DejaVu на Linux, Arial/Segoe на Windows.
+CANDIDATES = [
+    ROOT / 'fonts' / 'DejaVuSans.ttf',
+    Path('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'),
+    Path('/Library/Fonts/Arial Unicode.ttf'),
+    Path('C:/Windows/Fonts/arial.ttf'),
+    Path('C:/Windows/Fonts/segoeui.ttf'),
+]
+f = next((p for p in CANDIDATES if p.exists()), None)
+if f is None:
+    raise SystemExit('Не найден TTF с кириллицей. Положите DejaVuSans.ttf в fonts/ '
+                     'или укажите свой путь в CANDIDATES (scripts/31_stamp.py).')
+pdfmetrics.registerFont(TTFont('DJ', str(f)))
 src = PdfReader(str(ROOT/'build'/'manual.pdf'))
 buf = io.BytesIO()
 c = canvas.Canvas(buf, pagesize=A4)

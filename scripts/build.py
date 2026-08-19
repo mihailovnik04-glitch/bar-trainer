@@ -5,9 +5,9 @@ from config import CHAPTERS, MNEMO, TECH_FIX, FAMILY_NOTE
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 W = str(ROOT)
-drinks = json.load(open(f'{W}/data/drinks2.json'))
-imgs = json.load(open(f'{W}/data/images.json'))
-cells = json.load(open(f'{W}/data/data.json'))
+drinks = json.load(open(f'{W}/data/drinks2.json', encoding='utf-8'))
+imgs = json.load(open(f'{W}/data/images.json', encoding='utf-8'))
+cells = json.load(open(f'{W}/data/data.json', encoding='utf-8'))
 BY = {}
 for d in drinks:
     d['tech'] = TECH_FIX.get(d['name'], d['tech'])
