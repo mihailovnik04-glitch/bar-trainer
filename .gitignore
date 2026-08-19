@@ -4,3 +4,5 @@ data/_media/
 thumb/
 __pycache__/
 .venv/
+
+.vercel
