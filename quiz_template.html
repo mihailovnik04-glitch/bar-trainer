@@ -450,7 +450,7 @@ details.cheat b{color:var(--ink)}
       <span>Тренажёр, аттестация и база знаний — всё, что нужно выучить и где это посмотреть.</span>
       <div class="tags"><i id="bankSize">0 вопросов</i><i id="refSize">0 карт</i></div>
     </button>
-    <button class="mode ghost hidden" data-mode="roadmap" id="rmBtn">
+    <button class="mode hidden" data-mode="roadmap" id="rmBtn">
       <b>Роадмап</b>
       <span>План развития: что готово, что в работе, что впереди. Видите только вы.</span>
     </button>
@@ -460,11 +460,9 @@ details.cheat b{color:var(--ink)}
   <!-- ОБУЧЕНИЕ -->
   <div id="learn" class="hidden">
     <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Обучение</h1></div>
-    <div class="stats">
-      <div><b id="stTotal">0</b><span>ПОПЫТОК</span></div>
-      <div><b id="stBest">—</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
-      <div><b id="stAcc">—</b><span>ТОЧНОСТЬ</span></div>
-    </div>
+    <details class="cheatbox" id="learnStat"><summary>Моя статистика</summary>
+      <div id="learnStatBody"></div>
+    </details>
     <button class="mode" data-mode="setup">
       <b>Тренажёр</b>
       <span>Без таймера и лимита ошибок. Внутри — настройки подбора и разбор ошибок.</span>
@@ -1251,6 +1249,7 @@ function finish(why){
     </div>
     <div class="row"><button class="ghostbtn" id="toHome">На главную</button></div>`;
   show('result');
+  renderLearnStat();
   $('#again').onclick = ()=>{ if(S.mode==='train') renderSetup(); else start(S.mode); };
   $('#toErr').onclick = openErrors;
   $('#toHome').onclick = renderHome;
@@ -1471,6 +1470,33 @@ function bar(label, val, max, color){
     <i><u style="width:${pct}%;background:${color||'var(--acc)'}"></u></i></div>`;
 }
 
+/* Статистика по тестам живёт в «Обучении»: в профиле будут смены, опоздания и зарплата.
+   Свёрнута в одну строку — открывается по тапу, чтобы не занимать первый экран. */
+function renderLearnStat(){
+  const box = $('#learnStatBody'); if(!box) return;
+  const st = store.stats, m = myStats();
+  const acc = st.total ? Math.round(st.right/st.total*100) : 0;
+  const catName = {grams:'состав', garnish:'украшения', glass:'посуда', method:'метод',
+                   coffee:'кофе', tea:'чай', pf:'заготовки', serve:'подача'};
+  const maxCat = Math.max(1, ...Object.values(m.byCat));
+  box.innerHTML = `
+    <div class="stats" style="margin:10px 0 14px">
+      <div><b>${st.runs}</b><span>АТТЕСТАЦИЙ</span></div>
+      <div><b>${st.best||'—'}</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
+      <div><b>${acc}%</b><span>ТОЧНОСТЬ</span></div>
+    </div>
+    ${bar('Знаю: решено верно', m.solved, m.total, 'var(--ok)')}
+    ${bar('Осталось в разборе ошибок', m.errs, Math.max(m.errs, 40), 'var(--bad)')}
+    ${bar('В избранном', m.fav, Math.max(m.fav, 20))}
+    ${Object.keys(m.byCat).length ? `<div class="subhead">Где ошибаюсь чаще</div>` +
+      Object.entries(m.byCat).sort((a,b)=>b[1]-a[1])
+        .map(([c,n])=>bar(catName[c]||c, n, maxCat, 'var(--bad)')).join('') : ''}
+    ${m.weak.length ? `<div class="subhead">Слабые позиции</div>` +
+      m.weak.map(([n,c])=>`<div class="qrow"><div class="hd"><b>${n}</b>
+          <div class="a" style="color:var(--bad)">${c}</div></div></div>`).join('')
+      : '<div class="note">Ошибок пока нет — статистика появится после первых прогонов.</div>'}`;
+}
+
 function renderProfile(){
   const st = store.stats, m = myStats();
   const acc = st.total ? Math.round(st.right/st.total*100) : 0;
@@ -1485,21 +1511,14 @@ function renderProfile(){
         <span>${ROLE_NAME[acc_.role||'staff']} · ${acc_.cat||1}-я категория${
           acc_.venue?' · '+acc_.venue:''}</span></div>
     </div>
+    <div class="subhead">Работа</div>
     <div class="stats">
-      <div><b>${st.runs}</b><span>АТТЕСТАЦИЙ</span></div>
-      <div><b>${st.best||'—'}</b><span>ЛУЧШИЙ РЕЗУЛЬТАТ</span></div>
-      <div><b>${acc}%</b><span>ТОЧНОСТЬ</span></div>
+      <div><b>—</b><span>СМЕН ЗА МЕСЯЦ</span></div>
+      <div><b>—</b><span>ОПОЗДАНИЙ</span></div>
+      <div><b>—</b><span>ЧАСОВ</span></div>
     </div>
-    <div class="subhead">Прогресс по банку</div>
-    ${bar('Решено верно хотя бы раз', m.solved, m.total, 'var(--ok)')}
-    ${bar('Осталось ошибок в разборе', m.errs, Math.max(m.errs, 40), 'var(--bad)')}
-    ${bar('В избранном', m.fav, Math.max(m.fav, 20))}
-    ${Object.keys(m.byCat).length ? `<div class="subhead">Где ошибаюсь</div>` +
-      Object.entries(m.byCat).sort((a,b)=>b[1]-a[1])
-        .map(([c,n])=>bar(catName[c]||c, n, maxCat, 'var(--bad)')).join('') : ''}
-    ${m.weak.length ? `<div class="subhead">Слабые позиции</div>` +
-      m.weak.map(([n,c])=>`<div class="qrow"><div class="hd"><b>${n}</b>
-          <div class="a" style="color:var(--bad)">${c}</div></div></div>`).join('') : ''}
+    <div class="note">Смены, опоздания, часы и зарплата появятся вместе с графиком
+      и системой учёта прихода. Статистика по тестам — в разделе «Обучение».</div>
     <div class="subhead">Вход на другом устройстве</div>
     <div id="qrBox"></div>
     <div class="row"><button class="ghostbtn" id="profLogout">Выйти из аккаунта</button></div>`;
@@ -1529,7 +1548,9 @@ const ROADMAP = [
   {st:'plan', t:'Статистика', d:'зарплата, опоздания, часы за период'},
   {st:'plan', t:'Моя карта', d:'скидочная карта сотрудника для скидки на кассе'},
   {st:'plan', t:'Отметка о приходе', d:'связать с готовой внешней системой учёта: QR-код в приложении, отпечаток пальца, карточка сотрудника'},
-  {st:'plan', t:'Направления', d:'кухня и зал: свои карты, вопросы и аттестации'},
+  {st:'plan', t:'Фирменный стиль Tokyo-City', d:'переодеть приложение в айдентику сети: цвета, шрифты, логотип, иконки и оформление карточек вместо нынешней тёмно-янтарной темы'},
+  {st:'plan', t:'Подразделения', d:'кухня и зал: свои карты, вопросы и аттестации'},
+  {st:'plan', t:'База знаний · теория по продукции', d:'авторские разборы по позициям меню и подборка книг'},
   {st:'plan', t:'Отчёт по смене', d:'кто как сдаёт: сводка по сотрудникам для управляющего'},
 ];
 const RM_NAME = {done:'готово', work:'в работе', plan:'план'};
@@ -1606,22 +1627,50 @@ const KB = [
   {id:'qbase', title:'База вопросов', sub:'Все вопросы с ответами списком, без теста: фильтры по виду и теме', cat:1, ready:true},
   {id:'video', title:'Видео', sub:'Записи разборов и приготовления', cat:1},
   {id:'theory',title:'Теория алкоголя', sub:'Категории напитков, крепость, органолептика', cat:2},
+  {id:'product',title:'Теория по продукции', sub:'Авторские материалы по нашей продукции и подборка книг', cat:1, sub2:[
+      {id:'product-own', title:'Авторская теория', sub:'Разборы по позициям меню, написанные внутри'},
+      {id:'product-books', title:'Книги', sub:'Подборка литературы по бару и продукту'}]},
   {id:'sanpin',title:'СанПиН', sub:'Санитарные требования и проверки', cat:1, sub2:[
       {id:'sanpin-in', title:'Внутренние проверки', sub:'Чек-листы смены и бара'},
       {id:'sanpin-rpn',title:'РПН', sub:'Требования Роспотребнадзора'}]},
 ];
+// Подразделения: сотрудник видит своё, менеджер и выше могут переключаться —
+// им нужно смотреть материалы соседей.
 const DEPTS = [
   {id:'bar', title:'Бар', ready:true},
   {id:'kitchen', title:'Кухня'},
   {id:'hall', title:'Зал'},
 ];
+const canSwitchDept = () => ['manager','director','brand','owner'].includes((AUTH && AUTH.role) || 'staff');
+let KB_DEPT = null;                       // выбранное подразделение, по умолчанию своё
 
 // Категория приходит из аккаунта (app_metadata.category) — по умолчанию 1, самая младшая.
 const myCat = () => (AUTH && AUTH.cat) || 1;
 const kbVisible = x => myCat() >= (x.cat || 1);
 
 function renderKB(){
-  $('#kbLead').textContent = 'Бар · ' + myCat() + '-я категория. Разделы ниже открыты для вашей категории.';
+  if(!KB_DEPT) KB_DEPT = (AUTH && AUTH.dept) || 'bar';
+  const dept = DEPTS.find(d=>d.id===KB_DEPT) || DEPTS[0];
+  const mine = (AUTH && AUTH.dept) || 'bar';
+  // Переключатель есть только у менеджера и выше; остальным просто подписано их подразделение.
+  const head = canSwitchDept()
+    ? `<div class="subhead">Подразделение</div><div class="chips-row" id="kbDept">` +
+      DEPTS.map(d=>`<button class="chip${d.id===KB_DEPT?' on':''}" data-dept="${d.id}">${d.title}${
+        d.ready?'':' <i>скоро</i>'}</button>`).join('') + `</div>`
+    : `<div class="subhead">Подразделение</div><div class="note">${
+        (DEPTS.find(d=>d.id===mine)||DEPTS[0]).title} · другие подразделения открыты менеджеру и выше</div>`;
+
+  $('#kbLead').textContent = dept.title + ' · ' + myCat() + '-я категория. '
+    + 'Разделы ниже открыты для вашей категории.';
+
+  if(!dept.ready){
+    $('#kbList').innerHTML = head +
+      `<div class="note" style="margin-top:10px">Материалы подразделения «${dept.title}»
+       появятся позже — сейчас заполнен только бар.</div>`;
+    show('kb');
+    return;
+  }
+
   const card = (x, sub) => `<button class="mode${x.ready?'':' ghost'}" ${x.ready?`data-kbgo="${x.id}"`:''}>
       <b>${x.title}${x.ready?'':' <span style="color:var(--ink-3);font-size:12px">скоро</span>'}</b>
       <span>${x.sub||''}</span>
@@ -1630,17 +1679,16 @@ function renderKB(){
       ${sub||''}
     </button>`;
   const hidden = KB.filter(x=>!kbVisible(x)).length;
-  $('#kbList').innerHTML =
+  $('#kbList').innerHTML = head +
     KB.filter(kbVisible).map(x=>card(x, (x.sub2||[]).map(y=>
         `<div class="sub2">${y.title} · <i>${y.sub}</i></div>`).join(''))).join('') +
-    (hidden ? `<div class="note">Ещё ${hidden} раздел(а) откроются с повышением категории.</div>` : '') +
-    `<div class="subhead">Направления</div>` +
-    DEPTS.map(d=>`<div class="note" style="opacity:${d.ready?1:.55}">${d.title}${
-        d.ready?' · доступно':' · появится позже'}</div>`).join('');
+    (hidden ? `<div class="note">Ещё ${hidden} раздел(а) откроются с повышением категории.</div>` : '');
   show('kb');
 }
 
 $('#kbList').addEventListener('click', e=>{
+  const d = e.target.closest('[data-dept]');
+  if(d){ KB_DEPT = d.dataset.dept; renderKB(); return; }
   const b = e.target.closest('[data-kbgo]'); if(!b) return;
   if(b.dataset.kbgo==='tech') openRef();
   else if(b.dataset.kbgo==='qbase') openQB();
@@ -2163,7 +2211,7 @@ document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
   if(!m) return;
   if(m==='errors') openErrors();
-  else if(m==='learn') show('learn');
+  else if(m==='learn'){ renderLearnStat(); show('learn'); }
   else if(m==='profile') renderProfile();
   else if(m==='roadmap') renderRoadmap();
   else if(m==='attest') show('attest');
@@ -2206,7 +2254,7 @@ document.addEventListener('click', e=>{
   const b = e.target.closest('.scrhead .back'); if(!b) return;
   closeRecipe();
   if(b.dataset.kb) renderKB();
-  else if(b.dataset.learn) show('learn');
+  else if(b.dataset.learn){ renderLearnStat(); show('learn'); }
   else renderHome();
 });
 document.addEventListener('keydown',e=>{

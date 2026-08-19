@@ -81,8 +81,9 @@ with sync_playwright() as pw:
     check('прогресс подтянулся из базы', pg.evaluate("store.errors['test-id']") == 3)
     check('избранное подтянулось', pg.evaluate("!!store.fav['Аперол Спритц']"))
 
-    # выход
-    pg.click('#logout'); pg.wait_for_timeout(300)
+    # выход — теперь живёт в профиле
+    pg.click('[data-mode="profile"]'); pg.wait_for_timeout(400)
+    pg.click('#profLogout'); pg.wait_for_timeout(300)
     check('выход возвращает на экран входа', pg.locator('#login').is_visible())
 
     check('нет ошибок в консоли', not js_err, ' | '.join(js_err[:2]))

@@ -63,7 +63,11 @@ for s in (192, 512):
 
 # --- теги PWA в index.html (в одиночный quiz.html они не идут)
 html = (APP / 'index.html').read_text(encoding='utf-8')
+# Та же рюмка, что на домашнем экране, идёт и во вкладку браузера — иначе
+# в закладках и в списке вкладок приложение выглядит безымянным листом.
 tags = ('<link rel="manifest" href="manifest.webmanifest">\n'
+        '<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">\n'
+        '<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">\n'
         '<link rel="apple-touch-icon" href="icon-192.png">\n'
         '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
         '<meta name="mobile-web-app-capable" content="yes">\n')
@@ -92,9 +96,23 @@ self.addEventListener('activate', e => {{
     .then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 }});
-// Кеш первым: тренажёр обязан открываться в баре без сети. Свежесть даёт новый CACHE.
+// Интерфейс — сеть первым: иначе после выкатки телефон ещё один-два запуска показывает
+// старую версию из кеша (мы на этом ловились с категорией сотрудника). Офлайн —
+// откат в кеш, поэтому в баре без сети приложение всё равно открывается.
+// Данные (bank.js, media.js, картинки) — кеш первым: они большие и меняются вместе с CACHE.
 self.addEventListener('fetch', e => {{
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  const isShell = e.request.mode === 'navigate' ||
+                  url.pathname.endsWith('/') || url.pathname.endsWith('index.html');
+  if (isShell) {{
+    e.respondWith(
+      fetch(e.request)
+        .then(r => {{ const copy = r.clone();
+                     caches.open(CACHE).then(c => c.put(e.request, copy)); return r; }})
+        .catch(() => caches.match(e.request).then(r => r || caches.match('./'))));
+    return;
+  }}
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 }});
 """, encoding='utf-8')
