@@ -9,6 +9,7 @@ W = str(ROOT)
 drinks = json.load(open(f'{W}/data/drinks2.json', encoding='utf-8'))
 cells = json.load(open(f'{W}/data/data.json', encoding='utf-8'))
 imgs = json.load(open(f'{W}/data/images.json', encoding='utf-8'))
+extras = json.load(open(f'{W}/data/extras.json', encoding='utf-8'))
 
 SIMPLE = re.compile(r'^(\d+[.,]?\d*)\s*(мл|гр)\.?$')
 WITHGR = re.compile(r'(\d+[.,]?\d*)\s*гр')
@@ -465,6 +466,109 @@ for q in bank:
         q.pop('ans')
         q['t'] = 'choice'
 
+# ------------------------------------------------- кофе, чай, заготовки, подача
+# Листы «Кофе», «Чай », «ПФ» и «Спец. подачи» разбирает 03_extras.py. Вопросы по ним
+# устроены так же, как по коктейлям: спрашиваем только измеримое — граммовки, дозы,
+# температуру, время экстракции и кнопку пролива, — и только то, что написано в файле.
+def ask_amount(cat, sheet, who, label, amount, im='', extra_sk=''):
+    """Один вопрос про величину: ввод числа или выбор из четырёх."""
+    p = parse_amount(amount)
+    if not p:
+        return 0
+    v, unit, hint = p
+    fine = unit == 'гр' and v <= 30
+    kw = dict(cat=cat, drink=who, tag='', sh=sheet, img=im, hint=hint,
+              sk=f'{who}|{label}|{extra_sk or cat}')
+    if rnd.random() < 0.40:
+        opts = distractors(v, unit, rnd, fine=fine) + [v]
+        rnd.shuffle(opts)
+        add(t='choice', q=f'Сколько «{label}»?',
+            opts=[f'{fmtnum(o)} {unit}' for o in opts], ai=opts.index(v), **kw)
+    else:
+        add(t='num', q=f'Сколько «{label}»?', unit=unit, a=v, **kw)
+    return 1
+
+extra_n = 0
+
+# --- кофе: состав, выход, кнопка пролива, время экстракции
+BUTTONS = sorted({c['button'] for c in extras['coffee'] if c['button']})
+EXTRACTS = sorted({c['extract'] for c in extras['coffee'] if c['extract']})
+for c in extras['coffee']:
+    nm = c['name']
+    for n, a in c['ing']:
+        extra_n += ask_amount('coffee', 'Кофе', nm, n, a)
+    if c['total']:
+        p = parse_amount(c['total'])
+        if p:
+            add(t='num', cat='coffee', drink=nm, tag='', sh='Кофе', img='', hint='',
+                q='Какой выход у напитка?', unit=p[1], a=p[0], sk=f'{nm}|выход|coffee')
+            extra_n += 1
+    # «кнопка пролива с изображением одной большой чашки» — единственное место в пособии,
+    # где вообще описано, что нажимать на кофемашине.
+    if c['button'] and len(BUTTONS) >= 4:
+        others = [x for x in BUTTONS if x != c['button']]
+        rnd.shuffle(others)
+        opts = others[:3] + [c['button']]
+        rnd.shuffle(opts)
+        add(t='choice', cat='coffee', drink=nm, tag='', sh='Кофе', img='', hint='',
+            q='Какую кнопку пролива нажимать?', opts=opts, ai=opts.index(c['button']),
+            sk=f'{nm}|кнопка|coffee')
+        extra_n += 1
+    if c['extract'] and len(EXTRACTS) >= 3:
+        others = [x for x in EXTRACTS if x != c['extract']]
+        rnd.shuffle(others)
+        opts = others[:3] + [c['extract']]
+        rnd.shuffle(opts)
+        add(t='choice', cat='coffee', drink=nm, tag='', sh='Кофе', img='', hint='',
+            q='Сколько длится экстракция?', opts=opts, ai=opts.index(c['extract']),
+            sk=f'{nm}|экстракция|coffee')
+        extra_n += 1
+
+# --- чай: дозировка, температура, количество ложек, состав крафтовых смесей
+TEMPS = sorted({t['temp'] for t in extras['tea']['simple'] if t['temp']})
+for t in extras['tea']['simple']:
+    nm = t['name'].strip()
+    extra_n += ask_amount('tea', 'Чай', nm, 'заварка на порцию', t['dose'])
+    if t['temp'] and len(TEMPS) >= 2:
+        others = [x for x in TEMPS if x != t['temp']]
+        opts = others[:3] + [t['temp']]
+        rnd.shuffle(opts)
+        add(t='choice', cat='tea', drink=nm, tag='', sh='Чай', img='', hint='',
+            q='При какой температуре заваривается?', opts=opts, ai=opts.index(t['temp']),
+            sk=f'{nm}|температура|tea')
+        extra_n += 1
+    if t['spoons'].isdigit():
+        add(t='num', cat='tea', drink=nm, tag='', sh='Чай', img='', hint='',
+            q='Сколько ложек «1 tbsp» на порцию?', unit='ложк.', a=float(t['spoons']),
+            sk=f'{nm}|ложки|tea')
+        extra_n += 1
+for m in extras['tea']['mixes']:
+    for n, a in m['ing']:
+        extra_n += ask_amount('tea', 'Чай', m['name'].strip(), n, a)
+
+# --- заготовки: состав и выход
+for x in extras['pf']:
+    nm = x['name'].strip()
+    for n, a in x['ing']:
+        extra_n += ask_amount('pf', 'Заготовки (ПФ)', nm, n, a)
+    if x['total']:
+        p = parse_amount(x['total'])
+        if p:
+            add(t='num', cat='pf', drink=nm, tag='', sh='Заготовки (ПФ)', img='', hint='',
+                q='Сколько получается на выходе?', unit=p[1], a=p[0], sk=f'{nm}|выход|pf')
+            extra_n += 1
+
+# --- подача: порции чистого алкоголя и топинги
+for x in extras['serve']:
+    nm = x['name'].strip()
+    if '\n' in x['amount']:                       # спец. подача текилы: три строки сразу
+        for line, label in zip(x['amount'].split('\n'), ['Текила', 'Лайм', 'Соль']):
+            extra_n += ask_amount('serve', 'Подача', nm, label, line.strip())
+        continue
+    extra_n += ask_amount('serve', 'Подача', nm, 'порция', x['amount'])
+
+print('кофе/чай/ПФ/подача:', extra_n)
+
 # ------------------------------------------------- справочник для приложения
 import sys
 sys.path.insert(0, f'{W}/scripts')
@@ -511,6 +615,8 @@ for ch in CHAPTERS:
             'var': [{'name': pretty(v), 'method': BYNAME[v]['method']} for v in VARIANTS.get(nm, [])],
         })
 
+for i, r in enumerate(recipes):       # карточки кофе, чая, ПФ и подачи
+    R_INDEX.setdefault(r['name'], i)
 for q in bank:                       # связываем вопрос с карточкой рецепта
     if q['drink'] in R_INDEX:
         q['r'] = R_INDEX[q['drink']]
@@ -545,6 +651,39 @@ for g in sorted(GLASSWARE, key=lambda k: -len(GLASSWARE[k]['drinks'])):
     glassware.append({'name': e['name'], 'img': e['img'],
                       'straw': ' · '.join(k for k, _ in straws),
                       'n': len(e['drinks']), 'drinks': e['drinks']})
+
+# Карточки для справочника: те же данные, что и в вопросах, чтобы после ошибки
+# можно было открыть полную технологию, как у коктейлей.
+CH_LIST.append({'id': 'extras', 'title': 'Кофе, чай, заготовки, подача',
+                'color': '#8A6A4A', 'sub': 'Листы «Кофе», «Чай», «ПФ» и «Спец. подачи»'})
+SHEETS += ['Кофе', 'Чай', 'Заготовки (ПФ)', 'Подача']
+
+def extra_card(name, sheet, ing, total='', method='', chips=(), key=''):
+    recipes.append({'name': name, 'ch': 'extras', 'sh': sheet, 'si': 10000 + len(recipes),
+                    'tech': chips[0] if chips else '', 'glass': chips[1] if len(chips) > 1 else '',
+                    'straw': chips[2] if len(chips) > 2 else '', 'total': total, 'tag': '',
+                    'ing': [list(x) for x in ing], 'gar': [], 'method': method, 'serve': '',
+                    'formula': '', 'key': key, 'img': '', 'var': []})
+
+for c in extras['coffee']:
+    chips = [x for x in ('эспрессо-машина', c['extract'], c['milk']) if x]
+    extra_card(c['name'], 'Кофе', c['ing'], c['total'], c['method'], chips,
+               ('Кнопка пролива: ' + c['button']) if c['button'] else '')
+for t in extras['tea']['simple']:
+    # заказчик просил: где доза меряется ложками, писать и количество ложек
+    ing = [['Заварка', t['dose']]]
+    if t['spoons'].isdigit():
+        ing.append(['Ложек «1 tbsp»', t['spoons'] + ' шт'])
+    extra_card(t['name'].strip(), 'Чай', ing, '', '', [t['temp']] if t['temp'] else [])
+for m in extras['tea']['mixes']:
+    extra_card(m['name'].strip(), 'Чай', m['ing'], '', m['method'])
+for x in extras['pf']:
+    extra_card(x['name'].strip(), 'Заготовки (ПФ)', x['ing'], x['total'], x['method'])
+for x in extras['serve']:
+    extra_card(x['name'].strip(), 'Подача', [['Порция', x['amount']]], '', x['rule'],
+               [x['section'].capitalize()] if x['section'] else [])
+for x in extras['straws']:
+    extra_card(x['name'].strip(), 'Подача', [], '', x['rule'])
 
 json.dump({'chapters': CH_LIST, 'sheets': SHEETS, 'glassware': glassware, 'recipes': recipes},
           open(f'{W}/data/recipes.json', 'w', encoding='utf-8'), ensure_ascii=False)

@@ -34,6 +34,7 @@ if [ -n "$FULL" ]; then
   $PY scripts/02_enrich.py > /dev/null
 fi
 
+$PY scripts/03_extras.py > /dev/null   # листы кофе, чая, ПФ и подачи -> data/extras.json
 $PY scripts/assemble.py      # data/*.json + scripts/pages*.py -> build/index.html
 $PY scripts/30_pdf.py        # build/index.html -> build/manual.pdf
 $PY scripts/31_stamp.py      # + номера страниц -> build/manual_final.pdf

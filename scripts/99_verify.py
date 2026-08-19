@@ -49,8 +49,10 @@ for n in BY:
 # ---------- 3. ответы банка
 bank = json.load(open(ROOT / 'data' / 'bank.json', encoding='utf-8'))
 by = {re.sub(r'\s+/\s+', ' · ', d['name']): d for d in src}
+EXTRA_CATS = ('coffee', 'tea', 'pf', 'serve')
 for q in bank:
-    if q['drink'] == 'Эталон украшения' or q['cat'] in ('glass', 'method') or q['t'] != 'num':
+    if (q['drink'] == 'Эталон украшения' or q['t'] != 'num'
+            or q['cat'] in ('glass', 'method') + EXTRA_CATS):
         continue
     d = by.get(q['drink'])
     if not d: fails.append(f'вопрос про несуществующий напиток: {q["drink"]}'); continue
@@ -89,6 +91,54 @@ for q in bank:
     elif abs(shown + q['a'] - total) > 0.01:
         fails.append(f'fill не сходится с выходом: {q["drink"]} — {shown}+{q["a"]} != {total}')
 
+# ---------- 3б2. кофе, чай, заготовки и подача — ответы против data/extras.json
+extras = json.load(open(ROOT / 'data' / 'extras.json', encoding='utf-8'))
+EX_VALS = {}          # (напиток, что спрашиваем) -> [числа из исходника]
+
+
+def _put(who, label, amount):
+    # «2 б.л. - 10 гр»: в строке два числа, верным может быть любое из них
+    for m in re.finditer(r'(\d+[.,]?\d*)', (amount or '').replace(',', '.')):
+        EX_VALS.setdefault((who.strip(), label.strip()), []).append(float(m.group(1)))
+
+
+for c in extras['coffee']:
+    for n, a_ in c['ing']:
+        _put(c['name'], n, a_)
+    _put(c['name'], 'выход', c['total'])
+for t in extras['tea']['simple']:
+    _put(t['name'], 'заварка на порцию', t['dose'])
+    _put(t['name'], 'ложек', t['spoons'])
+for m_ in extras['tea']['mixes']:
+    for n, a_ in m_['ing']:
+        _put(m_['name'], n, a_)
+for x in extras['pf']:
+    for n, a_ in x['ing']:
+        _put(x['name'], n, a_)
+    _put(x['name'], 'выход', x['total'])
+for x in extras['serve']:
+    if '\n' in x['amount']:
+        for line, label in zip(x['amount'].split('\n'), ['Текила', 'Лайм', 'Соль']):
+            _put(x['name'], label, line)
+    else:
+        _put(x['name'], 'порция', x['amount'])
+
+for q in bank:
+    if q['cat'] not in EXTRA_CATS or q['t'] != 'num':
+        continue
+    if 'ложек' in q['q']:
+        label = 'ложек'
+    elif 'выход' in q['q'] or 'на выходе' in q['q']:
+        label = 'выход'
+    else:
+        m = re.search(r'«(.+?)»', q['q'])
+        label = m.group(1) if m else '?'
+    vals = EX_VALS.get((q['drink'].strip(), label.strip()), [])
+    if not vals:
+        fails.append(f'нет источника для вопроса: {q["drink"]} / {label}')
+    elif not any(abs(v - q['a']) < 0.01 for v in vals):
+        fails.append(f'неверный ответ (extras): {q["drink"]} / {label} = {q["a"]}, в файле {vals}')
+
 # ---------- 3в. пак «впиши весь состав»: сумма показанного и всех ответов = выход
 for q in bank:
     if q['t'] != 'mfill':
@@ -118,6 +168,13 @@ for k, n in seen_q.items():
 # ---------- 4. разброс дистракторов
 for q in bank:
     if q['t'] != 'choice' or q['cat'] == 'garnish':
+        continue
+    # мелкая шкала (заварка 8–15 гр, топинги, цукаты) живёт по правилу украшений:
+    # шаг 1–3 грамма, иначе выбор вырождается
+    if q['cat'] in EXTRA_CATS and all('гр' in o for o in q['opts']):
+        continue
+    # диапазоны («15-20 сек», «80 °C») сравнивать по разбросу бессмысленно
+    if any(('сек' in o) or ('°' in o) for o in q['opts']):
         continue
     nums = []
     for o in q['opts']:
