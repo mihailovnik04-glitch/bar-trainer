@@ -236,6 +236,77 @@ details.cheat b{color:var(--ink)}
 .fbbtn{margin-top:9px;display:inline-block;background:#0004;border-radius:10px;padding:7px 12px;
   font-size:13px;color:var(--ink);border:1px solid var(--line)}
 .foot{margin-top:auto;padding-top:22px;text-align:center;color:var(--ink-3);font-size:11.5px}
+
+/* ---------- избранное ---------- */
+.star{flex:0 0 34px;width:34px;height:34px;border-radius:11px;background:var(--card-2);
+  display:grid;place-items:center;font-size:16px;color:var(--ink-3);transition:transform .15s,color .2s}
+.star:active{transform:scale(.88)}
+.star.on{color:var(--acc)}
+.rrow .h .star{background:transparent;width:28px;height:28px;flex:0 0 28px;font-size:15px}
+.q .drink .star{margin-left:auto}
+
+/* ---------- чипсы фильтров (виды напитков, темы вопросов) ---------- */
+.chips-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips-row::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:11px;
+  padding:8px 12px;font-size:13px;color:var(--ink-2);white-space:nowrap;transition:.18s}
+.chip.on{background:#E0A45B1f;border-color:var(--acc);color:var(--acc);font-weight:600}
+.chip i{font-style:normal;font-family:var(--mono);font-size:11px;opacity:.7;margin-left:5px}
+
+/* ---------- своя клавиатура вместо нативной ---------- */
+/* На телефоне системная цифровая клавиатура закрывала карточку целиком и прыгала
+   при каждом фокусе. Своя всегда на месте и не двигает вёрстку. */
+.numbox{margin-top:16px}
+.numbox .disp{display:flex;align-items:center;gap:10px;background:var(--card-2);
+  border:1.5px solid var(--line);border-radius:15px;padding:13px 16px;transition:border-color .2s}
+.numbox .disp.focus{border-color:var(--acc)}
+.numbox .disp.ok{border-color:var(--ok)} .numbox .disp.bad{border-color:var(--bad)}
+.numbox .val{flex:1;font-family:var(--mono);font-size:26px;line-height:1.1;min-height:30px;
+  color:var(--ink);word-break:break-all}
+.numbox .val.ph{color:var(--ink-3)}
+.numbox .val i{font-style:normal;display:inline-block;width:2px;height:24px;background:var(--acc);
+  vertical-align:-4px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.numbox .unit{font-family:var(--mono);font-size:16px;color:var(--ink-3)}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.pad button{background:var(--card-2);border:1px solid var(--line);border-radius:14px;
+  padding:15px 0;font-family:var(--mono);font-size:22px;transition:transform .12s,background .18s}
+.pad button:active{transform:scale(.93);background:var(--line)}
+.pad button.act{background:var(--acc);color:#17140F;font-family:var(--sans);font-size:16px;font-weight:700}
+.pad button.sub{color:var(--ink-2);font-size:19px}
+.pad .quick{grid-column:1/-1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.pad .quick::-webkit-scrollbar{display:none}
+.pad .quick button{flex:0 0 auto;padding:9px 14px;font-size:15px;border-radius:11px;color:var(--ink-2)}
+
+/* ---------- «впиши весь состав» ---------- */
+.fillt tr.act td{color:var(--acc)}
+.fillt td .slot{display:inline-block;min-width:58px;text-align:right;border-bottom:1.5px dashed var(--line);
+  padding-bottom:1px;color:var(--ink-3)}
+.fillt tr.act td .slot{border-color:var(--acc);color:var(--acc)}
+.fillt tr.done td .slot{border-style:solid;border-color:var(--line);color:var(--ink)}
+.fillt tr.wrong td .slot{border-color:var(--bad);color:var(--bad)}
+.fillt tr.right td .slot{border-color:var(--ok);color:var(--ok)}
+
+/* ---------- прочее ---------- */
+.tagline{font-size:11px;color:var(--acc);letter-spacing:.06em;text-transform:uppercase;
+  background:#E0A45B14;border-radius:7px;padding:2px 7px;display:inline-block;margin-top:3px}
+.subhead{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px}
+.note{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:12px 14px;
+  font-size:13.5px;color:var(--ink-2);margin-bottom:10px}
+.qrow{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);
+  border-radius:13px;padding:11px 13px;margin-bottom:7px;transition:transform .14s}
+.qrow:active{transform:scale(.985)}
+.qrow .hd{display:flex;gap:10px;align-items:flex-start}
+.qrow .hd b{flex:1;font-size:14px;font-weight:600;line-height:1.3}
+.qrow .hd .a{font-family:var(--mono);font-size:13.5px;color:var(--ok);white-space:nowrap}
+.qrow .mt{font-size:11.5px;color:var(--ink-3);margin-top:5px}
+.gcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.gcard .hd{display:flex;gap:12px;align-items:center}
+.gcard img{width:44px;height:44px;border-radius:11px;object-fit:cover;background:var(--card-2);flex:0 0 44px}
+.gcard b{font-size:15px;display:block}
+.gcard .st{font-size:12px;color:var(--acc);font-family:var(--mono)}
+.gcard .dr{font-size:12.5px;color:var(--ink-3);margin-top:8px;line-height:1.5}
 @media (min-width:620px){ .wrap{padding-top:36px} h1{font-size:32px} }
 </style>
 </head>
@@ -243,6 +314,7 @@ details.cheat b{color:var(--ink)}
 <div class="wrap">
   <div class="top hidden" id="top">
     <button class="back" id="back">‹</button>
+    <button class="back hidden" id="prev" title="Предыдущий вопрос">↶</button>
     <div class="bar"><i id="prog"></i></div>
     <div class="count" id="count"></div>
     <div class="hearts" id="hearts"></div>
@@ -263,19 +335,24 @@ details.cheat b{color:var(--ink)}
       <span>75 вопросов, три ошибки — и стоп. Порядок случайный, время ограничено.</span>
       <div class="tags"><i>75 вопросов</i><i>30:00</i><i>3 ошибки</i></div>
     </button>
-    <button class="mode" data-mode="train">
+    <button class="mode" data-mode="setup">
       <b>Тренировка</b>
-      <span>Все вопросы банка подряд в случайном порядке. Без таймера и лимита ошибок.</span>
-      <div class="tags"><i id="bankSize">0 вопросов</i><i>без лимита</i></div>
+      <span>Без таймера и лимита ошибок. Можно выбрать вид напитков, только избранное или только то, что ещё не решено.</span>
+      <div class="tags"><i id="bankSize">0 вопросов</i><i>с настройками</i></div>
     </button>
     <button class="mode" data-mode="ref">
       <b>Справочник</b>
       <span>Все карточки коктейлей целиком: состав, украшения, приготовление, ключ к запоминанию. И шпаргалки по системе.</span>
       <div class="tags"><i id="refSize">0 рецептов</i><i>поиск по ингредиенту</i></div>
     </button>
+    <button class="mode" data-mode="qbase">
+      <b>База вопросов</b>
+      <span>Все вопросы с ответами списком — просто посмотреть, без теста. Фильтр по виду напитка и по теме.</span>
+      <div class="tags"><i id="qbSize">0 вопросов</i><i>с ответами</i></div>
+    </button>
     <button class="mode ghost" data-mode="errors">
       <b>Мои ошибки <span style="display:inline;color:var(--bad)" id="errCount"></span></b>
-      <span>Разбор и повторное решение того, что не получилось.</span>
+      <span>Разбор, статистика по коктейлям и повторное решение того, что не получилось.</span>
     </button>
     <div class="foot">Работает без интернета · данные хранятся только в этом браузере</div>
   </div>
@@ -286,6 +363,38 @@ details.cheat b{color:var(--ink)}
   <!-- РЕЗУЛЬТАТ -->
   <div id="result" class="hidden"></div>
 
+  <!-- НАСТРОЙКА ТРЕНИРОВКИ -->
+  <div id="setup" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Тренировка</h1></div>
+    <div id="resume"></div>
+    <div class="subhead">Что показывать</div>
+    <div class="seg" id="setPool">
+      <button data-pool="all" class="on">Все вопросы</button>
+      <button data-pool="new">Только нерешённые</button>
+      <button data-pool="fav">Избранное</button>
+    </div>
+    <div class="subhead">Вид напитков</div>
+    <div class="chips-row" id="setSheet"></div>
+    <div class="subhead">Тема</div>
+    <div class="chips-row" id="setCat"></div>
+    <label class="note" style="display:flex;gap:10px;align-items:center;cursor:pointer">
+      <input type="checkbox" id="setTotal" style="width:20px;height:20px;accent-color:var(--acc)">
+      <span>Подсказывать выход напитка там, где нужно вписать граммовку.
+      На экзамене выход не показывается никогда.</span>
+    </label>
+    <div class="note" id="setCount"></div>
+    <button class="go wide" id="setGo">Начать</button>
+  </div>
+
+  <!-- БАЗА ВОПРОСОВ -->
+  <div id="qbase" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>База вопросов</h1></div>
+    <input class="search" id="qbQ" placeholder="Коктейль или ингредиент…" autocomplete="off">
+    <div class="chips-row" id="qbSheet"></div>
+    <div class="chips-row" id="qbCat"></div>
+    <div id="qbList"></div>
+  </div>
+
   <!-- СПРАВОЧНИК -->
   <div id="ref" class="hidden">
     <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Справочник</h1></div>
@@ -293,7 +402,9 @@ details.cheat b{color:var(--ink)}
     <div class="seg" id="refSort">
       <button data-sort="ch" class="on">По системе</button>
       <button data-sort="src">Как в таблице</button>
+      <button data-sort="glass">Посуда</button>
     </div>
+    <div class="chips-row" id="refSheet"></div>
     <div id="cheats"></div>
     <div id="refList"></div>
   </div>
@@ -303,6 +414,7 @@ details.cheat b{color:var(--ink)}
     <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Мои ошибки</h1></div>
     <p class="lead" id="errLead"></p>
     <div class="row" id="errActions"></div>
+    <div id="errStat"></div>
     <div class="list" id="errList"></div>
   </div>
 </div>
@@ -325,32 +437,56 @@ const EX_N = 75, EX_LIVES = 3, EX_SEC = 30*60;
    v2: ошибки хранятся по стабильному q.id (хеш от напитка и текста вопроса), а не по
    позиции в BANK — позиция меняется при каждой перегенерации банка, и ошибки съезжали
    на чужие вопросы. Данные из v1 переносим один раз: там ключ — старый индекс. */
-const KEY='barquiz.v2', KEY_OLD='barquiz.v1';
+const KEY='barquiz.v3', KEY_V2='barquiz.v2', KEY_OLD='barquiz.v1';
 const BY_ID = {}; BANK.forEach(q=>BY_ID[q.id]=q);
-let store = {errors:{}, stats:{runs:0, best:0, right:0, total:0}};
+// fav — избранные коктейли, favQ — избранные вопросы, skip — напитки, убранные из тренировки,
+// solved — что уже решено верно (для режима «только нерешённые»), sess — незаконченная тренировка.
+let store = {errors:{}, stats:{runs:0, best:0, right:0, total:0},
+             fav:{}, favQ:{}, skip:{}, solved:{}, sess:null, showTotal:true};
 try{
   const raw=localStorage.getItem(KEY);
   if(raw){ store=Object.assign(store, JSON.parse(raw)); }
   else{
-    const old=localStorage.getItem(KEY_OLD);
-    if(old){
-      const o=JSON.parse(old);
-      store.stats=Object.assign(store.stats, o.stats||{});
-      for(const [i,n] of Object.entries(o.errors||{})){
-        const q=BANK[+i]; if(q) store.errors[q.id]=n;   // индекс -> id по текущему банку
+    const v2=localStorage.getItem(KEY_V2);
+    if(v2){ store=Object.assign(store, JSON.parse(v2)); }   // errors уже по id
+    else{
+      const old=localStorage.getItem(KEY_OLD);
+      if(old){
+        const o=JSON.parse(old);
+        store.stats=Object.assign(store.stats, o.stats||{});
+        for(const [i,n] of Object.entries(o.errors||{})){
+          const q=BANK[+i]; if(q) store.errors[q.id]=n;   // индекс -> id по текущему банку
+        }
       }
-      localStorage.setItem(KEY, JSON.stringify(store));
     }
+    localStorage.setItem(KEY, JSON.stringify(store));
   }
 }catch(e){}
+for(const k of ['fav','favQ','skip','solved','errors']) if(!store[k]) store[k]={};
 const save = ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
+
+/* ---------- избранное и исключения ---------- */
+const isFav  = n => !!store.fav[n];
+const isFavQ = id => !!store.favQ[id];
+const isSkip = n => !!store.skip[n];
+function toggleFav(n){ if(store.fav[n]) delete store.fav[n]; else store.fav[n]=1; save(); }
+function toggleFavQ(id){ if(store.favQ[id]) delete store.favQ[id]; else store.favQ[id]=1; save(); }
+function toggleSkip(n){ if(store.skip[n]) delete store.skip[n]; else store.skip[n]=1; save(); }
+const starHTML = (on,attr) => `<button class="star${on?' on':''}" ${attr}>${on?'★':'☆'}</button>`;
+// Вопрос считается избранным и сам по себе, и когда в избранном весь коктейль:
+// «избранное» в тренировке должно поднимать и то, и другое.
+const favQuestion = q => isFavQ(q.id) || isFav(q.drink);
+
 let REF_SORT = store.refSort==='src' ? 'src' : 'ch';   // порядок справочника: главы или таблица
 
 /* ---------- утилиты ---------- */
 const fmt = v => Number.isInteger(v) ? String(v) : String(v).replace('.',',');
 const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]];} return a; };
 const mmss = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-const answerText = q => (q.t==='num'||q.t==='fill') ? `${fmt(q.a)} ${q.unit}` : q.opts[q.ai];
+const answerText = q =>
+  q.t==='mfill' ? q.a.map(v=>fmt(v)).join(' · ')+' '+q.unit
+: (q.t==='num'||q.t==='fill') ? `${fmt(q.a)} ${q.unit}`
+: q.opts[q.ai];
 const qLabel = q => q.q.replace(/^Сколько\s+/,'').replace(/^весит:\s*/,'Вес: ')
    .replace(/\?$/,'').replace(/ идёт в украшение/,' · украшение')
    .replace(/^В какой посуде.*$/,'Посуда').replace(/^Чем украшается.*$/,'Набор украшений');
@@ -372,9 +508,10 @@ function pickExam(){
 
 /* ---------- состояние ---------- */
 let S = null, tick = null;
+const SCREENS = ['home','quiz','result','errors','ref','setup','qbase'];
 
 function show(id){
-  ['home','quiz','result','errors','ref'].forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
+  SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
   closeRecipe();
   $('#top').classList.toggle('hidden', id!=='quiz');
 }
@@ -385,22 +522,123 @@ function renderHome(){
   $('#stBest').textContent = st.best ? st.best+'/'+EX_N : '—';
   $('#stAcc').textContent = st.total ? Math.round(st.right/st.total*100)+'%' : '—';
   $('#bankSize').textContent = BANK.length+' вопросов';
+  $('#qbSize').textContent = BANK.length+' вопросов';
   $('#refSize').textContent = REC.recipes.length+' рецептов';
   const n = Object.keys(store.errors).length;
   $('#errCount').textContent = n ? '· '+n : '';
   show('home');
 }
 
+/* ---------- настройка тренировки ---------- */
+const SHEETS = REC.sheets || [];
+const CATS = [['all','Все темы'],['grams','Состав'],['garnish','Украшения'],
+              ['glass','Посуда'],['method','Метод']];
+let OPT = {pool:'all', sheet:'all', cat:'all'};
+
+// Один и тот же факт спрашивается по-разному: точным вводом, выбором, пропуском в составе.
+// В одной сессии это выглядит как повтор, поэтому от каждой строки рецепта берём один вопрос.
+function dedupKey(q){
+  const p = (q.sk||q.id).split('|');
+  const kind = p[p.length-1]==='g' ? 'g' : 'i';   // украшение и состав — всё-таки разные факты
+  return p.slice(0,-1).join('|')+'|'+kind;
+}
+function dedupe(list){
+  const seen = new Set(), full = new Set(), taken = {}, out = [];
+  for(const q of list){
+    const isAll = /\|all\|mfill$/.test(q.sk||'');
+    // «Впиши весь состав» перекрывает все граммовки этого коктейля — вместе они дубли
+    if(isAll && taken[q.drink]) continue;
+    if(!isAll && q.cat==='grams' && full.has(q.drink)) continue;
+    const k = dedupKey(q);
+    if(seen.has(k)) continue;
+    seen.add(k);
+    if(isAll) full.add(q.drink); else if(q.cat==='grams') taken[q.drink]=1;
+    out.push(q);
+  }
+  return out;
+}
+
+function trainPool(o){
+  let list = BANK.filter(q=>!isSkip(q.drink));
+  if(o.sheet!=='all') list = list.filter(q=>q.sh===o.sheet);
+  if(o.cat!=='all')   list = list.filter(q=>q.cat===o.cat);
+  if(o.pool==='new')  list = list.filter(q=>!store.solved[q.id]);
+  if(o.pool==='fav')  list = list.filter(favQuestion);
+  return dedupe(shuffle(list.slice()));
+}
+
+function renderSetup(){
+  $('#setPool').querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.pool===OPT.pool));
+  $('#setSheet').innerHTML = [['all','Все виды']].concat(SHEETS.map(x=>[x,x]))
+    .map(([v,t])=>`<button class="chip${OPT.sheet===v?' on':''}" data-sheet="${v}">${t}</button>`).join('');
+  $('#setCat').innerHTML = CATS
+    .map(([v,t])=>`<button class="chip${OPT.cat===v?' on':''}" data-cat="${v}">${t}</button>`).join('');
+  $('#setTotal').checked = !!store.showTotal;
+  const n = trainPool(OPT).length;
+  $('#setCount').innerHTML = n
+    ? `Готово вопросов: <b style="font-family:var(--mono);color:var(--acc)">${n}</b>`
+    : 'Под такие настройки вопросов нет — измените фильтры.';
+  $('#setGo').style.opacity = n ? 1 : .4;
+  // Незаконченная тренировка: спрашиваем, продолжить её или начать заново.
+  const sv = store.sess;
+  $('#resume').innerHTML = sv
+    ? `<div class="note" style="border-style:solid;border-color:var(--acc)">
+         Есть незаконченная тренировка: вопрос ${sv.k+1} из ${sv.ids.length}, верно ${sv.right}.
+         <div class="row"><button class="go" id="resGo">Продолжить</button>
+         <button class="ghostbtn" id="resDrop">Начать новую</button></div></div>` : '';
+  if(sv){
+    $('#resGo').onclick = ()=>resumeSession();
+    $('#resDrop').onclick = ()=>{ store.sess=null; save(); renderSetup(); };
+  }
+  show('setup');
+}
+$('#setPool').addEventListener('click', e=>{
+  const b=e.target.closest('button[data-pool]'); if(!b) return;
+  OPT.pool=b.dataset.pool; renderSetup();
+});
+$('#setSheet').addEventListener('click', e=>{
+  const b=e.target.closest('button[data-sheet]'); if(!b) return;
+  OPT.sheet=b.dataset.sheet; renderSetup();
+});
+$('#setCat').addEventListener('click', e=>{
+  const b=e.target.closest('button[data-cat]'); if(!b) return;
+  OPT.cat=b.dataset.cat; renderSetup();
+});
+$('#setTotal').addEventListener('change', e=>{ store.showTotal=e.target.checked; save(); });
+$('#setGo').addEventListener('click', ()=>{ if(trainPool(OPT).length) start('train'); });
+
 /* ---------- запуск ---------- */
 function start(mode){
   let list;
   if(mode==='exam') list = pickExam();
-  else if(mode==='train') list = shuffle(BANK.slice());
-  else list = shuffle(Object.keys(store.errors).map(id=>BY_ID[id]).filter(Boolean));
+  else if(mode==='train') list = trainPool(OPT);
+  else list = dedupe(shuffle(Object.keys(store.errors).map(id=>BY_ID[id]).filter(Boolean)));
   if(!list.length){ renderHome(); return; }
-  S = {mode, list, k:0, right:0, wrong:0, lives:EX_LIVES, left:EX_SEC, done:[], t0:Date.now()};
+  if(mode==='train'){ store.sess = null; save(); }
+  S = {mode, list, k:0, right:0, wrong:0, lives:EX_LIVES, left:EX_SEC, done:[],
+       t0:Date.now(), ans:{}, again:{}};
+  runSession();
+}
+
+// Тренировка переживает выход из приложения: сохраняем id вопросов и позицию.
+function saveSession(){
+  if(!S || S.mode!=='train' || S.ended) return;
+  store.sess = {ids:S.list.map(q=>q.id), k:S.k, right:S.right, wrong:S.wrong,
+                ans:S.ans, t0:S.t0};
+  save();
+}
+function resumeSession(){
+  const sv = store.sess; if(!sv) return;
+  const list = sv.ids.map(id=>BY_ID[id]).filter(Boolean);
+  if(!list.length){ store.sess=null; save(); renderSetup(); return; }
+  S = {mode:'train', list, k:Math.min(sv.k,list.length-1), right:sv.right||0, wrong:sv.wrong||0,
+       lives:EX_LIVES, left:EX_SEC, done:[], t0:sv.t0||Date.now(), ans:sv.ans||{}, again:{}};
+  runSession();
+}
+
+function runSession(){
   show('quiz');
-  if(mode==='exam'){
+  if(S.mode==='exam'){
     $('#timer').textContent = mmss(S.left);
     clearInterval(tick);
     tick = setInterval(()=>{
@@ -412,6 +650,11 @@ function start(mode){
   renderQ();
 }
 
+/* ---------- отрисовка вопроса ---------- */
+// Выход напитка — подсказка: зная его, пропуск считается арифметикой. На экзамене
+// не показываем никогда, в тренировке это выбор пользователя.
+const showTotal = () => S.mode!=='exam' && !!store.showTotal;
+
 function renderQ(){
   const q = S.list[S.k];
   $('#prog').style.width = (S.k/S.list.length*100)+'%';
@@ -419,46 +662,136 @@ function renderQ(){
   $('#hearts').innerHTML = S.mode==='exam'
     ? '<span style="color:var(--bad)">'+'●'.repeat(S.lives)+'</span><span style="color:var(--ink-3)">'+'○'.repeat(EX_LIVES-S.lives)+'</span>'
     : '';
+  $('#prev').classList.toggle('hidden', S.mode==='exam' || S.k===0);
   const img = q.img ? `<img src="${src(q.img)}" alt="">` : '';
-  // «Пропущенная граммовка»: показываем состав целиком, пустая строка — та, что нужно вписать.
-  const fillTable = q.t==='fill'
-    ? `<table class="fillt">${q.rows.map(([n,a])=>
-         `<tr class="${a?'':'miss'}"><td>${n}</td><td>${a||'?'}</td></tr>`).join('')}
-       <tr class="tot"><td>Выход</td><td>${q.total}</td></tr></table>` : '';
-  const body = (q.t==='num'||q.t==='fill')
-    ? `${fillTable}<div class="numrow">
-         <input id="inp" type="number" inputmode="decimal" enterkeyhint="go" placeholder="0" autocomplete="off">
-         <span class="unit">${q.unit}</span>
-         <button class="go" id="ok">Ответ</button>
-       </div>`
+  const nBlanks = q.t==='mfill' ? q.a.length : (q.t==='fill' ? 1 : 0);
+  let bi = -1;
+  const table = (q.t==='fill'||q.t==='mfill')
+    ? `<table class="fillt" id="ftab">${q.rows.map(([n,a])=>{
+         if(a==='') bi++;
+         return `<tr class="${a?'':'miss'}"${a?'':` data-b="${bi}"`}><td>${n}</td>`+
+                `<td>${a || '<span class="slot">—</span>'}</td></tr>`;
+       }).join('')}${showTotal()&&q.total?`<tr class="tot"><td>Выход</td><td>${q.total}</td></tr>`:''}</table>`
+    : '';
+  const body = (q.t==='num'||q.t==='fill'||q.t==='mfill')
+    ? table + padHTML(q, nBlanks)
     : `<div class="opts">${q.opts.map((o,i)=>
          `<button class="opt ${q.cat!=='glass'&&q.t==='choice'&&/^\d/.test(o)?'num':''}" data-i="${i}">${o}</button>`).join('')}</div>`;
+  const kind = q.cat==='glass' ? 'посуда' : q.cat==='garnish' ? 'украшение'
+             : q.cat==='method' ? 'метод' : 'состав';
   $('#quiz').innerHTML = `<div class="q" id="qc">
-      <div class="drink">${img}<div><span>${q.cat==='glass'?'посуда':(q.cat==='garnish'?'украшение':'состав')}</span><b>${q.drink}</b></div></div>
+      <div class="drink">${img}<div><span>${kind}</span><b>${q.drink}</b>
+        ${q.tag?`<div class="tagline">${q.tag}</div>`:''}</div>
+        ${starHTML(isFavQ(q.id), 'id="favQ"')}</div>
       <h2>${q.q}</h2>
       ${q.hint?`<div class="hint">${q.hint}</div>`:''}
       ${body}
       <div class="fb" id="fb"></div>
     </div>`;
-  if(q.t==='num'||q.t==='fill'){
-    const inp=$('#inp');
-    setTimeout(()=>inp.focus({preventScroll:true}),60);
-    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') submitNum(); });
-    $('#ok').addEventListener('click', submitNum);
-  } else {
-    $('#quiz').querySelectorAll('.opt').forEach(b=>
+  $('#favQ').onclick = e=>{ e.stopPropagation(); toggleFavQ(q.id);
+    e.currentTarget.classList.toggle('on'); e.currentTarget.textContent = isFavQ(q.id)?'★':'☆'; };
+  if(q.t==='num'||q.t==='fill'||q.t==='mfill') initPad(q, nBlanks);
+  else $('#quiz').querySelectorAll('.opt').forEach(b=>
       b.addEventListener('click',()=>submitChoice(+b.dataset.i, b)));
+  // уже отвеченный вопрос (вернулись назад) — показываем разбор, не даём переотвечать
+  const prev = S.ans[q.id];
+  if(prev!=null) replay(q, prev);
+}
+
+/* ---------- своя клавиатура ---------- */
+// Нативная клавиатура телефона перекрывала карточку и прыгала при фокусе,
+// поэтому цифры вводятся своим падом. Он же обслуживает несколько полей у «впиши состав».
+const QUICK = [10,20,30,40,50,60,100,150,200];
+let PAD = null;
+
+function padHTML(q, nBlanks){
+  const many = nBlanks > 1;
+  return `<div class="numbox" id="numbox">
+    <div class="disp" id="disp">
+      <span class="val ph" id="val">0<i></i></span>
+      <span class="unit">${q.unit||''}</span>
+    </div>
+    ${many?`<div class="hint" id="slotHint"></div>`:''}
+    <div class="pad">
+      <div class="quick">${QUICK.map(v=>`<button data-q="${v}">${v}</button>`).join('')}</div>
+      ${[1,2,3,4,5,6,7,8,9].map(d=>`<button data-d="${d}">${d}</button>`).join('')}
+      <button data-d="," class="sub">,</button>
+      <button data-d="0">0</button>
+      <button data-del="1" class="sub">⌫</button>
+      <button class="act" id="ok" style="grid-column:1/-1">${many?'Дальше':'Ответ'}</button>
+    </div></div>`;
+}
+
+function padDraw(){
+  const q = PAD.q, v = PAD.vals[PAD.i];
+  $('#val').innerHTML = (v||'0')+'<i></i>';
+  $('#val').classList.toggle('ph', !v);
+  const tab = $('#ftab');
+  if(PAD.many && tab){
+    const rows=[...tab.querySelectorAll('tr[data-b]')];
+    rows.forEach((tr,i)=>{
+      tr.classList.toggle('act', i===PAD.i);
+      tr.classList.toggle('done', !!PAD.vals[i] && i!==PAD.i);
+      tr.querySelector('.slot').textContent = PAD.vals[i] ? PAD.vals[i]+' '+q.unit : '—';
+    });
+    $('#slotHint').textContent = 'Поле '+(PAD.i+1)+' из '+PAD.n+' · '+
+      rows[PAD.i].firstElementChild.textContent.trim();
+    $('#ok').textContent = PAD.i===PAD.n-1 ? 'Ответ' : 'Дальше';
+  } else if(tab){
+    const tr=tab.querySelector('tr[data-b]');
+    if(tr){ tr.classList.add('act'); tr.querySelector('.slot').textContent = v ? v+' '+q.unit : '—'; }
   }
 }
 
+function initPad(q, nBlanks){
+  PAD = {q, n:Math.max(1,nBlanks), i:0, vals:new Array(Math.max(1,nBlanks)).fill(''),
+         many:nBlanks>1, locked:false};
+  $('#numbox').addEventListener('click', e=>{
+    const b=e.target.closest('button'); if(!b || PAD.locked) return;
+    if(b.dataset.d!=null){
+      const d=b.dataset.d;
+      if(d===',' && (PAD.vals[PAD.i].includes(',')||!PAD.vals[PAD.i])) return;
+      if(PAD.vals[PAD.i].replace(',','').length>=5) return;
+      PAD.vals[PAD.i]+=d; padDraw(); return;
+    }
+    if(b.dataset.del){ PAD.vals[PAD.i]=PAD.vals[PAD.i].slice(0,-1); padDraw(); return; }
+    if(b.dataset.q!=null){ PAD.vals[PAD.i]=b.dataset.q; padDraw(); return; }
+    if(b.id==='ok'){
+      if(!PAD.vals[PAD.i]) return;
+      if(PAD.i < PAD.n-1){ PAD.i++; padDraw(); return; }
+      submitNum();
+    }
+  });
+  if(PAD.many && $('#ftab')) $('#ftab').addEventListener('click', e=>{
+    const tr=e.target.closest('tr[data-b]'); if(!tr||PAD.locked) return;
+    PAD.i=+tr.dataset.b; padDraw();
+  });
+  padDraw();
+}
+
+const numOf = t => parseFloat((t||'').replace(',','.'));
+
 function submitNum(){
-  const q=S.list[S.k], inp=$('#inp');
-  if(inp.disabled) return;
-  const raw=(inp.value||'').replace(',','.').trim();
-  if(raw==='') { inp.focus(); return; }
-  const ok = Math.abs(parseFloat(raw) - q.a) < 0.001;
-  inp.disabled=true; $('#ok').style.opacity=.4;
-  inp.style.borderColor = ok?'var(--ok)':'var(--bad)';
+  const q=S.list[S.k];
+  if(!PAD || PAD.locked) return;
+  PAD.locked = true;
+  let ok;
+  if(q.t==='mfill'){
+    const rows=[...$('#ftab').querySelectorAll('tr[data-b]')];
+    ok = q.a.every((a,i)=>Math.abs(numOf(PAD.vals[i]) - a) < 0.001);
+    rows.forEach((tr,i)=>{
+      const good = Math.abs(numOf(PAD.vals[i]) - q.a[i]) < 0.001;
+      tr.classList.remove('act','done');
+      tr.classList.add(good?'right':'wrong');
+      if(!good) tr.querySelector('.slot').textContent = fmt(q.a[i])+' '+q.unit;
+    });
+  } else {
+    ok = Math.abs(numOf(PAD.vals[0]) - q.a) < 0.001;
+    const tab = $('#ftab'), tr = tab && tab.querySelector('tr[data-b]');
+    if(tr){ tr.classList.remove('act'); tr.classList.add(ok?'right':'wrong');
+            if(!ok) tr.querySelector('.slot').textContent = fmt(q.a)+' '+q.unit; }
+  }
+  $('#disp').classList.add(ok?'ok':'bad');
   grade(ok);
 }
 
@@ -473,17 +806,46 @@ function submitChoice(i, btn){
   grade(i===q.ai);
 }
 
+// возврат к уже отвеченному вопросу: показываем правильный ответ и не пересчитываем статистику
+function replay(q, rec){
+  if(PAD) PAD.locked = true;
+  const fb=$('#fb');
+  fb.className = 'fb '+(rec.ok?'ok':'bad')+' show';
+  fb.innerHTML = (rec.ok?'Верно':'Правильный ответ: <b>'+answerText(q)+'</b>')
+    + '<span style="opacity:.55;font-size:12px"> · этот вопрос вы уже отвечали</span>'
+    + (q.r!=null ? '<br><span class="fbbtn" id="showRec" data-r="'+q.r+'">Открыть рецепт целиком</span>' : '');
+  $('#quiz').querySelectorAll('.opt').forEach((b,j)=>{ b.disabled=true;
+    b.classList.add(j===q.ai ? 'ok' : 'dim'); });
+  if($('#ok')){ $('#ok').textContent='Дальше'; $('#ok').onclick = ()=>next(); }
+  const tab=$('#ftab');
+  if(tab) tab.querySelectorAll('tr[data-b]').forEach((tr,i)=>{
+    tr.classList.remove('act');
+    tr.classList.add('done');
+    tr.querySelector('.slot').textContent =
+      (q.t==='mfill' ? fmt(q.a[i]) : fmt(q.a))+' '+q.unit;
+  });
+}
+
 function grade(ok){
   const q=S.list[S.k], fb=$('#fb');
-  S.done.push({i:q.i, ok});
+  S.done.push({id:q.id, ok});
+  S.ans[q.id] = {ok};
   store.stats.total++; if(ok) store.stats.right++;
   if(ok){
     S.right++;
+    store.solved[q.id] = 1;                      // для режима «только нерешённые»
     if(store.errors[q.id]){ delete store.errors[q.id]; }
     fb.className='fb ok show'; fb.innerHTML='Верно';
   } else {
     S.wrong++; if(S.mode==='exam') S.lives--;
+    delete store.solved[q.id];
     store.errors[q.id] = (store.errors[q.id]||0)+1;
+    // Ошибку надо переспросить, пока она свежая: вставляем копию в ближайшие 50 вопросов.
+    if(S.mode!=='exam' && !S.again[q.id]){
+      S.again[q.id] = 1;
+      const at = Math.min(S.list.length, S.k + 20 + Math.floor(Math.random()*30));
+      S.list.splice(at, 0, q);
+    }
     fb.className='fb bad show';
     fb.innerHTML = 'Правильный ответ: <b>'+answerText(q)+'</b>'
       + '<span style="opacity:.55;font-size:12px"> · тап или Enter — дальше</span>'
@@ -492,14 +854,14 @@ function grade(ok){
   }
   save();
   if(S.mode==='exam' && S.lives<=0){ setTimeout(()=>finish('lives'), 1200); return; }
-  const delay = ok ? 420 : 1900;
+  const delay = ok ? 520 : 2200;
   S.timer = setTimeout(next, delay);
   setTimeout(()=>{ if(!S.ended){ S.armed=true; document.addEventListener('pointerdown', onAdvance, {once:true}); } }, 220);
 }
 
 function onAdvance(e){
-  // тап по кнопке рецепта или внутри модалки не листает вопрос
-  if(e && e.target.closest && e.target.closest('#modal, #showRec')){
+  // тап по кнопке рецепта, по своей клавиатуре, по звезде и внутри модалки не листает вопрос
+  if(e && e.target.closest && e.target.closest('#modal, #showRec, .numbox, .star, .top')){
     document.addEventListener('pointerdown', onAdvance, {once:true});
     return;
   }
@@ -512,19 +874,32 @@ function next(){
   document.removeEventListener('pointerdown', onAdvance);
   clearTimeout(S.timer);
   S.k++;
+  saveSession();
   if(S.k>=S.list.length) finish('end'); else renderQ();
+}
+
+// Шаг назад: вопрос показывается с разбором, отвечать заново не нужно.
+function prevQ(){
+  if(!S || S.k===0) return;
+  S.armed=false;
+  document.removeEventListener('pointerdown', onAdvance);
+  clearTimeout(S.timer);
+  S.k--;
+  saveSession();
+  renderQ();
 }
 
 function finish(why){
   if(S.ended) return; S.ended=true; S.armed=false;
   document.removeEventListener('pointerdown', onAdvance);
   clearInterval(tick); clearTimeout(S.timer);
+  if(S.mode==='train') store.sess=null;
   const secs = Math.round((Date.now()-S.t0)/1000);
   if(S.mode==='exam'){
     store.stats.runs++;
     if(S.right>store.stats.best) store.stats.best=S.right;
-    save();
   }
+  save();
   const passed = S.mode!=='exam' ? null : (why==='end' && S.lives>0);
   const title = S.mode==='exam'
       ? (passed ? 'Экзамен сдан' : (why==='time' ? 'Время вышло' : (why==='lives'?'Три ошибки':'Экзамен завершён')))
@@ -543,10 +918,12 @@ function finish(why){
     </div>
     <div class="row"><button class="ghostbtn" id="toHome">На главную</button></div>`;
   show('result');
-  $('#again').onclick = ()=>start(S.mode);
+  $('#again').onclick = ()=>{ if(S.mode==='train') renderSetup(); else start(S.mode); };
   $('#toErr').onclick = openErrors;
   $('#toHome').onclick = renderHome;
 }
+addEventListener('pagehide', saveSession);
+addEventListener('visibilitychange', ()=>{ if(document.hidden) saveSession(); });
 
 
 /* ---------- шпаргалки (сжатая версия главы «Система» из пособия) ---------- */
@@ -666,6 +1043,11 @@ function recipeHTML(r){
   const vars = (r.var||[]).map(v=>`<div class="var"><b>${v.name}</b><p>${mark(v.method)}</p></div>`).join('');
   return `<div class="grip"><i></i>
       <button class="cls" id="clsRec"><b>‹</b>${BACK_LABEL}</button>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        ${starHTML(isFav(r.name), 'data-fav="'+r.name.replace(/"/g,'&quot;')+'"')}
+        <button class="star" data-skip="${r.name.replace(/"/g,'&quot;')}"
+          title="Убрать напиток из тренировки">${isSkip(r.name)?'🚫':'⃠'}</button>
+      </div>
     </div><div class="rc">
     ${r.img?`<img class="hero" src="${src(r.img)}" alt="">`:''}
     <h3>${r.name}${r.total?` <span style="font-family:var(--mono);font-size:15px;color:var(--acc)">${r.total}</span>`:''}</h3>
@@ -718,16 +1100,51 @@ function compHTML(r){
 }
 
 function rowHTML(r,i){
-  return `<button class="rrow" data-r="${i}">
-    <div class="h">${r.img?`<img src="${src(r.img)}">`:'<div style="width:38px"></div>'}
-      <div class="t"><b>${r.name}</b><span>${[r.tech,r.glass].filter(Boolean).join(' · ')}</span></div>
-      <div class="v">${r.total||''}</div></div>
-    ${compHTML(r)}</button>`;
+  return `<div class="rrow">
+    <div class="h">${r.img?`<img src="${src(r.img)}" data-r="${i}">`:'<div style="width:38px"></div>'}
+      <div class="t" data-r="${i}"><b>${r.name}</b><span>${[r.tech,r.glass].filter(Boolean).join(' · ')}${r.tag?' · '+r.tag:''}</span></div>
+      <div class="v">${r.total||''}</div>
+      ${starHTML(isFav(r.name), 'data-fav="'+r.name.replace(/"/g,'&quot;')+'"')}</div>
+    <div data-r="${i}">${compHTML(r)}</div></div>`;
+}
+
+let REF_SHEET = 'all';        // фильтр по виду напитков
+let REF_FAV = false;          // показывать только избранное
+
+function refPool(f){
+  return REC.recipes.map((r,i)=>[r,i])
+    .filter(([r])=>match(r,f))
+    .filter(([r])=>REF_SHEET==='all' || r.sh===REF_SHEET)
+    .filter(([r])=>!REF_FAV || isFav(r.name));
+}
+
+function renderRefChips(){
+  const favN = Object.keys(store.fav).length;
+  $('#refSheet').innerHTML =
+    `<button class="chip${REF_FAV?' on':''}" data-fav-filter="1">★ Избранное<i>${favN}</i></button>` +
+    [['all','Все виды']].concat((REC.sheets||[]).map(x=>[x,x]))
+      .map(([v,t])=>`<button class="chip${REF_SHEET===v?' on':''}" data-sheet="${v}">${t}</button>`).join('');
+}
+
+// Справочник посуды: собран из самих карточек — какой бокал, какая трубочка, что в нём подаётся.
+function glassHTML(){
+  const gw = REC.glassware || [];
+  return gw.map(g=>`<div class="gcard"><div class="hd">
+      ${g.img?`<img src="${src(g.img)}">`:''}
+      <div><b>${g.name}</b><span class="st">${g.straw||'без трубочки'} · ${g.n} напитков</span></div>
+    </div><div class="dr">${g.drinks.join(' · ')}</div></div>`).join('');
 }
 
 function renderRef(filter){
   const f = (filter||'').trim().toLowerCase();
-  const all = REC.recipes.map((r,i)=>[r,i]).filter(([r])=>match(r,f));
+  renderRefChips();
+  $('#refSheet').classList.toggle('hidden', REF_SORT==='glass');
+  if(REF_SORT==='glass'){
+    $('#refList').innerHTML = glassHTML();
+    $('#cheats').classList.toggle('hidden', !!f);
+    return;
+  }
+  const all = refPool(f);
   let html;
   if(REF_SORT==='src'){          // порядок исходной таблицы: лист и строка Excel
     html = (REC.sheets||[]).map(sh=>{
@@ -744,7 +1161,8 @@ function renderRef(filter){
         rows.map(([r,i])=>rowHTML(r,i)).join('');
     }).join('');
   }
-  $('#refList').innerHTML = html || '<div class="empty">Ничего не нашлось</div>';
+  $('#refList').innerHTML = html ||
+    `<div class="empty">${REF_FAV?'В избранном пока пусто. Звёздочка справа в строке добавляет коктейль сюда.':'Ничего не нашлось'}</div>`;
   $('#cheats').classList.toggle('hidden', !!f);
 }
 
@@ -764,21 +1182,102 @@ function openRef(){
 $('#refSort').addEventListener('click', e=>{
   const b = e.target.closest('button[data-sort]'); if(!b) return;
   REF_SORT = b.dataset.sort;
-  store.refSort = REF_SORT; save();          // выбор порядка переживает перезагрузку
+  if(REF_SORT!=='glass'){ store.refSort = REF_SORT; save(); }   // выбор порядка переживает перезагрузку
   $('#refSort').querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
   renderRef($('#refQ').value);
-  $('#refList').scrollIntoView({block:'start'});
+});
+$('#refSheet').addEventListener('click', e=>{
+  const f = e.target.closest('[data-fav-filter]');
+  if(f){ REF_FAV = !REF_FAV; renderRef($('#refQ').value); return; }
+  const b = e.target.closest('[data-sheet]'); if(!b) return;
+  REF_SHEET = b.dataset.sheet;
+  renderRef($('#refQ').value);
+});
+
+/* ---------- база вопросов ---------- */
+// Просто список вопросов с ответами: посмотреть, что вообще спрашивается, без теста.
+let QB = {sheet:'all', cat:'all', fav:false, q:''};
+
+function qbRowHTML(q){
+  const meta = [q.drink, q.tag, q.sh].filter(Boolean).join(' · ');
+  return `<div class="qrow"><div class="hd">
+      <b${q.r!=null?` data-r="${q.r}"`:''}>${q.q}</b>
+      <div class="a">${answerText(q)}</div>
+      ${starHTML(isFavQ(q.id), 'data-favq="'+q.id+'"')}</div>
+    <div class="mt">${meta}</div></div>`;
+}
+
+function qbList(){
+  const f = QB.q.trim().toLowerCase();
+  return BANK.filter(q=>
+      (QB.sheet==='all' || q.sh===QB.sheet) &&
+      (QB.cat==='all'   || q.cat===QB.cat) &&
+      (!QB.fav || favQuestion(q)) &&
+      (!f || (q.drink+' '+q.q).toLowerCase().includes(f)));
+}
+
+function renderQB(){
+  const favN = Object.keys(store.favQ).length;
+  $('#qbSheet').innerHTML =
+    `<button class="chip${QB.fav?' on':''}" data-fav-filter="1">★ Избранное<i>${favN}</i></button>` +
+    [['all','Все виды']].concat((REC.sheets||[]).map(x=>[x,x]))
+      .map(([v,t])=>`<button class="chip${QB.sheet===v?' on':''}" data-sheet="${v}">${t}</button>`).join('');
+  $('#qbCat').innerHTML = CATS
+    .map(([v,t])=>`<button class="chip${QB.cat===v?' on':''}" data-cat="${v}">${t}</button>`).join('');
+  const list = qbList();
+  $('#qbList').innerHTML = list.length
+    ? `<div class="subhead">${list.length} вопросов</div>` + list.map(qbRowHTML).join('')
+    : '<div class="empty">Ничего не нашлось</div>';
+}
+
+function openQB(){ renderQB(); show('qbase'); $('#qbQ').oninput = e=>{ QB.q=e.target.value; renderQB(); }; }
+
+$('#qbSheet').addEventListener('click', e=>{
+  const f = e.target.closest('[data-fav-filter]');
+  if(f){ QB.fav=!QB.fav; renderQB(); return; }
+  const b = e.target.closest('[data-sheet]'); if(!b) return;
+  QB.sheet=b.dataset.sheet; renderQB();
+});
+$('#qbCat').addEventListener('click', e=>{
+  const b = e.target.closest('[data-cat]'); if(!b) return;
+  QB.cat=b.dataset.cat; renderQB();
 });
 
 /* ---------- ошибки ---------- */
 function openErrors(){
-  const ids = Object.keys(store.errors).filter(id=>BY_ID[id]);
+  const ids = Object.keys(store.errors).filter(id=>BY_ID[id])
+      .sort((a,b)=>store.errors[b]-store.errors[a]);
   $('#errLead').textContent = ids.length
     ? 'Здесь остаются вопросы, где вы ошиблись. Ответите верно — вопрос уйдёт из списка.'
     : 'Пока пусто. Ошибки будут появляться здесь автоматически.';
   $('#errActions').innerHTML = ids.length
     ? '<button class="go" id="redo">Перерешать · '+ids.length+'</button><button class="ghostbtn" id="clear">Очистить</button>'
     : '<button class="ghostbtn" id="home2">На главную</button>';
+
+  // Где чаще всего ошибаемся: сначала по коктейлям, потом сами частые вопросы.
+  const byDrink = {}, byCat = {};
+  ids.forEach(id=>{
+    const q=BY_ID[id], n=store.errors[id];
+    byDrink[q.drink] = (byDrink[q.drink]||0)+n;
+    byCat[q.cat] = (byCat[q.cat]||0)+n;
+  });
+  const top = Object.entries(byDrink).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const catName = {grams:'состав', garnish:'украшения', glass:'посуда', method:'метод'};
+  const cats = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const worst = ids.slice(0,5);
+  $('#errStat').innerHTML = ids.length ? `
+    <div class="subhead">Слабые коктейли</div>
+    ${top.map(([n,c])=>`<div class="qrow"><div class="hd"><b>${n}</b>
+        <div class="a" style="color:var(--bad)">${c} ошиб.</div></div></div>`).join('')}
+    <div class="subhead">По темам</div>
+    <div class="note">${cats.map(([c,n])=>`${catName[c]||c} — <b style="font-family:var(--mono);color:var(--bad)">${n}</b>`).join(' · ')}</div>
+    <div class="subhead">Самые частые ошибки</div>
+    ${worst.map(id=>{const q=BY_ID[id];
+      return `<div class="qrow"><div class="hd"><b${q.r!=null?` data-r="${q.r}"`:''}>${q.q}</b>
+        <div class="a">${answerText(q)}</div></div>
+        <div class="mt">${q.drink} · промахов ${store.errors[id]}</div></div>`;}).join('')}
+    <div class="subhead">Все ошибки</div>` : '';
+
   $('#errList').innerHTML = ids.map(id=>{
     const q=BY_ID[id];
     return `<button class="item" data-r="${q.r??''}">${q.img?`<img src="${src(q.img)}">`:''}
@@ -796,16 +1295,34 @@ function openErrors(){
 /* ---------- события ---------- */
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
-  if(m==='errors') openErrors(); else if(m==='ref') openRef(); else start(m);
+  if(m==='errors') openErrors();
+  else if(m==='ref') openRef();
+  else if(m==='setup') renderSetup();
+  else if(m==='qbase') openQB();
+  else start(m);
 }));
+// звёздочки: коктейль в избранном и вопрос в избранном
 document.addEventListener('click', e=>{
-  const row = e.target.closest('.rrow, .item, #showRec');
+  const f = e.target.closest('[data-fav]');
+  if(f){ e.stopPropagation(); toggleFav(f.dataset.fav);
+    f.classList.toggle('on'); f.textContent = isFav(f.dataset.fav)?'★':'☆';
+    if(REF_FAV) renderRef($('#refQ').value); return; }
+  const fq = e.target.closest('[data-favq]');
+  if(fq){ e.stopPropagation(); toggleFavQ(fq.dataset.favq);
+    fq.classList.toggle('on'); fq.textContent = isFavQ(fq.dataset.favq)?'★':'☆';
+    if(QB.fav) renderQB(); return; }
+  const sk = e.target.closest('[data-skip]');
+  if(sk){ e.stopPropagation(); const n=sk.dataset.skip; toggleSkip(n);
+    sk.textContent = isSkip(n)?'🚫':'⃠';
+    sk.classList.toggle('on', isSkip(n)); return; }
+  const row = e.target.closest('[data-r]');
   if(!row) return;
   const i = row.dataset.r;
   if(i!=='' && i!=null) openRecipe(+i);
 });
-$('#back').addEventListener('click',()=>{ clearInterval(tick); closeRecipe(); renderHome(); });
-// «‹» в шапке справочника и списка ошибок — возврат на главный экран
+$('#back').addEventListener('click',()=>{ clearInterval(tick); saveSession(); closeRecipe(); renderHome(); });
+$('#prev').addEventListener('click', e=>{ e.stopPropagation(); prevQ(); });
+// «‹» в шапке справочника, базы вопросов и списка ошибок — возврат на главный экран
 document.addEventListener('click', e=>{
   if(e.target.closest('.scrhead .back')){ closeRecipe(); renderHome(); }
 });
@@ -814,8 +1331,17 @@ document.addEventListener('keydown',e=>{
   if(S && S.armed && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); next(); return; }
   const opts=$('#quiz').querySelectorAll('.opt');
   if(opts.length && /^[1-4]$/.test(e.key)){ const b=opts[+e.key-1]; if(b&&!b.disabled) b.click(); }
+  // своя клавиатура слушает и физическую: цифры, запятая, Backspace, Enter
+  if(PAD && !PAD.locked && $('#numbox')){
+    if(/^[0-9]$/.test(e.key)) $('#numbox').querySelector(`[data-d="${e.key}"]`).click();
+    else if(e.key===','||e.key==='.') $('#numbox').querySelector('[data-d=","]').click();
+    else if(e.key==='Backspace'){ e.preventDefault(); $('#numbox').querySelector('[data-del]').click(); }
+    else if(e.key==='Enter'){ e.preventDefault(); $('#ok').click(); }
+  }
+  if(e.key==='ArrowLeft') prevQ();
 });
 renderHome();
+
 </script>
 </body>
 </html>
