@@ -1,0 +1,6 @@
+build/
+data/source.xlsx
+data/_media/
+thumb/
+__pycache__/
+.venv/

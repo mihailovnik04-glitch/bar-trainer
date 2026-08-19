@@ -1,0 +1,1476 @@
+{
+ "Спец. подачи": [
+  {
+   "file": "media/image13.png",
+   "row": 1,
+   "col": 4,
+   "row_to": 6,
+   "col_to": 4
+  },
+  {
+   "file": "media/image1.png",
+   "row": 23,
+   "col": 1,
+   "row_to": 27,
+   "col_to": 1
+  },
+  {
+   "file": "media/image3.jpeg",
+   "row": 40,
+   "col": 1,
+   "row_to": 40,
+   "col_to": 1
+  },
+  {
+   "file": "media/image4.jpeg",
+   "row": 41,
+   "col": 1,
+   "row_to": 41,
+   "col_to": 1
+  },
+  {
+   "file": "media/image5.jpeg",
+   "row": 42,
+   "col": 1,
+   "row_to": 42,
+   "col_to": 1
+  },
+  {
+   "file": "media/image6.jpeg",
+   "row": 43,
+   "col": 1,
+   "row_to": 43,
+   "col_to": 1
+  },
+  {
+   "file": "media/image7.jpeg",
+   "row": 44,
+   "col": 1,
+   "row_to": 44,
+   "col_to": 1
+  },
+  {
+   "file": "media/image8.jpeg",
+   "row": 45,
+   "col": 1,
+   "row_to": 45,
+   "col_to": 1
+  },
+  {
+   "file": "media/image9.jpeg",
+   "row": 46,
+   "col": 1,
+   "row_to": 46,
+   "col_to": 1
+  },
+  {
+   "file": "media/image10.png",
+   "row": 47,
+   "col": 1,
+   "row_to": 47,
+   "col_to": 1
+  },
+  {
+   "file": "media/image11.png",
+   "row": 47,
+   "col": 1,
+   "row_to": 47,
+   "col_to": 1
+  },
+  {
+   "file": "media/image2.png",
+   "row": 50,
+   "col": 1,
+   "row_to": 67,
+   "col_to": 1
+  },
+  {
+   "file": "media/image12.png",
+   "row": 69,
+   "col": 1,
+   "row_to": 80,
+   "col_to": 1
+  }
+ ],
+ "Лонг Дринки": [
+  {
+   "file": "media/image46.png",
+   "row": 2,
+   "col": 1,
+   "row_to": 10,
+   "col_to": 1
+  },
+  {
+   "file": "media/image38.png",
+   "row": 12,
+   "col": 1,
+   "row_to": 19,
+   "col_to": 1
+  },
+  {
+   "file": "media/image39.png",
+   "row": 21,
+   "col": 1,
+   "row_to": 26,
+   "col_to": 1
+  },
+  {
+   "file": "media/image50.png",
+   "row": 28,
+   "col": 1,
+   "row_to": 33,
+   "col_to": 1
+  },
+  {
+   "file": "media/image40.png",
+   "row": 35,
+   "col": 1,
+   "row_to": 40,
+   "col_to": 1
+  },
+  {
+   "file": "media/image41.png",
+   "row": 42,
+   "col": 1,
+   "row_to": 48,
+   "col_to": 1
+  },
+  {
+   "file": "media/image43.png",
+   "row": 50,
+   "col": 1,
+   "row_to": 56,
+   "col_to": 1
+  },
+  {
+   "file": "media/image44.png",
+   "row": 59,
+   "col": 1,
+   "row_to": 66,
+   "col_to": 1
+  },
+  {
+   "file": "media/image42.png",
+   "row": 68,
+   "col": 1,
+   "row_to": 76,
+   "col_to": 1
+  },
+  {
+   "file": "media/image45.png",
+   "row": 78,
+   "col": 1,
+   "row_to": 86,
+   "col_to": 1
+  },
+  {
+   "file": "media/image47.png",
+   "row": 81,
+   "col": 4,
+   "row_to": 86,
+   "col_to": 4
+  },
+  {
+   "file": "media/image48.png",
+   "row": 81,
+   "col": 4,
+   "row_to": 86,
+   "col_to": 4
+  },
+  {
+   "file": "media/image22.png",
+   "row": 89,
+   "col": 1,
+   "row_to": 96,
+   "col_to": 1
+  },
+  {
+   "file": "media/image37.png",
+   "row": 91,
+   "col": 4,
+   "row_to": 96,
+   "col_to": 4
+  },
+  {
+   "file": "media/image36.png",
+   "row": 97,
+   "col": 1,
+   "row_to": 105,
+   "col_to": 1
+  },
+  {
+   "file": "media/image32.png",
+   "row": 107,
+   "col": 1,
+   "row_to": 114,
+   "col_to": 1
+  },
+  {
+   "file": "media/image14.png",
+   "row": 108,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image35.png",
+   "row": 115,
+   "col": 1,
+   "row_to": 122,
+   "col_to": 1
+  },
+  {
+   "file": "media/image49.png",
+   "row": 124,
+   "col": 1,
+   "row_to": 132,
+   "col_to": 1
+  },
+  {
+   "file": "media/image28.png",
+   "row": 133,
+   "col": 1,
+   "row_to": 141,
+   "col_to": 1
+  },
+  {
+   "file": "media/image31.png",
+   "row": 143,
+   "col": 1,
+   "row_to": 152,
+   "col_to": 1
+  },
+  {
+   "file": "media/image15.png",
+   "row": 153,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image33.png",
+   "row": 162,
+   "col": 1,
+   "row_to": 170,
+   "col_to": 1
+  },
+  {
+   "file": "media/image25.png",
+   "row": 171,
+   "col": 1,
+   "row_to": 180,
+   "col_to": 1
+  },
+  {
+   "file": "media/image17.png",
+   "row": 173,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image16.png",
+   "row": 174,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image20.png",
+   "row": 182,
+   "col": 1,
+   "row_to": 189,
+   "col_to": 1
+  },
+  {
+   "file": "media/image19.png",
+   "row": 191,
+   "col": 1,
+   "row_to": 198,
+   "col_to": 1
+  },
+  {
+   "file": "media/image21.png",
+   "row": 200,
+   "col": 1,
+   "row_to": 206,
+   "col_to": 1
+  },
+  {
+   "file": "media/image27.png",
+   "row": 207,
+   "col": 1,
+   "row_to": 214,
+   "col_to": 1
+  },
+  {
+   "file": "media/image30.png",
+   "row": 215,
+   "col": 1,
+   "row_to": 223,
+   "col_to": 1
+  },
+  {
+   "file": "media/image29.png",
+   "row": 224,
+   "col": 1,
+   "row_to": 231,
+   "col_to": 1
+  },
+  {
+   "file": "media/image26.png",
+   "row": 232,
+   "col": 1,
+   "row_to": 238,
+   "col_to": 1
+  },
+  {
+   "file": "media/image23.png",
+   "row": 239,
+   "col": 1,
+   "row_to": 244,
+   "col_to": 1
+  },
+  {
+   "file": "media/image34.png",
+   "row": 245,
+   "col": 1,
+   "row_to": 253,
+   "col_to": 1
+  },
+  {
+   "file": "media/image24.png",
+   "row": 255,
+   "col": 1,
+   "row_to": 262,
+   "col_to": 1
+  },
+  {
+   "file": "media/image18.png",
+   "row": 263,
+   "col": 1,
+   "row_to": 271,
+   "col_to": 1
+  }
+ ],
+ "Шотики": [
+  {
+   "file": "media/image51.png",
+   "row": 1,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image62.png",
+   "row": 2,
+   "col": 1,
+   "row_to": 7,
+   "col_to": 1
+  },
+  {
+   "file": "media/image60.png",
+   "row": 9,
+   "col": 1,
+   "row_to": 16,
+   "col_to": 1
+  },
+  {
+   "file": "media/image61.png",
+   "row": 18,
+   "col": 1,
+   "row_to": 24,
+   "col_to": 1
+  },
+  {
+   "file": "media/image55.png",
+   "row": 26,
+   "col": 1,
+   "row_to": 31,
+   "col_to": 1
+  },
+  {
+   "file": "media/image54.png",
+   "row": 33,
+   "col": 1,
+   "row_to": 38,
+   "col_to": 1
+  },
+  {
+   "file": "media/image57.png",
+   "row": 40,
+   "col": 1,
+   "row_to": 47,
+   "col_to": 1
+  },
+  {
+   "file": "media/image59.png",
+   "row": 49,
+   "col": 1,
+   "row_to": 56,
+   "col_to": 1
+  },
+  {
+   "file": "media/image53.png",
+   "row": 58,
+   "col": 1,
+   "row_to": 63,
+   "col_to": 1
+  },
+  {
+   "file": "media/image58.png",
+   "row": 65,
+   "col": 1,
+   "row_to": 71,
+   "col_to": 1
+  },
+  {
+   "file": "media/image56.png",
+   "row": 73,
+   "col": 1,
+   "row_to": 80,
+   "col_to": 1
+  },
+  {
+   "file": "media/image52.png",
+   "row": 85,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  }
+ ],
+ "Лимонады и БА": [
+  {
+   "file": "media/image83.png",
+   "row": 2,
+   "col": 1,
+   "row_to": 6,
+   "col_to": 1
+  },
+  {
+   "file": "media/image87.png",
+   "row": 8,
+   "col": 1,
+   "row_to": 12,
+   "col_to": 1
+  },
+  {
+   "file": "media/image85.png",
+   "row": 14,
+   "col": 1,
+   "row_to": 19,
+   "col_to": 1
+  },
+  {
+   "file": "media/image86.png",
+   "row": 21,
+   "col": 1,
+   "row_to": 26,
+   "col_to": 1
+  },
+  {
+   "file": "media/image88.png",
+   "row": 27,
+   "col": 1,
+   "row_to": 33,
+   "col_to": 1
+  },
+  {
+   "file": "media/image94.png",
+   "row": 35,
+   "col": 1,
+   "row_to": 38,
+   "col_to": 1
+  },
+  {
+   "file": "media/image93.png",
+   "row": 40,
+   "col": 1,
+   "row_to": 44,
+   "col_to": 1
+  },
+  {
+   "file": "media/image92.png",
+   "row": 46,
+   "col": 1,
+   "row_to": 50,
+   "col_to": 1
+  },
+  {
+   "file": "media/image84.png",
+   "row": 52,
+   "col": 1,
+   "row_to": 56,
+   "col_to": 1
+  },
+  {
+   "file": "media/image91.png",
+   "row": 58,
+   "col": 1,
+   "row_to": 62,
+   "col_to": 1
+  },
+  {
+   "file": "media/image90.png",
+   "row": 64,
+   "col": 1,
+   "row_to": 68,
+   "col_to": 1
+  },
+  {
+   "file": "media/image89.png",
+   "row": 70,
+   "col": 1,
+   "row_to": 75,
+   "col_to": 1
+  },
+  {
+   "file": "media/image82.png",
+   "row": 77,
+   "col": 1,
+   "row_to": 81,
+   "col_to": 1
+  },
+  {
+   "file": "media/image81.png",
+   "row": 83,
+   "col": 1,
+   "row_to": 87,
+   "col_to": 1
+  },
+  {
+   "file": "media/image68.png",
+   "row": 89,
+   "col": 1,
+   "row_to": 94,
+   "col_to": 1
+  },
+  {
+   "file": "media/image69.png",
+   "row": 96,
+   "col": 1,
+   "row_to": 100,
+   "col_to": 1
+  },
+  {
+   "file": "media/image67.png",
+   "row": 101,
+   "col": 1,
+   "row_to": 107,
+   "col_to": 1
+  },
+  {
+   "file": "media/image66.png",
+   "row": 108,
+   "col": 1,
+   "row_to": 113,
+   "col_to": 1
+  },
+  {
+   "file": "media/image75.png",
+   "row": 114,
+   "col": 1,
+   "row_to": 121,
+   "col_to": 1
+  },
+  {
+   "file": "media/image72.png",
+   "row": 123,
+   "col": 1,
+   "row_to": 128,
+   "col_to": 1
+  },
+  {
+   "file": "media/image74.png",
+   "row": 130,
+   "col": 1,
+   "row_to": 136,
+   "col_to": 1
+  },
+  {
+   "file": "media/image71.png",
+   "row": 138,
+   "col": 1,
+   "row_to": 142,
+   "col_to": 1
+  },
+  {
+   "file": "media/image77.png",
+   "row": 145,
+   "col": 1,
+   "row_to": 150,
+   "col_to": 1
+  },
+  {
+   "file": "media/image76.png",
+   "row": 151,
+   "col": 1,
+   "row_to": 156,
+   "col_to": 1
+  },
+  {
+   "file": "media/image78.png",
+   "row": 157,
+   "col": 1,
+   "row_to": 162,
+   "col_to": 1
+  },
+  {
+   "file": "media/image79.png",
+   "row": 163,
+   "col": 1,
+   "row_to": 169,
+   "col_to": 1
+  },
+  {
+   "file": "media/image73.png",
+   "row": 172,
+   "col": 1,
+   "row_to": 178,
+   "col_to": 1
+  },
+  {
+   "file": "media/image65.png",
+   "row": 180,
+   "col": 1,
+   "row_to": 184,
+   "col_to": 1
+  },
+  {
+   "file": "media/image64.png",
+   "row": 187,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image80.png",
+   "row": 194,
+   "col": 1,
+   "row_to": 200,
+   "col_to": 1
+  },
+  {
+   "file": "media/image70.png",
+   "row": 202,
+   "col": 1,
+   "row_to": 207,
+   "col_to": 1
+  },
+  {
+   "file": "media/image63.png",
+   "row": 209,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  }
+ ],
+ "Лимонады с собой (Акция)": [],
+ "Горячие": [
+  {
+   "file": "media/image103.png",
+   "row": 2,
+   "col": 1,
+   "row_to": 10,
+   "col_to": 1
+  },
+  {
+   "file": "media/image102.png",
+   "row": 12,
+   "col": 1,
+   "row_to": 20,
+   "col_to": 1
+  },
+  {
+   "file": "media/image100.png",
+   "row": 23,
+   "col": 1,
+   "row_to": 31,
+   "col_to": 1
+  },
+  {
+   "file": "media/image99.png",
+   "row": 33,
+   "col": 1,
+   "row_to": 41,
+   "col_to": 1
+  },
+  {
+   "file": "media/image101.png",
+   "row": 44,
+   "col": 1,
+   "row_to": 51,
+   "col_to": 1
+  },
+  {
+   "file": "media/image98.png",
+   "row": 53,
+   "col": 1,
+   "row_to": 60,
+   "col_to": 1
+  },
+  {
+   "file": "media/image95.png",
+   "row": 57,
+   "col": 4,
+   "row_to": 59,
+   "col_to": 4
+  },
+  {
+   "file": "media/image97.png",
+   "row": 62,
+   "col": 1,
+   "row_to": 68,
+   "col_to": 1
+  },
+  {
+   "file": "media/image96.jpeg",
+   "row": 70,
+   "col": 1,
+   "row_to": 75,
+   "col_to": 1
+  }
+ ],
+ "Самовывоз": [
+  {
+   "file": "media/image104.png",
+   "row": 1,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image105.png",
+   "row": 6,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image106.png",
+   "row": 11,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image107.png",
+   "row": 16,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image108.png",
+   "row": 23,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image109.png",
+   "row": 29,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  }
+ ],
+ "Чай ": [
+  {
+   "file": "media/image122.png",
+   "row": 4,
+   "col": 5,
+   "row_to": 4,
+   "col_to": 5
+  },
+  {
+   "file": "media/image123.png",
+   "row": 5,
+   "col": 5,
+   "row_to": 5,
+   "col_to": 5
+  },
+  {
+   "file": "media/image124.png",
+   "row": 6,
+   "col": 5,
+   "row_to": 6,
+   "col_to": 5
+  },
+  {
+   "file": "media/image129.png",
+   "row": 8,
+   "col": 5,
+   "row_to": 8,
+   "col_to": 5
+  },
+  {
+   "file": "media/image125.png",
+   "row": 18,
+   "col": 5,
+   "row_to": 18,
+   "col_to": 5
+  },
+  {
+   "file": "media/image126.png",
+   "row": 19,
+   "col": 5,
+   "row_to": 19,
+   "col_to": 5
+  },
+  {
+   "file": "media/image127.png",
+   "row": 20,
+   "col": 5,
+   "row_to": 20,
+   "col_to": 5
+  },
+  {
+   "file": "media/image132.jpeg",
+   "row": 22,
+   "col": 5,
+   "row_to": 22,
+   "col_to": 5
+  },
+  {
+   "file": "media/image128.jpeg",
+   "row": 32,
+   "col": 5,
+   "row_to": 32,
+   "col_to": 5
+  },
+  {
+   "file": "media/image130.jpeg",
+   "row": 35,
+   "col": 2,
+   "row_to": 45,
+   "col_to": 4
+  },
+  {
+   "file": "media/image110.jpeg",
+   "row": 36,
+   "col": 1,
+   "row_to": 45,
+   "col_to": 1
+  },
+  {
+   "file": "media/image131.jpeg",
+   "row": 36,
+   "col": 5,
+   "row_to": 45,
+   "col_to": 6
+  },
+  {
+   "file": "media/image111.jpeg",
+   "row": 48,
+   "col": 1,
+   "row_to": 56,
+   "col_to": 1
+  },
+  {
+   "file": "media/image112.jpeg",
+   "row": 49,
+   "col": 1,
+   "row_to": 56,
+   "col_to": 2
+  },
+  {
+   "file": "media/image113.jpeg",
+   "row": 49,
+   "col": 2,
+   "row_to": 56,
+   "col_to": 3
+  },
+  {
+   "file": "media/image116.jpeg",
+   "row": 49,
+   "col": 5,
+   "row_to": 56,
+   "col_to": 5
+  },
+  {
+   "file": "media/image115.jpeg",
+   "row": 62,
+   "col": 5,
+   "row_to": 70,
+   "col_to": 5
+  },
+  {
+   "file": "media/image119.jpeg",
+   "row": 62,
+   "col": 6,
+   "row_to": 70,
+   "col_to": 6
+  },
+  {
+   "file": "media/image114.jpeg",
+   "row": 63,
+   "col": 1,
+   "row_to": 70,
+   "col_to": 1
+  },
+  {
+   "file": "media/image120.jpeg",
+   "row": 63,
+   "col": 1,
+   "row_to": 70,
+   "col_to": 2
+  },
+  {
+   "file": "media/image117.jpeg",
+   "row": 76,
+   "col": 4,
+   "row_to": 82,
+   "col_to": 4
+  },
+  {
+   "file": "media/image118.jpeg",
+   "row": 76,
+   "col": 5,
+   "row_to": 82,
+   "col_to": 5
+  },
+  {
+   "file": "media/image121.jpeg",
+   "row": 76,
+   "col": 5,
+   "row_to": 82,
+   "col_to": 6
+  }
+ ],
+ "Кофе": [
+  {
+   "file": "media/image136.png",
+   "row": 1,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image137.png",
+   "row": 1,
+   "col": 2,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image138.png",
+   "row": 1,
+   "col": 3,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image139.png",
+   "row": 1,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image138.png",
+   "row": 13,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image138.png",
+   "row": 19,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image137.png",
+   "row": 26,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image136.png",
+   "row": 33,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image136.png",
+   "row": 33,
+   "col": 4,
+   "row_to": 37,
+   "col_to": 4
+  },
+  {
+   "file": "media/image138.png",
+   "row": 39,
+   "col": 4,
+   "row_to": 44,
+   "col_to": 4
+  },
+  {
+   "file": "media/image138.png",
+   "row": 47,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image137.png",
+   "row": 54,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image139.png",
+   "row": 62,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image136.png",
+   "row": 69,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image137.png",
+   "row": 77,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image136.png",
+   "row": 84,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image137.png",
+   "row": 91,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image137.png",
+   "row": 97,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image138.png",
+   "row": 107,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image136.png",
+   "row": 114,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image133.png",
+   "row": 119,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image134.png",
+   "row": 119,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image135.png",
+   "row": 119,
+   "col": 2,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image141.jpeg",
+   "row": 128,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image140.jpeg",
+   "row": 128,
+   "col": 2,
+   "row_to": null,
+   "col_to": null
+  }
+ ],
+ "Сахарный сироп ПФ": [
+  {
+   "file": "media/image142.jpeg",
+   "row": 10,
+   "col": 1,
+   "row_to": 24,
+   "col_to": 5
+  },
+  {
+   "file": "media/image143.jpeg",
+   "row": 10,
+   "col": 5,
+   "row_to": 24,
+   "col_to": 12
+  }
+ ],
+ "ПФ": [
+  {
+   "file": "media/image160.png",
+   "row": 4,
+   "col": 4,
+   "row_to": 9,
+   "col_to": 4
+  },
+  {
+   "file": "media/image161.png",
+   "row": 4,
+   "col": 4,
+   "row_to": 9,
+   "col_to": 4
+  },
+  {
+   "file": "media/image162.png",
+   "row": 4,
+   "col": 4,
+   "row_to": 9,
+   "col_to": 4
+  },
+  {
+   "file": "media/image163.png",
+   "row": 4,
+   "col": 4,
+   "row_to": 9,
+   "col_to": 4
+  },
+  {
+   "file": "media/image156.png",
+   "row": 14,
+   "col": 4,
+   "row_to": 18,
+   "col_to": 4
+  },
+  {
+   "file": "media/image157.png",
+   "row": 14,
+   "col": 4,
+   "row_to": 18,
+   "col_to": 4
+  },
+  {
+   "file": "media/image158.png",
+   "row": 14,
+   "col": 4,
+   "row_to": 18,
+   "col_to": 4
+  },
+  {
+   "file": "media/image159.png",
+   "row": 14,
+   "col": 4,
+   "row_to": 18,
+   "col_to": 4
+  },
+  {
+   "file": "media/image152.png",
+   "row": 45,
+   "col": 1,
+   "row_to": 54,
+   "col_to": 1
+  },
+  {
+   "file": "media/image153.png",
+   "row": 45,
+   "col": 2,
+   "row_to": 53,
+   "col_to": 2
+  },
+  {
+   "file": "media/image154.png",
+   "row": 45,
+   "col": 3,
+   "row_to": 53,
+   "col_to": 4
+  },
+  {
+   "file": "media/image155.png",
+   "row": 45,
+   "col": 4,
+   "row_to": 53,
+   "col_to": 4
+  },
+  {
+   "file": "media/image146.jpeg",
+   "row": 57,
+   "col": 1,
+   "row_to": 65,
+   "col_to": 1
+  },
+  {
+   "file": "media/image149.jpeg",
+   "row": 57,
+   "col": 3,
+   "row_to": 65,
+   "col_to": 4
+  },
+  {
+   "file": "media/image147.jpeg",
+   "row": 57,
+   "col": 4,
+   "row_to": 65,
+   "col_to": 4
+  },
+  {
+   "file": "media/image148.jpeg",
+   "row": 57,
+   "col": 4,
+   "row_to": 65,
+   "col_to": 4
+  },
+  {
+   "file": "media/image150.jpeg",
+   "row": 67,
+   "col": 1,
+   "row_to": 75,
+   "col_to": 1
+  },
+  {
+   "file": "media/image151.jpeg",
+   "row": 67,
+   "col": 1,
+   "row_to": 75,
+   "col_to": 2
+  },
+  {
+   "file": "media/image144.png",
+   "row": 78,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image145.jpeg",
+   "row": 78,
+   "col": 4,
+   "row_to": null,
+   "col_to": null
+  }
+ ],
+ "Украшения": [
+  {
+   "file": "media/image175.png",
+   "row": 2,
+   "col": 3,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image181.png",
+   "row": 2,
+   "col": 7,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image165.png",
+   "row": 3,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image169.png",
+   "row": 3,
+   "col": 5,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image172.png",
+   "row": 11,
+   "col": 3,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image171.png",
+   "row": 18,
+   "col": 3,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image184.png",
+   "row": 19,
+   "col": 5,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image179.png",
+   "row": 19,
+   "col": 7,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image170.png",
+   "row": 20,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image186.png",
+   "row": 29,
+   "col": 3,
+   "row_to": 32,
+   "col_to": 3
+  },
+  {
+   "file": "media/image164.png",
+   "row": 34,
+   "col": 3,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image167.png",
+   "row": 35,
+   "col": 5,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image166.png",
+   "row": 36,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image177.png",
+   "row": 36,
+   "col": 7,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image187.png",
+   "row": 47,
+   "col": 3,
+   "row_to": 50,
+   "col_to": 3
+  },
+  {
+   "file": "media/image180.png",
+   "row": 52,
+   "col": 7,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image190.png",
+   "row": 53,
+   "col": 1,
+   "row_to": 65,
+   "col_to": 1
+  },
+  {
+   "file": "media/image178.png",
+   "row": 53,
+   "col": 5,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image176.png",
+   "row": 68,
+   "col": 3,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image189.png",
+   "row": 68,
+   "col": 5,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image183.png",
+   "row": 68,
+   "col": 7,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image173.png",
+   "row": 70,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image182.png",
+   "row": 74,
+   "col": 7,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image174.png",
+   "row": 84,
+   "col": 3,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image168.png",
+   "row": 85,
+   "col": 1,
+   "row_to": null,
+   "col_to": null
+  },
+  {
+   "file": "media/image188.png",
+   "row": 85,
+   "col": 5,
+   "row_to": 97,
+   "col_to": 5
+  },
+  {
+   "file": "media/image185.png",
+   "row": 86,
+   "col": 7,
+   "row_to": 96,
+   "col_to": 7
+  }
+ ],
+ "Трубочки": [
+  {
+   "file": "media/image191.jpg",
+   "row": 1,
+   "col": 2,
+   "row_to": null,
+   "col_to": null
+  }
+ ]
+}

@@ -1,0 +1,182 @@
+:root{
+  --paper:#FBFAF8; --ink:#17140F; --ink-2:#4A443C; --ink-3:#8B8378;
+  --line:#E4DFD6; --line-2:#EFEBE4; --soft:#F4F1EA;
+  --acc:#C0562F; --acc-soft:#F6EDE7;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  --sans:'Inter',system-ui,sans-serif;
+  --head:'Manrope','Inter',sans-serif;
+  --serif:'Playfair Display',Georgia,serif;
+}
+*{box-sizing:border-box}
+img{max-width:100%;height:auto}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:var(--paper)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);
+  font-size:9.2pt;line-height:1.42;font-feature-settings:"tnum" 0;}
+h1,h2,h3,h4{font-family:var(--head);margin:0;font-weight:800;letter-spacing:-.02em}
+p{margin:0 0 5px}
+a{color:inherit;text-decoration:none}
+
+@page{size:A4;margin:0}
+.page{page-break-after:always;break-after:page}
+.sheet,.toc{padding:12mm 13mm 15mm}
+.no-break{break-inside:avoid;page-break-inside:avoid}
+
+/* ---------- обложка ---------- */
+.cover{box-sizing:border-box;width:210mm;height:297mm;display:flex;flex-direction:column;
+  justify-content:space-between;padding:26mm 22mm;background:#17140F;color:#F7F3EC;
+  margin:0;position:relative;overflow:hidden}
+.cover .kicker{font-family:var(--mono);font-size:8.5pt;letter-spacing:.22em;text-transform:uppercase;color:#B9AE9C}
+.cover h1{font-family:var(--serif);font-weight:500;font-size:52pt;line-height:.98;letter-spacing:-.02em;margin:0 0 6mm}
+.cover h1 em{font-style:italic;color:#E0A45B}
+.cover .lead{font-size:11pt;line-height:1.5;color:#CFC6B6;max-width:118mm}
+.cover-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-top:8mm}
+.cover-grid div{border-top:1px solid #3A342A;padding-top:3mm}
+.cover-grid b{display:block;font-family:var(--mono);font-size:17pt;color:#E0A45B;font-weight:500}
+.cover-grid span{font-size:8pt;color:#9B9182;letter-spacing:.04em}
+.cover-strip{display:flex;gap:2mm;margin:6mm 0}
+.cover-strip i{height:2.6mm;flex:1;border-radius:2mm;display:block}
+
+/* ---------- содержание ---------- */
+.toc h2{font-size:22pt;margin-bottom:6mm}
+.toc-list{display:grid;grid-template-columns:1fr 1fr;gap:0 8mm}
+.toc-item{display:flex;gap:3mm;align-items:baseline;padding:2.6mm 0;border-bottom:1px solid var(--line-2)}
+.toc-item b{font-family:var(--mono);font-size:8pt;color:var(--ink-3);width:8mm}
+.toc-item span{flex:1;font-weight:600;font-family:var(--head)}
+.toc-item i{width:3mm;height:3mm;border-radius:50%;display:inline-block}
+
+/* ---------- разделитель главы ---------- */
+.divider{padding:0 0 6mm;margin-bottom:6mm;border-bottom:1px solid var(--line);break-before:page;page-break-before:always}
+.divider.first{break-before:auto;page-break-before:auto}
+.divider .num{font-family:var(--mono);font-size:9pt;letter-spacing:.2em;color:var(--acc)}
+.divider h2{font-family:var(--serif);font-weight:500;font-size:30pt;line-height:1.02;margin:2mm 0 3mm;letter-spacing:-.01em}
+.divider p{font-size:10pt;color:var(--ink-2);max-width:120mm;line-height:1.5}
+.divider .rule{height:2.2mm;background:var(--acc);width:22mm;border-radius:3mm;margin:0 0 3.5mm}
+
+/* ---------- карточка напитка ---------- */
+.card{display:flex;gap:4.5mm;padding:4mm;border:1px solid var(--line);border-radius:3.4mm;
+  background:#fff;margin-bottom:4.5mm;break-inside:avoid;page-break-inside:avoid;position:relative}
+.card::before{content:'';position:absolute;left:0;top:6mm;bottom:6mm;width:1.1mm;background:var(--acc);
+  border-radius:0 2mm 2mm 0}
+.card .ph{width:38mm;flex:0 0 38mm;border-radius:2.4mm;overflow:hidden;background:var(--soft);
+  align-self:stretch;min-height:52mm;position:relative}
+.card .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.card .body{flex:1;min-width:0;display:flex;flex-direction:column}
+.card h3{font-size:13.4pt;line-height:1.12;letter-spacing:-.025em;flex:1;padding-right:3mm}
+.card .head{display:flex;align-items:flex-start;gap:2mm;margin-bottom:2mm}
+.vol{font-family:var(--mono);font-weight:600;font-size:9.6pt;background:var(--acc);color:#fff;
+  padding:1mm 2.2mm;border-radius:1.6mm;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:1.4mm;margin-bottom:2.6mm}
+.chip{font-size:7.2pt;letter-spacing:.03em;text-transform:uppercase;font-weight:600;color:var(--ink-2);
+  border:1px solid var(--line);border-radius:1.4mm;padding:.8mm 1.6mm;background:var(--soft)}
+.chip.acc{background:var(--acc-soft);border-color:transparent;color:var(--acc)}
+.cols{display:flex;gap:4mm;flex:1}
+.col-ing{width:44%;flex:0 0 44%}
+.col-m{flex:1;min-width:0}
+.lbl{font-size:6.8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700;
+  margin-bottom:1.4mm;font-family:var(--head)}
+table.ing{width:100%;border-collapse:collapse}
+table.ing td{padding:.75mm 0;vertical-align:baseline;border-bottom:1px dotted var(--line)}
+table.ing td.n{font-size:8.2pt;line-height:1.25}
+table.ing td.a{font-family:var(--mono);font-size:8pt;font-weight:600;text-align:right;white-space:nowrap;padding-left:2mm}
+table.ing tr.g td.n{color:var(--ink-2)}
+table.ing tr.g td.a{color:var(--acc)}
+table.ing tr.sub td{border:0;padding-top:2mm}
+table.ing tr.sub span{font-size:6.8pt;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);font-weight:700}
+.method{font-size:8.2pt;line-height:1.44;color:var(--ink-2);text-align:justify;hyphens:auto}
+.method b{color:var(--ink);font-weight:600}
+.serve{margin-top:2mm;font-size:7.6pt;color:var(--ink-3);font-style:italic}
+.formula{font-family:var(--mono);font-size:8pt;font-weight:500;background:var(--soft);border-radius:1.8mm;
+  padding:1.6mm 2.4mm;margin-top:3mm;color:var(--ink-2);line-height:1.4}
+.formula b{color:var(--ink);font-weight:700}
+.key{margin-top:2mm;background:var(--acc-soft);border-radius:1.8mm;padding:2mm 2.4mm;font-size:8.2pt;
+  line-height:1.4;color:#3A2F26}
+.key b{font-family:var(--head);font-size:6.8pt;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);
+  display:block;margin-bottom:.8mm}
+.variant{margin:-2.5mm 0 4.5mm 0;padding:3mm 4mm;border:1px dashed var(--line);border-radius:2.4mm;background:#fff;
+  break-inside:avoid}
+.variant h4{font-size:9.4pt;margin-bottom:1.4mm}
+.variant .method{font-size:7.8pt}
+
+/* ---------- блоки-паттерны ---------- */
+.sec{margin-bottom:6mm;break-inside:avoid}
+.sec > h3{font-size:13pt;margin-bottom:2.5mm;display:flex;align-items:center;gap:2.5mm}
+.sec > h3 .n{font-family:var(--mono);font-size:8pt;color:#fff;background:var(--acc);border-radius:50%;
+  width:6mm;height:6mm;display:inline-flex;align-items:center;justify-content:center;font-weight:600;flex:0 0 6mm}
+.box{border:1px solid var(--line);border-radius:3mm;padding:4mm;background:#fff}
+.box.tint{background:var(--acc-soft);border-color:transparent}
+.big-rule{font-family:var(--mono);font-size:12pt;font-weight:600;text-align:center;padding:4mm 2mm;
+  background:var(--ink);color:#F7F3EC;border-radius:3mm;letter-spacing:-.01em}
+.big-rule em{color:#E0A45B;font-style:normal}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4mm}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm}
+.mini{border:1px solid var(--line);border-radius:2.6mm;padding:3mm;background:#fff}
+.mini b{display:block;font-family:var(--head);font-size:9.4pt;margin-bottom:1mm}
+.mini .num{font-family:var(--mono);font-size:15pt;font-weight:600;color:var(--acc);line-height:1}
+.mini p{font-size:8pt;color:var(--ink-2);margin:1.5mm 0 0}
+table.t{width:100%;border-collapse:collapse;font-size:8.2pt}
+table.t th{font-size:6.8pt;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);text-align:left;
+  padding:0 2mm 1.6mm 0;font-family:var(--head);border-bottom:1px solid var(--line)}
+table.t td{padding:1.5mm 2mm 1.5mm 0;border-bottom:1px solid var(--line-2);vertical-align:top}
+table.t td.m{font-family:var(--mono);font-weight:500;white-space:nowrap}
+table.t tr:last-child td{border-bottom:0}
+table.t td b{font-weight:600}
+.hl{background:var(--acc);color:#fff;border-radius:1.2mm;padding:.3mm 1.2mm;font-family:var(--mono);font-weight:600}
+.note{font-size:8pt;color:var(--ink-3);margin-top:2mm;line-height:1.4}
+ul.clean{margin:0;padding-left:4mm;font-size:8.4pt;line-height:1.5;color:var(--ink-2)}
+ul.clean li{margin-bottom:1.2mm}
+ul.clean li b{color:var(--ink)}
+.ladder{display:flex;gap:2mm;align-items:flex-end;margin:2mm 0}
+.ladder div{flex:1;text-align:center;background:var(--acc-soft);border-radius:1.6mm 1.6mm 0 0;padding:1.5mm 0;
+  font-family:var(--mono);font-size:8pt;font-weight:600;color:var(--acc)}
+
+/* галерея украшений */
+.gal{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm}
+.gal figure{margin:0;break-inside:avoid}
+.gal .im{aspect-ratio:1/1;border-radius:2.4mm;overflow:hidden;background:var(--soft);border:1px solid var(--line-2)}
+.gal img{width:100%;height:100%;object-fit:cover;display:block}
+.gal figcaption{font-size:7.6pt;line-height:1.25;margin-top:1.4mm;font-weight:500}
+.gal .w{font-family:var(--mono);font-size:9pt;font-weight:700;color:var(--acc);display:block;margin-top:.5mm}
+
+/* кофе / чай / пф карточки */
+.rcard{border:1px solid var(--line);border-radius:3mm;padding:3.5mm 4mm;background:#fff;margin-bottom:3mm;
+  break-inside:avoid;display:flex;gap:4mm}
+.rcard .rim{width:22mm;flex:0 0 22mm;border-radius:2mm;overflow:hidden;background:var(--soft);align-self:flex-start}
+.rcard .rim img{width:100%;display:block}
+.rcard h4{font-size:11pt;margin-bottom:1.5mm}
+.rcard .rows{display:flex;flex-wrap:wrap;gap:1.4mm;margin-bottom:2mm}
+.rcard .rows span{font-family:var(--mono);font-size:7.8pt;font-weight:600;background:var(--soft);
+  border-radius:1.4mm;padding:.8mm 1.6mm}
+.rcard .rows span.o{background:var(--acc);color:#fff}
+.rcard ol{margin:0;padding-left:4.5mm;font-size:8pt;line-height:1.45;color:var(--ink-2)}
+.rcard ol li{margin-bottom:.8mm}
+
+/* заголовок раздела внутри страницы */
+.page-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--acc);
+  padding-bottom:2mm;margin-bottom:5mm}
+.page-head h2{font-size:17pt}
+.page-head span{font-family:var(--mono);font-size:8pt;color:var(--ink-3);letter-spacing:.1em;text-transform:uppercase}
+
+/* ---------- экранная версия ---------- */
+#nav{display:none}
+@media screen{
+  .divider,.page-head{scroll-margin-top:130px}
+  body{background:#EDEAE3;padding:0 0 60px}
+  #nav{display:block;position:sticky;top:0;z-index:50;background:rgba(23,20,15,.97);backdrop-filter:blur(8px);
+    color:#F7F3EC;padding:10px 18px;box-shadow:0 2px 20px rgba(0,0,0,.18)}
+  #nav .inner{max-width:900px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  #nav b{font-family:var(--head);font-size:14px;letter-spacing:-.02em;margin-right:6px}
+  #nav a{font-size:11.5px;color:#C9C0B2;padding:4px 9px;border-radius:14px;border:1px solid #39332A;white-space:nowrap}
+  #nav a:hover{background:#2A241C;color:#fff}
+  #nav input{flex:1;min-width:160px;background:#2A241C;border:1px solid #3D362C;color:#fff;border-radius:14px;
+    padding:6px 12px;font-family:var(--sans);font-size:12px;outline:none}
+  .page,.sheet{max-width:900px;margin:0 auto 18px;background:var(--paper);padding:26px 30px;border-radius:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,.07)}
+  .cover{margin:0 auto 18px;border-radius:12px;height:auto;padding:44px 40px}
+  .page{page-break-after:auto}
+  body{font-size:12.4px}
+  .card h3{font-size:19px}
+  .divider{padding:10mm 0 4mm}
+  .hidden{display:none}
+}
+@media print{ .screen-only{display:none!important} }

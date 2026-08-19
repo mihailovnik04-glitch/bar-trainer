@@ -1,0 +1,5 @@
+openpyxl
+pillow
+playwright
+pypdf
+reportlab
