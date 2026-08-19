@@ -63,6 +63,24 @@ for q in bank:
     if not any(abs(v - q['a']) < 0.01 for v in vals):
         fails.append(f'неверный ответ в банке: {q["drink"]} / {label} = {q["a"]}, в файле {vals}')
 
+# ---------- 3б. пак «пропущенная граммовка»: показанное + ответ должны дать выход
+for q in bank:
+    if q['t'] != 'fill':
+        continue
+    shown = 0.0
+    blanks = 0
+    for n, a in q['rows']:
+        if a == '':
+            blanks += 1
+            continue
+        m = re.match(r'^(\d+[.,]?\d*)\s*мл\.?$', a.strip())
+        if m: shown += float(m.group(1).replace(',', '.'))
+    total = float(re.match(r'^(\d+[.,]?\d*)', q['total']).group(1).replace(',', '.'))
+    if blanks != 1:
+        fails.append(f'в fill-вопросе не одна пропущенная строка: {q["drink"]} ({blanks})')
+    elif abs(shown + q['a'] - total) > 0.01:
+        fails.append(f'fill не сходится с выходом: {q["drink"]} — {shown}+{q["a"]} != {total}')
+
 # ---------- 4. разброс дистракторов
 for q in bank:
     if q['t'] != 'choice' or q['cat'] == 'garnish':

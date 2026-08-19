@@ -69,6 +69,14 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
 .q h2{font-size:21px;line-height:1.25;margin:0 0 4px;font-weight:700;letter-spacing:-.3px}
 .q .hint{font-size:12.5px;color:var(--ink-3);margin-top:6px}
 
+/* таблица пака «пропущенная граммовка» */
+.fillt{width:100%;border-collapse:collapse;margin-top:14px}
+.fillt td{padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px;color:var(--ink-2)}
+.fillt td+td{text-align:right;font-family:var(--mono);color:var(--ink);white-space:nowrap;padding-left:10px}
+.fillt tr.miss td{color:var(--acc)}
+.fillt tr.miss td+td{color:var(--acc);font-weight:700}
+.fillt tr.tot td{border-bottom:0;color:var(--ink-3);font-size:13px;text-transform:uppercase;letter-spacing:.08em}
+.fillt tr.tot td+td{color:var(--ink-2);text-transform:none;letter-spacing:0}
 /* ввод числа */
 .numrow{display:flex;align-items:center;gap:10px;margin-top:18px}
 .numrow input{flex:1;width:100%;background:var(--card-2);border:1.5px solid var(--line);border-radius:15px;
@@ -133,9 +141,17 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
   border-radius:24px 24px 0 0;padding:0 0 26px;transform:translateY(100%);
   transition:transform .28s cubic-bezier(.2,.85,.25,1);-webkit-overflow-scrolling:touch}
 .modal.on .sheet-card{transform:none}
-.sheet-card .grip{position:sticky;top:0;background:linear-gradient(var(--card) 70%,transparent);
-  padding:10px 0 6px;display:flex;justify-content:center;z-index:2}
-.sheet-card .grip i{width:42px;height:4px;border-radius:4px;background:var(--line);display:block}
+/* Шапка карточки липкая и всегда держит кнопку возврата: одной «шторки» мало —
+   с телефона было непонятно, как выйти обратно в справочник. */
+.sheet-card .grip{position:sticky;top:0;background:var(--card);
+  padding:10px 14px 8px;display:flex;align-items:center;gap:10px;z-index:2;
+  border-bottom:1px solid var(--line)}
+.sheet-card .grip i{width:42px;height:4px;border-radius:4px;background:var(--line);display:block;
+  position:absolute;left:50%;transform:translateX(-50%);top:6px}
+.sheet-card .grip .cls{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--ink-2);
+  background:var(--card-2);border-radius:11px;padding:8px 13px 8px 9px;transition:transform .15s}
+.sheet-card .grip .cls:active{transform:scale(.94)}
+.sheet-card .grip .cls b{font-size:17px;font-weight:400;line-height:1}
 .rc{padding:0 18px}
 .rc .hero{width:100%;height:210px;object-fit:contain;border-radius:16px;background:var(--card-2);display:block;padding:6px}
 .rc h3{font-size:23px;margin:14px 0 8px;letter-spacing:-.4px;line-height:1.15}
@@ -160,20 +176,53 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
 .rc .serve{font-size:13px;color:var(--ink-3);font-style:italic;margin-top:8px}
 
 /* ---------- справочник ---------- */
+/* шапка экрана: заголовок и возврат на главную (у quiz своя шапка #top) */
+.scrhead{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
+.scrhead h1{font-size:23px;margin:0}
+.scrhead .back{width:34px;height:34px;border-radius:11px;background:var(--card);display:grid;
+  place-items:center;font-size:20px;color:var(--ink-2);flex:0 0 34px;transition:.18s}
+.scrhead .back:active{transform:scale(.92)}
+
+/* переключатель порядка: по главам пособия или как в исходной таблице */
+.seg{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:13px;
+  padding:4px;margin-bottom:14px}
+.seg button{flex:1;border-radius:10px;padding:9px 6px;font-size:13.5px;color:var(--ink-2);
+  transition:background .18s,color .18s}
+.seg button.on{background:var(--card-2);color:var(--ink);font-weight:600}
+
 .search{width:100%;background:var(--card);border:1.5px solid var(--line);border-radius:14px;
   padding:12px 14px;color:var(--ink);font-size:16px;outline:none;margin-bottom:14px;transition:border-color .2s}
 .search:focus{border-color:var(--acc)}
 .chgroup{margin:18px 0 8px;display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.1em;
   text-transform:uppercase;color:var(--ink-3)}
 .chgroup i{width:8px;height:8px;border-radius:50%;display:block}
-.rrow{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
-  border-radius:14px;padding:9px 12px;margin-bottom:7px;width:100%;text-align:left;transition:transform .14s}
+/* Строка справочника показывает состав сразу: на телефоне открывать каждую карточку,
+   чтобы увидеть граммовки, слишком долго. Шапка строки — flex, состав под ней — сетка
+   «название / количество», числа моноширинным и всегда прижаты вправо. */
+.rrow{display:block;background:var(--card);border:1px solid var(--line);
+  border-radius:14px;padding:10px 12px;margin-bottom:7px;width:100%;text-align:left;transition:transform .14s}
 .rrow:active{transform:scale(.985)}
+.rrow .h{display:flex;align-items:center;gap:12px}
 .rrow img{width:38px;height:38px;border-radius:10px;object-fit:cover;background:var(--card-2);flex:0 0 38px}
 .rrow .t{flex:1;min-width:0}
 .rrow .t b{display:block;font-size:14.5px;font-weight:600;line-height:1.25}
 .rrow .t span{font-size:11.5px;color:var(--ink-3)}
-.rrow .v{font-family:var(--mono);font-size:12.5px;color:var(--acc)}
+.rrow .v{font-family:var(--mono);font-size:12.5px;color:var(--acc);white-space:nowrap}
+.rrow .comp{display:grid;grid-template-columns:1fr auto;gap:1px 10px;margin-top:9px;
+  padding-top:8px;border-top:1px solid var(--line)}
+.rrow .comp dt{font-size:12.5px;color:var(--ink-2);line-height:1.5;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rrow .comp dd{margin:0;font-family:var(--mono);font-size:12.5px;color:var(--ink);
+  line-height:1.5;white-space:nowrap;text-align:right}
+.rrow .comp .g dt,.rrow .comp dt.g{color:var(--ink-3)}
+.rrow .comp dd.g{color:var(--acc)}
+details.cheatbox{margin-bottom:10px}
+details.cheatbox>summary{list-style:none;cursor:pointer;background:var(--card);border:1px dashed var(--line);
+  border-radius:14px;padding:12px 14px;font-size:14px;color:var(--ink-2)}
+details.cheatbox>summary::-webkit-details-marker{display:none}
+details.cheatbox>summary::after{content:'＋';float:right;color:var(--ink-3)}
+details.cheatbox[open]>summary{color:var(--ink);margin-bottom:8px}
+details.cheatbox[open]>summary::after{content:'−'}
 details.cheat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
 details.cheat summary{cursor:pointer;font-weight:600;font-size:15px;list-style:none}
 details.cheat summary::-webkit-details-marker{display:none}
@@ -239,15 +288,19 @@ details.cheat b{color:var(--ink)}
 
   <!-- СПРАВОЧНИК -->
   <div id="ref" class="hidden">
-    <h1 style="font-size:23px">Справочник</h1>
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Справочник</h1></div>
     <input class="search" id="refQ" placeholder="Коктейль или ингредиент…" autocomplete="off">
+    <div class="seg" id="refSort">
+      <button data-sort="ch" class="on">По системе</button>
+      <button data-sort="src">Как в таблице</button>
+    </div>
     <div id="cheats"></div>
     <div id="refList"></div>
   </div>
 
   <!-- ОШИБКИ -->
   <div id="errors" class="hidden">
-    <h1 style="font-size:23px">Мои ошибки</h1>
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Мои ошибки</h1></div>
     <p class="lead" id="errLead"></p>
     <div class="row" id="errActions"></div>
     <div class="list" id="errList"></div>
@@ -291,19 +344,21 @@ try{
   }
 }catch(e){}
 const save = ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
+let REF_SORT = store.refSort==='src' ? 'src' : 'ch';   // порядок справочника: главы или таблица
 
 /* ---------- утилиты ---------- */
 const fmt = v => Number.isInteger(v) ? String(v) : String(v).replace('.',',');
 const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]];} return a; };
 const mmss = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-const answerText = q => q.t==='num' ? `${fmt(q.a)} ${q.unit}` : q.opts[q.ai];
+const answerText = q => (q.t==='num'||q.t==='fill') ? `${fmt(q.a)} ${q.unit}` : q.opts[q.ai];
 const qLabel = q => q.q.replace(/^Сколько\s+/,'').replace(/^весит:\s*/,'Вес: ')
    .replace(/\?$/,'').replace(/ идёт в украшение/,' · украшение')
    .replace(/^В какой посуде.*$/,'Посуда').replace(/^Чем украшается.*$/,'Набор украшений');
 
 function pickExam(){
-  const by = c => BANK.filter(q=>q.cat===c && q.t==='num');
-  const byc = c => BANK.filter(q=>q.cat===c && q.t!=='num');
+  const isNum = q => q.t==='num'||q.t==='fill';
+  const by = c => BANK.filter(q=>q.cat===c && isNum(q));
+  const byc = c => BANK.filter(q=>q.cat===c && !isNum(q));
   const take = (arr,n) => shuffle(arr.slice()).slice(0,n);
   const set = [
     ...take(by('grams'), 48),
@@ -365,8 +420,13 @@ function renderQ(){
     ? '<span style="color:var(--bad)">'+'●'.repeat(S.lives)+'</span><span style="color:var(--ink-3)">'+'○'.repeat(EX_LIVES-S.lives)+'</span>'
     : '';
   const img = q.img ? `<img src="${src(q.img)}" alt="">` : '';
-  const body = q.t==='num'
-    ? `<div class="numrow">
+  // «Пропущенная граммовка»: показываем состав целиком, пустая строка — та, что нужно вписать.
+  const fillTable = q.t==='fill'
+    ? `<table class="fillt">${q.rows.map(([n,a])=>
+         `<tr class="${a?'':'miss'}"><td>${n}</td><td>${a||'?'}</td></tr>`).join('')}
+       <tr class="tot"><td>Выход</td><td>${q.total}</td></tr></table>` : '';
+  const body = (q.t==='num'||q.t==='fill')
+    ? `${fillTable}<div class="numrow">
          <input id="inp" type="number" inputmode="decimal" enterkeyhint="go" placeholder="0" autocomplete="off">
          <span class="unit">${q.unit}</span>
          <button class="go" id="ok">Ответ</button>
@@ -380,7 +440,7 @@ function renderQ(){
       ${body}
       <div class="fb" id="fb"></div>
     </div>`;
-  if(q.t==='num'){
+  if(q.t==='num'||q.t==='fill'){
     const inp=$('#inp');
     setTimeout(()=>inp.focus({preventScroll:true}),60);
     inp.addEventListener('keydown',e=>{ if(e.key==='Enter') submitNum(); });
@@ -604,7 +664,9 @@ function recipeHTML(r){
   const gars = r.gar.length ? `<div class="lbl">Украшение</div><table>`+
       r.gar.map(([n,a])=>`<tr class="g"><td>${n}</td><td class="a">${a}</td></tr>`).join('')+`</table>` : '';
   const vars = (r.var||[]).map(v=>`<div class="var"><b>${v.name}</b><p>${mark(v.method)}</p></div>`).join('');
-  return `<div class="grip"><i></i></div><div class="rc">
+  return `<div class="grip"><i></i>
+      <button class="cls" id="clsRec"><b>‹</b>${BACK_LABEL}</button>
+    </div><div class="rc">
     ${r.img?`<img class="hero" src="${src(r.img)}" alt="">`:''}
     <h3>${r.name}${r.total?` <span style="font-family:var(--mono);font-size:15px;color:var(--acc)">${r.total}</span>`:''}</h3>
     <div class="chips">${chips}</div>
@@ -618,47 +680,95 @@ function recipeHTML(r){
   </div>`;
 }
 
+let BACK_LABEL = 'Назад';
 function openRecipe(i){
   const r = REC.recipes[i]; if(!r) return;
   if(S){ clearTimeout(S.timer); }              // не листаем вопрос, пока читают рецепт
+  BACK_LABEL = $('#ref').classList.contains('hidden') ? 'Назад' : 'Справочник';
   $('#sheetCard').innerHTML = recipeHTML(r);
   $('#sheetCard').scrollTop = 0;
   $('#modal').classList.add('on');
   document.body.style.overflow='hidden';
+  // Своя запись в истории: на Android системная кнопка «назад» закрывает карточку,
+  // а не выкидывает из приложения целиком.
+  if(!(history.state||{}).rec){ try{ history.pushState({rec:1},''); }catch(e){} }
+  $('#clsRec').onclick = ()=>closeRecipe();
 }
-function closeRecipe(){
+function closeRecipe(fromPop){
+  if(!$('#modal').classList.contains('on')) return;
   $('#modal').classList.remove('on');
   document.body.style.overflow='';
+  if(!fromPop && (history.state||{}).rec){ try{ history.back(); }catch(e){} }
 }
+addEventListener('popstate', ()=>closeRecipe(true));
 $('#modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeRecipe(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeRecipe(); });
 
 /* ---------- справочник ---------- */
+const match = (r,f) => !f ||
+  (r.name+' '+r.ing.map(x=>x[0]).join(' ')+' '+r.gar.map(x=>x[0]).join(' ')+' '+r.glass)
+    .toLowerCase().includes(f);
+
+/* Состав прямо в строке списка: с телефона нужно видеть граммовки, не открывая карточку.
+   Украшения идут следом и приглушены, чтобы не путались с основным составом. */
+function compHTML(r){
+  const row = ([n,a],g) =>
+    `<dt class="${g?'g':''}">${n}</dt><dd class="${g?'g':''}">${a||'—'}</dd>`;
+  return `<dl class="comp">${r.ing.map(x=>row(x,0)).join('')}${r.gar.map(x=>row(x,1)).join('')}</dl>`;
+}
+
+function rowHTML(r,i){
+  return `<button class="rrow" data-r="${i}">
+    <div class="h">${r.img?`<img src="${src(r.img)}">`:'<div style="width:38px"></div>'}
+      <div class="t"><b>${r.name}</b><span>${[r.tech,r.glass].filter(Boolean).join(' · ')}</span></div>
+      <div class="v">${r.total||''}</div></div>
+    ${compHTML(r)}</button>`;
+}
+
 function renderRef(filter){
   const f = (filter||'').trim().toLowerCase();
-  const html = REC.chapters.map(ch=>{
-    const rows = REC.recipes.map((r,i)=>[r,i]).filter(([r])=>r.ch===ch.id).filter(([r])=>{
-      if(!f) return true;
-      return (r.name+' '+r.ing.map(x=>x[0]).join(' ')+' '+r.gar.map(x=>x[0]).join(' ')+' '+r.glass).toLowerCase().includes(f);
-    });
-    if(!rows.length) return '';
-    return `<div class="chgroup"><i style="background:${ch.color}"></i>${ch.title}</div>`+
-      rows.map(([r,i])=>`<button class="rrow" data-r="${i}">
-        ${r.img?`<img src="${src(r.img)}">`:'<div style="width:38px"></div>'}
-        <div class="t"><b>${r.name}</b><span>${[r.tech,r.glass].filter(Boolean).join(' · ')}</span></div>
-        <div class="v">${r.total||''}</div></button>`).join('');
-  }).join('');
+  const all = REC.recipes.map((r,i)=>[r,i]).filter(([r])=>match(r,f));
+  let html;
+  if(REF_SORT==='src'){          // порядок исходной таблицы: лист и строка Excel
+    html = (REC.sheets||[]).map(sh=>{
+      const rows = all.filter(([r])=>r.sh===sh).sort((a,b)=>a[0].si-b[0].si);
+      if(!rows.length) return '';
+      return `<div class="chgroup"><i style="background:var(--ink-3)"></i>${sh}</div>`+
+        rows.map(([r,i])=>rowHTML(r,i)).join('');
+    }).join('');
+  } else {                       // порядок глав пособия
+    html = REC.chapters.map(ch=>{
+      const rows = all.filter(([r])=>r.ch===ch.id);
+      if(!rows.length) return '';
+      return `<div class="chgroup"><i style="background:${ch.color}"></i>${ch.title}</div>`+
+        rows.map(([r,i])=>rowHTML(r,i)).join('');
+    }).join('');
+  }
   $('#refList').innerHTML = html || '<div class="empty">Ничего не нашлось</div>';
   $('#cheats').classList.toggle('hidden', !!f);
 }
 
 function openRef(){
   $('#refSize').textContent = REC.recipes.length+' рецептов';
-  $('#cheats').innerHTML = CHEATS;
-  renderRef('');
+  // Шпаргалки свёрнуты в одну строку: раскрытые, они занимали весь первый экран,
+  // и до составов коктейлей приходилось листать.
+  $('#cheats').innerHTML =
+    '<details class="cheatbox"><summary>Шпаргалки по системе</summary><div>'+CHEATS+'</div></details>';
+  $('#refSort').querySelectorAll('button').forEach(b=>
+    b.classList.toggle('on', b.dataset.sort===REF_SORT));
+  renderRef($('#refQ').value);
   show('ref');
   $('#refQ').oninput = e=>renderRef(e.target.value);
 }
+
+$('#refSort').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-sort]'); if(!b) return;
+  REF_SORT = b.dataset.sort;
+  store.refSort = REF_SORT; save();          // выбор порядка переживает перезагрузку
+  $('#refSort').querySelectorAll('button').forEach(x=>x.classList.toggle('on', x===b));
+  renderRef($('#refQ').value);
+  $('#refList').scrollIntoView({block:'start'});
+});
 
 /* ---------- ошибки ---------- */
 function openErrors(){
@@ -695,6 +805,10 @@ document.addEventListener('click', e=>{
   if(i!=='' && i!=null) openRecipe(+i);
 });
 $('#back').addEventListener('click',()=>{ clearInterval(tick); closeRecipe(); renderHome(); });
+// «‹» в шапке справочника и списка ошибок — возврат на главный экран
+document.addEventListener('click', e=>{
+  if(e.target.closest('.scrhead .back')){ closeRecipe(); renderHome(); }
+});
 document.addEventListener('keydown',e=>{
   if($('#quiz').classList.contains('hidden')) return;
   if(S && S.armed && (e.key==='Enter'||e.key===' ')){ e.preventDefault(); next(); return; }

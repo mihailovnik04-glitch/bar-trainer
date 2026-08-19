@@ -115,8 +115,8 @@ for d in drinks:
         cat = 'garnish' if is_gar else 'grams'
         q = (f'Сколько «{label}» идёт в украшение?' if is_gar
              else f'Сколько «{label}»?')
-        # 85% — ввод точного значения, 15% — выбор
-        if rnd.random() < 0.15:
+        # 60% — ввод точного значения, 40% — выбор из четырёх (заказчик просил больше выбора)
+        if rnd.random() < 0.40:
             opts = distractors(v, unit, rnd) + [v]
             rnd.shuffle(opts)
             add(t='choice', cat=cat, drink=nm, q=q, hint=hint, img=im,
@@ -133,6 +133,38 @@ for d in drinks:
     if len(gars) >= 2:
         add(t='garset', cat='garnish', drink=nm, q='Чем украшается напиток?', img=im,
             ans=' + '.join(gars))
+
+# ------------------------------------------------- пак «пропущенная граммовка»
+# Показываем состав целиком, одну строку прячем — её нужно вписать. Вопрос честный только там,
+# где выход равен сумме жидкостей: тогда пропуск действительно вычисляется, а не угадывается.
+ML = re.compile(r'^(\d+[.,]?\d*)\s*мл\.?$')
+
+def ml(a):
+    m = ML.match((a or '').strip())
+    return float(m.group(1).replace(',', '.')) if m else None
+
+fill_n = 0
+for d in drinks:
+    if 'Безо льда' in d['name']:
+        continue
+    out = ml(d['total'])
+    if not out:
+        continue
+    rows = [(n, a, ml(a)) for n, a in d['ing'] if 'укр' not in n.lower()]
+    liq = [r for r in rows if r[2] is not None]
+    if len(liq) < 3 or len({n for n, _, _ in rows}) != len(rows):
+        continue                                  # мало строк или повторы названий
+    if abs(sum(r[2] for r in liq) - out) > 0.01:
+        continue                                  # выход не сходится — пропуск не вычислить
+    nm = pretty(d['name'])
+    hide = rnd.choice(liq)                        # какую строку прячем
+    add(t='fill', cat='grams', drink=nm,
+        q='Одна граммовка стёрлась. Какая?',
+        unit='мл', a=hide[2], total=d['total'],
+        rows=[[n, ('' if (n, a) == (hide[0], hide[1]) else a)] for n, a, _ in rows],
+        img=thumb(d['photos'][0] if d['photos'] else ''),
+        hint='выход = сумма всех жидкостей')
+    fill_n += 1
 
 # ------------------------------------------------- эталонные веса украшений
 G = {}
@@ -193,6 +225,14 @@ for d in drinks:
     if 'Безо льда' in d['name']:
         VARIANTS.setdefault(d['name'].split(' / Безо льда')[0], []).append(d['name'])
 
+# Блоки в drinks2.json лежат ровно в порядке книги: листы по порядку вкладок,
+# внутри листа — по строке. Поэтому позиция в массиве и есть «порядок как в Excel».
+SRC_ORDER = {d['name']: i for i, d in enumerate(drinks)}
+SHEETS = []
+for d in drinks:
+    if d['sheet'] not in SHEETS:
+        SHEETS.append(d['sheet'])
+
 recipes, R_INDEX = [], {}
 for ch in CHAPTERS:
     for nm in ch['items']:
@@ -200,6 +240,9 @@ for ch in CHAPTERS:
         R_INDEX[pretty(nm)] = len(recipes)
         recipes.append({
             'name': pretty(nm), 'ch': ch['id'],
+            # порядок исходника: справочник умеет показывать карточки так же, как они идут
+            # в Excel (лист + строка), а не только по главам пособия
+            'sh': d['sheet'], 'si': SRC_ORDER[nm],
             'tech': TECH_FIX.get(nm, d['tech']), 'glass': GLASS_NORM.get(d['glass'], d['glass']),
             'straw': d['straw'], 'total': d['total'],
             'ing': [[n, a] for n, a in d['ing_main']],
@@ -227,11 +270,12 @@ dupes = {k: v for k, v in seen.items() if len(v) > 1}
 if dupes:
     raise SystemExit(f'Коллизия id вопросов: {dupes}')
 
-json.dump({'chapters': CH_LIST, 'recipes': recipes},
+json.dump({'chapters': CH_LIST, 'sheets': SHEETS, 'recipes': recipes},
           open(f'{W}/data/recipes.json', 'w', encoding='utf-8'), ensure_ascii=False)
 json.dump(MEDIA, open(f'{W}/data/media.json', 'w', encoding='utf-8'), ensure_ascii=False)
 json.dump(bank, open(f'{W}/data/bank.json', 'w', encoding='utf-8'), ensure_ascii=False)
 from collections import Counter
 print('вопросов:', len(bank), Counter((q['cat'], q['t']) for q in bank))
+print('пак «пропущенная граммовка»:', fill_n)
 print('рецептов:', len(recipes), '· картинок:', len(MEDIA))
 print('посуда:', glasses)
