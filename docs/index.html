@@ -375,7 +375,7 @@ details.cheat b{color:var(--ink)}
       <b>Мои ошибки <span style="display:inline;color:var(--bad)" id="errCount"></span></b>
       <span>Разбор, статистика по коктейлям и повторное решение того, что не получилось.</span>
     </button>
-    <div class="foot">Работает без интернета · данные хранятся только в этом браузере</div>
+    <div class="foot" id="homeFoot">Работает без интернета · данные хранятся только в этом браузере</div>
   </div>
 
   <!-- ТЕСТ -->
@@ -383,6 +383,19 @@ details.cheat b{color:var(--ink)}
 
   <!-- РЕЗУЛЬТАТ -->
   <div id="result" class="hidden"></div>
+
+  <!-- ВХОД -->
+  <div id="login" class="hidden">
+    <h1>Тренажёр<br>граммовок</h1>
+    <p class="lead">Доступ по логину и паролю. Аккаунты заводит владелец — регистрация закрыта.</p>
+    <input class="search" id="logMail" type="email" inputmode="email" autocomplete="username"
+           placeholder="Почта" autocapitalize="off" spellcheck="false">
+    <input class="search" id="logPass" type="password" autocomplete="current-password"
+           placeholder="Пароль">
+    <button class="go wide" id="logGo">Войти</button>
+    <div class="note hidden" id="logErr" style="border-color:var(--bad);color:var(--bad);margin-top:12px"></div>
+    <div class="foot">После первого входа тренажёр работает и без интернета</div>
+  </div>
 
   <!-- НАСТРОЙКА ТРЕНИРОВКИ -->
   <div id="setup" class="hidden">
@@ -450,6 +463,9 @@ details.cheat b{color:var(--ink)}
 <script src="bank.js"></script>
 <script>
 const BANK = window.BANK;
+// Адрес и публичный ключ Supabase. Пустой url = вход выключен, приложение работает
+// как раньше — это нужно, чтобы сборка не ломалась до настройки проекта.
+const SB = {"url":"","key":""};
 BANK.forEach((q,i)=>q.i=i);
 const IMG = window.IMG || {};                 // ключ -> data-URI, картинка хранится один раз
 const REC = (window.RECIPES||{recipes:[],chapters:[]});
@@ -487,7 +503,10 @@ try{
   }
 }catch(e){}
 for(const k of ['fav','favQ','skip','skipQ','skipSh','solved','errors']) if(!store[k]) store[k]={};
-const save = ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
+const save = ()=>{
+  try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){}
+  if(typeof pushProgress === 'function') pushProgress();
+};
 
 /* ---------- избранное и исключения ---------- */
 const isFav  = n => !!store.fav[n];
@@ -547,7 +566,7 @@ function pickExam(){
 
 /* ---------- состояние ---------- */
 let S = null, tick = null;
-const SCREENS = ['home','quiz','result','errors','ref','setup','qbase'];
+const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
@@ -565,6 +584,11 @@ function renderHome(){
   $('#refSize').textContent = REC.recipes.length+' рецептов';
   const n = Object.keys(store.errors).length;
   $('#errCount').textContent = n ? '· '+n : '';
+  $('#homeFoot').innerHTML = (authOn() && AUTH)
+    ? `${AUTH.mail||''} · прогресс синхронизируется · <span class="fbbtn" id="logout"
+        style="margin-top:6px">Выйти</span>`
+    : 'Работает без интернета · данные хранятся только в этом браузере';
+  const lo = $('#logout'); if(lo) lo.onclick = logout;
   show('home');
 }
 
@@ -1087,7 +1111,9 @@ function recipeHTML(r){
   const rows = r.ing.map(([n,a])=>`<tr><td>${n}</td><td class="a">${a}</td></tr>`).join('');
   const gars = r.gar.length ? `<div class="lbl">Украшение</div><table>`+
       r.gar.map(([n,a])=>`<tr class="g"><td>${n}</td><td class="a">${a}</td></tr>`).join('')+`</table>` : '';
-  const vars = (r.var||[]).map(v=>`<div class="var"><b>${v.name}</b><p>${mark(v.method)}</p></div>`).join('');
+  const vars = (r.var||[]).map(v=>`<div class="var"><b>${v.name}${
+      v.total?` <span style="font-family:var(--mono);font-size:13px;color:var(--acc)">${v.total}</span>`:''
+    }</b><p>${mark(v.method)}</p></div>`).join('');
   return `<div class="grip"><i></i>
       <button class="cls" id="clsRec"><b>‹</b>${BACK_LABEL}</button>
       <div style="margin-left:auto;display:flex;gap:8px">
@@ -1397,6 +1423,121 @@ function openErrors(){
   } else $('#home2').onclick = renderHome;
 }
 
+/* ---------- вход и синхронизация ---------- */
+// Тонкий клиент поверх REST API Supabase: библиотека не подключается, потому что
+// приложение должно открываться офлайн и не тянуть ничего из сети при запуске.
+const AKEY = 'barquiz.auth';
+let AUTH = null;
+try{ AUTH = JSON.parse(localStorage.getItem(AKEY)||'null'); }catch(e){}
+const authOn = () => !!(SB && SB.url && SB.key);
+const saveAuth = () => { try{ localStorage.setItem(AKEY, JSON.stringify(AUTH)); }catch(e){} };
+
+async function sbAuth(path, body){
+  const r = await fetch(SB.url+'/auth/v1/'+path, {
+    method:'POST',
+    headers:{'apikey':SB.key,'Content-Type':'application/json'},
+    body:JSON.stringify(body)});
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error_description || j.msg || j.message || 'Ошибка входа');
+  return j;
+}
+
+function setSession(j){
+  AUTH = {token:j.access_token, refresh:j.refresh_token,
+          uid:(j.user&&j.user.id)||(AUTH&&AUTH.uid),
+          mail:(j.user&&j.user.email)||(AUTH&&AUTH.mail),
+          exp:Date.now() + (j.expires_in||3600)*1000};
+  saveAuth();
+}
+
+async function ensureToken(){
+  if(!AUTH) return null;
+  if(AUTH.exp && AUTH.exp - Date.now() > 60000) return AUTH.token;
+  try{
+    setSession(await sbAuth('token?grant_type=refresh_token', {refresh_token:AUTH.refresh}));
+    return AUTH.token;
+  }catch(e){ return AUTH.token; }      // офлайн: работаем на старом токене
+}
+
+async function sbRest(path, opts){
+  const token = await ensureToken();
+  return fetch(SB.url+'/rest/v1/'+path, Object.assign({}, opts, {
+    headers:Object.assign({'apikey':SB.key,'Authorization':'Bearer '+token,
+      'Content-Type':'application/json'}, (opts&&opts.headers)||{})}));
+}
+
+/* Слияние прогресса. Устройство и база правятся независимо, поэтому счётчики
+   объединяем по максимуму, а не перетираем: ошибки и избранное — по большему
+   значению, статистика — по большей сумме. Так ни один разбор не теряется. */
+function mergeStore(remote){
+  if(!remote) return;
+  const maxMap = (a,b)=>{ const o=Object.assign({}, a||{});
+    for(const [k,v] of Object.entries(b||{})) o[k]=Math.max(o[k]||0, v||0); return o; };
+  store.errors = maxMap(store.errors, remote.errors);
+  for(const k of ['fav','favQ','skip','skipQ','skipSh','solved'])
+    store[k] = Object.assign({}, remote[k]||{}, store[k]||{});
+  const rs = remote.stats||{}, ls = store.stats;
+  store.stats = {runs:Math.max(rs.runs||0, ls.runs||0), best:Math.max(rs.best||0, ls.best||0),
+                 right:Math.max(rs.right||0, ls.right||0), total:Math.max(rs.total||0, ls.total||0)};
+  if(remote.sess && !store.sess) store.sess = remote.sess;
+  if(typeof remote.showTotal === 'boolean' && store.showTotal===undefined)
+    store.showTotal = remote.showTotal;
+}
+
+async function pullProgress(){
+  if(!authOn() || !AUTH) return;
+  try{
+    const r = await sbRest('bar_progress?select=data&user_id=eq.'+AUTH.uid, {method:'GET'});
+    if(!r.ok) return;
+    const rows = await r.json();
+    if(rows[0] && rows[0].data){ mergeStore(rows[0].data); save(); }
+  }catch(e){}
+}
+
+let pushTimer = null;
+function pushProgress(){
+  if(!authOn() || !AUTH) return;
+  clearTimeout(pushTimer);
+  // Пишем пачкой: во время теста store сохраняется после каждого ответа,
+  // а базе достаточно одного запроса раз в несколько секунд.
+  pushTimer = setTimeout(async ()=>{
+    try{
+      await sbRest('bar_progress', {method:'POST',
+        headers:{'Prefer':'resolution=merge-duplicates'},
+        body:JSON.stringify({user_id:AUTH.uid, data:store, updated_at:new Date().toISOString()})});
+    }catch(e){}
+  }, 4000);
+}
+
+function showLogin(msg){
+  SCREENS.concat(['login']).forEach(x=>$('#'+x).classList.toggle('hidden', x!=='login'));
+  $('#top').classList.add('hidden');
+  $('#logErr').classList.toggle('hidden', !msg);
+  if(msg) $('#logErr').textContent = msg;
+}
+
+$('#logGo').addEventListener('click', async ()=>{
+  const mail = $('#logMail').value.trim(), pass = $('#logPass').value;
+  if(!mail || !pass){ showLogin('Введите почту и пароль'); return; }
+  $('#logGo').textContent = 'Проверяем…';
+  try{
+    setSession(await sbAuth('token?grant_type=password', {email:mail, password:pass}));
+    $('#logGo').textContent = 'Войти';
+    await pullProgress();
+    renderHome();
+  }catch(e){
+    $('#logGo').textContent = 'Войти';
+    showLogin(String(e.message||e).includes('credentials') ? 'Неверная почта или пароль' : e.message);
+  }
+});
+$('#logPass').addEventListener('keydown', e=>{ if(e.key==='Enter') $('#logGo').click(); });
+
+function logout(){
+  AUTH = null;
+  try{ localStorage.removeItem(AKEY); }catch(e){}
+  showLogin('');
+}
+
 /* ---------- события ---------- */
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
@@ -1447,8 +1588,14 @@ document.addEventListener('keydown',e=>{
   }
   if(e.key==='ArrowLeft') prevQ();
 });
-renderHome();
-
+// Вход спрашиваем один раз: дальше сессия лежит в localStorage и обновляется молча,
+// поэтому в баре приложение открывается сразу и работает без интернета.
+if(authOn() && !AUTH){
+  showLogin('');
+} else {
+  renderHome();
+  pullProgress();
+}
 </script>
 <script>if('serviceWorker' in navigator && location.protocol==='https:'){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(e=>console.warn('sw',e)));}</script>
 </body>
