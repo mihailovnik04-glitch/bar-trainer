@@ -242,6 +242,8 @@ details.cheat b{color:var(--ink)}
   display:grid;place-items:center;font-size:16px;color:var(--ink-3);transition:transform .15s,color .2s}
 .star:active{transform:scale(.88)}
 .star.on{color:var(--acc)}
+.star.off{font-size:15px}
+.star.off.on{color:var(--bad)}
 .rrow .h .star{background:transparent;width:28px;height:28px;flex:0 0 28px;font-size:15px}
 .q .drink .star{margin-left:auto}
 
@@ -252,6 +254,7 @@ details.cheat b{color:var(--ink)}
 .chip{flex:0 0 auto;background:var(--card);border:1px solid var(--line);border-radius:11px;
   padding:8px 12px;font-size:13px;color:var(--ink-2);white-space:nowrap;transition:.18s}
 .chip.on{background:#E0A45B1f;border-color:var(--acc);color:var(--acc);font-weight:600}
+.chip.off.on{background:#E2564B1f;border-color:var(--bad);color:var(--bad)}
 .chip i{font-style:normal;font-family:var(--mono);font-size:11px;opacity:.7;margin-left:5px}
 
 /* ---------- своя клавиатура вместо нативной ---------- */
@@ -395,6 +398,8 @@ details.cheat b{color:var(--ink)}
     <div class="chips-row" id="setSheet"></div>
     <div class="subhead">Тема</div>
     <div class="chips-row" id="setCat"></div>
+    <div class="subhead">Убрать виды совсем</div>
+    <div class="chips-row" id="setOff"></div>
     <label class="note" style="display:flex;gap:10px;align-items:center;cursor:pointer">
       <input type="checkbox" id="setTotal" style="width:20px;height:20px;accent-color:var(--acc)">
       <span>Подсказывать выход напитка там, где нужно вписать граммовку.
@@ -461,7 +466,7 @@ const BY_ID = {}; BANK.forEach(q=>BY_ID[q.id]=q);
 // fav — избранные коктейли, favQ — избранные вопросы, skip — напитки, убранные из тренировки,
 // solved — что уже решено верно (для режима «только нерешённые»), sess — незаконченная тренировка.
 let store = {errors:{}, stats:{runs:0, best:0, right:0, total:0},
-             fav:{}, favQ:{}, skip:{}, solved:{}, sess:null, showTotal:true};
+             fav:{}, favQ:{}, skip:{}, skipQ:{}, skipSh:{}, solved:{}, sess:null, showTotal:true};
 try{
   const raw=localStorage.getItem(KEY);
   if(raw){ store=Object.assign(store, JSON.parse(raw)); }
@@ -481,7 +486,7 @@ try{
     localStorage.setItem(KEY, JSON.stringify(store));
   }
 }catch(e){}
-for(const k of ['fav','favQ','skip','solved','errors']) if(!store[k]) store[k]={};
+for(const k of ['fav','favQ','skip','skipQ','skipSh','solved','errors']) if(!store[k]) store[k]={};
 const save = ()=>{ try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
 
 /* ---------- избранное и исключения ---------- */
@@ -491,6 +496,18 @@ const isSkip = n => !!store.skip[n];
 function toggleFav(n){ if(store.fav[n]) delete store.fav[n]; else store.fav[n]=1; save(); }
 function toggleFavQ(id){ if(store.favQ[id]) delete store.favQ[id]; else store.favQ[id]=1; save(); }
 function toggleSkip(n){ if(store.skip[n]) delete store.skip[n]; else store.skip[n]=1; save(); }
+// Выключить сразу целый вид («Шотики», «Самовывоз») — иначе пришлось бы снимать
+// напитки по одному.
+const isSkipSh = sh => !!store.skipSh[sh];
+function toggleSkipSh(sh){ if(store.skipSh[sh]) delete store.skipSh[sh]; else store.skipSh[sh]=1; save(); }
+// Выключенный вопрос не появляется ни в тренировке, ни на экзамене — в отличие от
+// «убрать напиток», который выключает коктейль целиком.
+const isSkipQ = id => !!store.skipQ[id];
+function toggleSkipQ(id){ if(store.skipQ[id]) delete store.skipQ[id]; else store.skipQ[id]=1; save(); }
+const offHTML = (on,attr) => `<button class="star off${on?' on':''}" ${attr}
+  title="Не показывать этот вопрос">${on?'⊘':'⊖'}</button>`;
+// Единый фильтр «что вообще может попасться»: применяем и в тренировке, и на экзамене.
+const playable = q => !isSkipQ(q.id) && !isSkip(q.drink) && !isSkipSh(q.sh);
 const starHTML = (on,attr) => `<button class="star${on?' on':''}" ${attr}>${on?'★':'☆'}</button>`;
 // Вопрос считается избранным и сам по себе, и когда в избранном весь коктейль:
 // «избранное» в тренировке должно поднимать и то, и другое.
@@ -513,7 +530,7 @@ const qLabel = q => q.q.replace(/^Сколько\s+/,'').replace(/^весит:\s
 function pickExam(){
   // «впиши весь состав» — тоже ввод числа, только полей несколько
   const isNum = q => q.t==='num'||q.t==='fill'||q.t==='mfill';
-  const pool = BANK.filter(q=>q.t!=='mfill' || q.a.length<=4);   // на экзамене без простыней
+  const pool = BANK.filter(q=>playable(q) && (q.t!=='mfill' || q.a.length<=4));  // без простыней и выключенного
   const by = c => pool.filter(q=>q.cat===c && isNum(q));
   const byc = c => pool.filter(q=>q.cat===c && !isNum(q));
   const take = (arr,n) => shuffle(arr.slice()).slice(0,n);
@@ -554,7 +571,9 @@ function renderHome(){
 /* ---------- настройка тренировки ---------- */
 const SHEETS = REC.sheets || [];
 const CATS = [['all','Все темы'],['grams','Состав'],['garnish','Украшения'],
-              ['glass','Посуда'],['method','Метод']];
+              ['glass','Посуда'],['method','Метод'],['coffee','Кофе'],['tea','Чай'],
+              ['pf','Заготовки'],['serve','Подача']];
+const CAT_NAME = Object.fromEntries(CATS);
 let OPT = {pool:'all', sheet:'all', cat:'all'};
 
 // Один и тот же факт спрашивается по-разному: точным вводом, выбором, пропуском в составе.
@@ -581,7 +600,7 @@ function dedupe(list){
 }
 
 function trainPool(o){
-  let list = BANK.filter(q=>!isSkip(q.drink));
+  let list = BANK.filter(playable);
   if(o.sheet!=='all') list = list.filter(q=>q.sh===o.sheet);
   if(o.cat!=='all')   list = list.filter(q=>q.cat===o.cat);
   if(o.pool==='new')  list = list.filter(q=>!store.solved[q.id]);
@@ -595,6 +614,9 @@ function renderSetup(){
     .map(([v,t])=>`<button class="chip${OPT.sheet===v?' on':''}" data-sheet="${v}">${t}</button>`).join('');
   $('#setCat').innerHTML = CATS
     .map(([v,t])=>`<button class="chip${OPT.cat===v?' on':''}" data-cat="${v}">${t}</button>`).join('');
+  // Выключенный вид не попадёт ни в тренировку, ни на экзамен, пока его не вернут.
+  $('#setOff').innerHTML = SHEETS.map(x=>
+    `<button class="chip${isSkipSh(x)?' off on':''}" data-off="${x}">${isSkipSh(x)?'✕ ':''}${x}</button>`).join('');
   $('#setTotal').checked = !!store.showTotal;
   const n = trainPool(OPT).length;
   $('#setCount').innerHTML = n
@@ -625,6 +647,10 @@ $('#setSheet').addEventListener('click', e=>{
 $('#setCat').addEventListener('click', e=>{
   const b=e.target.closest('button[data-cat]'); if(!b) return;
   OPT.cat=b.dataset.cat; renderSetup();
+});
+$('#setOff').addEventListener('click', e=>{
+  const b=e.target.closest('button[data-off]'); if(!b) return;
+  toggleSkipSh(b.dataset.off); renderSetup();
 });
 $('#setTotal').addEventListener('change', e=>{ store.showTotal=e.target.checked; save(); });
 $('#setGo').addEventListener('click', ()=>{ if(trainPool(OPT).length) start('train'); });
@@ -699,8 +725,7 @@ function renderQ(){
     ? table + padHTML(q, nBlanks)
     : `<div class="opts">${q.opts.map((o,i)=>
          `<button class="opt ${q.cat!=='glass'&&q.t==='choice'&&/^\d/.test(o)?'num':''}" data-i="${i}">${o}</button>`).join('')}</div>`;
-  const kind = q.cat==='glass' ? 'посуда' : q.cat==='garnish' ? 'украшение'
-             : q.cat==='method' ? 'метод' : 'состав';
+  const kind = (CAT_NAME[q.cat] || 'состав').toLowerCase();
   $('#quiz').innerHTML = `<div class="q" id="qc">
       <div class="drink">${img}<div><span>${kind}</span><b>${q.drink}</b>
         ${q.tag?`<div class="tagline">${q.tag}</div>`:''}</div>
@@ -1271,17 +1296,27 @@ function qbRowHTML(q){
   return `<div class="qrow"><div class="hd">
       <b${q.r!=null?` data-r="${q.r}"`:''}>${q.q}</b>
       <div class="a">${answerText(q)}</div>
-      ${starHTML(isFavQ(q.id), 'data-favq="'+q.id+'"')}</div>
-    <div class="mt">${meta}</div></div>`;
+      ${starHTML(isFavQ(q.id), 'data-favq="'+q.id+'"')}
+      ${offHTML(isSkipQ(q.id), 'data-skipq="'+q.id+'"')}</div>
+    <div class="mt">${meta}${isSkipQ(q.id)?' · <b style="color:var(--bad)">выключен</b>':''}</div></div>`;
 }
 
+// Поиск идёт по всей строке вопроса: название, текст, вид отдачи, лист и сам ответ.
+// Слова ищутся по отдельности, поэтому «лимон кувшин» находит то же, что «кувшин лимон»,
+// а совпадение считается с первой введённой буквы.
+const qbText = q => (q.drink+' '+q.q+' '+(q.tag||'')+' '+(q.sh||'')+' '+answerText(q)
+  + ' ' + (q.rows ? q.rows.map(r=>r[0]).join(' ') : '')).toLowerCase().replace(/ё/g,'е');
+
 function qbList(){
-  const f = QB.q.trim().toLowerCase();
-  return BANK.filter(q=>
-      (QB.sheet==='all' || q.sh===QB.sheet) &&
-      (QB.cat==='all'   || q.cat===QB.cat) &&
-      (!QB.fav || favQuestion(q)) &&
-      (!f || (q.drink+' '+q.q).toLowerCase().includes(f)));
+  const words = QB.q.toLowerCase().replace(/ё/g,'е').split(/\s+/).filter(Boolean);
+  return BANK.filter(q=>{
+      if(QB.sheet!=='all' && q.sh!==QB.sheet) return false;
+      if(QB.cat!=='all'   && q.cat!==QB.cat)  return false;
+      if(QB.fav && !favQuestion(q)) return false;
+      if(!words.length) return true;
+      const t = qbText(q);
+      return words.every(w=>t.includes(w));
+  });
 }
 
 function renderQB(){
@@ -1293,8 +1328,10 @@ function renderQB(){
   $('#qbCat').innerHTML = CATS
     .map(([v,t])=>`<button class="chip${QB.cat===v?' on':''}" data-cat="${v}">${t}</button>`).join('');
   const list = qbList();
+  const off = Object.keys(store.skipQ).length;
   $('#qbList').innerHTML = list.length
-    ? `<div class="subhead">${list.length} вопросов</div>` + list.map(qbRowHTML).join('')
+    ? `<div class="subhead">${list.length} вопросов${off?` · выключено ${off}`:''}</div>`
+      + list.map(qbRowHTML).join('')
     : '<div class="empty">Ничего не нашлось</div>';
 }
 
@@ -1375,6 +1412,8 @@ document.addEventListener('click', e=>{
   if(f){ e.stopPropagation(); toggleFav(f.dataset.fav);
     f.classList.toggle('on'); f.textContent = isFav(f.dataset.fav)?'★':'☆';
     if(REF_FAV) renderRef($('#refQ').value); return; }
+  const sq = e.target.closest('[data-skipq]');
+  if(sq){ e.stopPropagation(); toggleSkipQ(sq.dataset.skipq); renderQB(); return; }
   const fq = e.target.closest('[data-favq]');
   if(fq){ e.stopPropagation(); toggleFavQ(fq.dataset.favq);
     fq.classList.toggle('on'); fq.textContent = isFavQ(fq.dataset.favq)?'★':'☆';
