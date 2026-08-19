@@ -162,16 +162,38 @@ GLASS_RARE = {'Айриш', 'Сова', 'Череп', 'Шейкер', 'Стэм�
 # Без пометки вопрос неотличим, поэтому вид отдачи пишем всегда, где он есть.
 ICED = {d['name'].split(' / Безо льда')[0] for d in drinks if 'Безо льда' in d['name']}
 
+# Семья напитка: «Лимонделло», «Лимонделло / Кувшин», «Лимонделло 0.5 л» и «… / с собой» —
+# один напиток в разных объёмах и подачах, но с разными граммовками. Там, где версий
+# больше одной, объём обязателен в пометке — иначе вопрос неотличим от соседнего.
+def family(name):
+    n = name.lower().replace('ё', 'е')
+    n = re.sub(r'\s*/\s*(кувшин|безо льда|с собой|с ежевикой)', '', n)
+    n = re.sub(r'\s*\d+[.,]?\d*\s*л\b', '', n)
+    n = re.sub(r'\s*б/а|\s*0,0', '', n)
+    return n.strip()
+
+FAMILY_N = {}
+for d in drinks:
+    FAMILY_N[family(d['name'])] = FAMILY_N.get(family(d['name']), 0) + 1
+
 def tag_of(d):
     nm = d['name']
-    if d['sheet'] == 'Самовывоз':
-        return 'на самовывоз · бутылка ПЭТ'
-    if 'с собой' in nm.lower():
-        return 'с собой'
     parts = []
-    if 'Кувшин' in nm: parts.append('кувшин 1 л')
-    if 'Безо льда' in nm: parts.append('безо льда')
-    elif nm in ICED: parts.append('со льдом')     # у напитка есть парный вариант безо льда
+    if d['sheet'] == 'Самовывоз':
+        parts = ['на самовывоз', 'бутылка ПЭТ']
+    elif 'с собой' in nm.lower():
+        parts = ['с собой']
+    else:
+        if 'Кувшин' in nm: parts.append('кувшин 1 л')
+        if 'Безо льда' in nm: parts.append('безо льда')
+        elif nm in ICED: parts.append('со льдом')  # есть парный вариант безо льда
+    # «С собой» и «Самовывоз» — версии по определению, даже если в таблице их назвали
+    # иначе («Щавель-горох» против «Щавель-Зеленый горошек»): объём пишем всегда.
+    multi = (FAMILY_N.get(family(nm), 0) > 1
+             or d['sheet'] in ('Лимонады с собой (Акция)', 'Самовывоз')
+             or 'Кувшин' in nm)
+    if multi and d['total']:
+        parts.append(d['total'])
     return ' · '.join(parts)
 
 for d in drinks:
