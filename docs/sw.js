@@ -1,5 +1,5 @@
 // собирается scripts/42_pwa.py — руками не править
-const CACHE = 'barquiz-0a67a9a4';
+const CACHE = 'barquiz-570de9ff';
 const FILES = ["./", "index.html", "bank.js", "recipes.js", "media.js", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
