@@ -232,12 +232,17 @@ def push(take):
         print('НЕТ В staff (пропущены):', ', '.join(miss))
 
     for b in take:
-        api(f"""insert into public.periods (venue_id, dept, year, month, half, state)
-                values ({q(home)}, 'bar', {b['year']}, {b['month']}, {b['half']}, 'published')
-                on conflict (venue_id, dept, year, month, half)
-                do update set state = 'published'""")
+        # Границы периода теперь подвижные (их двигает старший), поэтому ключ —
+        # дата начала, а не пара «месяц + половина».
+        d_from = f"{b['year']}-{b['month']:02d}-{min(b['days']):02d}"
+        d_to = f"{b['year']}-{b['month']:02d}-{max(b['days']):02d}"
+        api(f"""insert into public.periods (venue_id, dept, year, month, half, d_from, d_to, state)
+                values ({q(home)}, 'bar', {b['year']}, {b['month']}, {b['half']},
+                        {q(d_from)}, {q(d_to)}, 'published')
+                on conflict (venue_id, dept, d_from)
+                do update set d_to = excluded.d_to, state = 'published'""")
         pid = api(f"""select id from public.periods where venue_id={q(home)} and dept='bar'
-                       and year={b['year']} and month={b['month']} and half={b['half']}""")[0]['id']
+                       and d_from={q(d_from)}""")[0]['id']
         # Перезаливка идемпотентна: слой plan этого периода стираем и пишем заново.
         api(f"delete from public.shifts where period_id={q(pid)} and layer='plan'")
         rows, events, notes = [], [], []

@@ -470,9 +470,42 @@ details.cheat b{color:var(--ink)}
 .strow .hd{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .strow .nmin{flex:1;min-width:0;background:var(--card-2);border:1px solid var(--line);
   border-radius:10px;padding:8px 10px;color:var(--ink);font-size:14.5px}
-.strow .nlab{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-3)}
-.strow .hin{width:66px;background:var(--card-2);border:1px solid var(--line);border-radius:10px;
+/* Подписи и числовые поля нужны и в карточке сотрудника, и в листе дня,
+   и в настройках — поэтому селекторы общие, а не привязаны к .strow. */
+.nlab{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-3)}
+.hin{width:66px;background:var(--card-2);border:1px solid var(--line);border-radius:10px;
   padding:7px 8px;color:var(--ink);font-family:var(--mono);font-size:14px}
+/* события дня, виды и настройки */
+.schnav.off{opacity:.3;pointer-events:none}
+.schgrid thead th[data-day]{cursor:pointer}
+.schgrid thead th u em{font-style:normal;font-size:13px;line-height:0}
+.evlist{display:flex;flex-direction:column;gap:6px}
+.evrow{display:flex;align-items:center;gap:8px;background:var(--card-2);border-radius:11px;
+  padding:8px 10px;border-left:3px solid var(--line);font-size:13.5px}
+.evrow span{flex:1;min-width:0}
+.evrow em{font-style:normal;font-family:var(--mono);font-size:11.5px;color:var(--acc)}
+.evrow .star{flex:0 0 28px;width:28px;height:28px;font-size:13px;background:transparent}
+.strow .swatch{width:16px;height:16px;border-radius:5px;flex:0 0 16px}
+.chip.sw{width:26px;min-width:26px;padding:0;height:26px;border-radius:8px;border:2px solid transparent}
+.chip.sw.on{border-color:var(--ink)}
+.dowgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:8px}
+.dowgrid label{display:flex;flex-direction:column;align-items:center;gap:4px}
+.dowgrid i{font-style:normal;font-size:10.5px;color:var(--ink-3);text-transform:uppercase}
+.dowgrid .hin{width:100%;text-align:center;padding:8px 2px}
+/* Два поля лимита в ряд: на 390 px «часов» и «барменов» с кнопками в одну строку
+   не помещались и уезжали за край. */
+.ovrgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.ovrgrid .nlab{flex-direction:column;align-items:stretch;gap:4px}
+.ovrgrid .nlab i{font-style:normal;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
+.ovrgrid .hin{width:100%}
+.addrow{display:flex;gap:8px;margin-top:8px}
+.addrow .nmin{flex:1;min-width:0}
+.addrow .chip{flex:0 0 auto}
+.schcell input[type=date]{font-family:var(--mono)}
+/* Значок живой синхронизации: маленькая точка в шапке периода. */
+.rtdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);
+  margin-left:6px;vertical-align:middle;opacity:.85}
+.rtdot.off{background:var(--ink-3);opacity:.5}
 
 /* ---------- «впиши весь состав» ---------- */
 .fillt tr.act td{color:var(--acc)}
@@ -731,6 +764,18 @@ details.cheat b{color:var(--ink)}
     <div id="staffBody"></div>
   </div>
 
+  <!-- НАСТРОЙКИ ГРАФИКА -->
+  <div id="setsscr" class="hidden">
+    <div class="scrhead"><button class="back" data-sched="1">‹</button><h1>Настройки графика</h1></div>
+    <div id="setsBody"></div>
+  </div>
+
+  <!-- ВИДЫ СОБЫТИЙ -->
+  <div id="kindsscr" class="hidden">
+    <div class="scrhead"><button class="back" data-sets="1">‹</button><h1>Виды событий</h1></div>
+    <div id="kindsBody"></div>
+  </div>
+
   <!-- РОАДМАП (только владельцу) -->
   <div id="roadmap" class="hidden">
     <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Роадмап</h1></div>
@@ -927,7 +972,7 @@ let S = null, tick = null;
 // зачёт по числу ошибок. Отличается только пул, поэтому проверка режима одна на всех.
 const isExam = () => !!S && (S.mode==='exam' || S.mode==='examfav');
 const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb','attest','stub',
-                 'learn','profile','roadmap','sched','staffscr'];
+                 'learn','profile','roadmap','sched','staffscr','setsscr','kindsscr'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
@@ -1696,9 +1741,10 @@ const CHEATS = `
    и localStorage тут не помощник. Поэтому последний просмотренный период
    кладётся в кеш — чтобы в баре без интернета можно было хотя бы посмотреть,
    кто сегодня работает. Запись — только онлайн. */
-const SCH = {venue:null, staff:[], settings:{}, period:null,
-             shifts:[], events:[], notes:[], y:0, m:0, half:1,
-             booted:false, busy:false, err:''};
+const SCH = {venue:null, venues:[], staff:[], settings:{}, kinds:[],
+             periods:[], pi:-1, period:null,
+             shifts:[], events:[], notes:[],
+             booted:false, busy:false, err:'', edit:false, showWish:false, cell:null};
 const SCH_CACHE = 'barquiz.sched';
 const MON = ['января','февраля','марта','апреля','мая','июня','июля','августа',
              'сентября','октября','ноября','декабря'];
@@ -1707,20 +1753,40 @@ const MON_N = ['Январь','Февраль','Март','Апрель','Май
 const WD = ['вс','пн','вт','ср','чт','пт','сб'];
 const ST_NAME = {wish:'собираем пожелания', draft:'черновик', published:'выкачен'};
 
-// Полумесяц: 1–15 и 16–конец месяца. Второй бывает 13, 15 или 16 дней.
-function periodDays(y, m, half){
-  const last = new Date(y, m, 0).getDate();
-  const from = half===1 ? 1 : 16, to = half===1 ? 15 : last;
-  const out = [];
-  for(let d=from; d<=to; d++) out.push(new Date(y, m-1, d));
+/* Границы периода задаёт старший, а не календарь: заказчик 20.08.2026 попросил
+   двигать их по своему усмотрению. Поэтому дни берутся из d_from…d_to самого
+   периода, а не вычисляются из «полумесяца». year/month/half остались подписью. */
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const dfrom = s => new Date(s + 'T00:00:00');
+const daysBetween = (a, b) => Math.round((dfrom(b) - dfrom(a)) / 86400000);
+
+function periodDays(p){
+  if(!p) return [];
+  const out = [], end = dfrom(p.d_to);
+  for(let d = dfrom(p.d_from); d <= end; d.setDate(d.getDate()+1)) out.push(new Date(d));
   return out;
 }
-const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+// Подпись периода: своя, если старший её задал, иначе диапазон словами.
+function periodTitle(p){
+  if(!p) return '—';
+  if(p.title) return p.title;
+  const a = dfrom(p.d_from), b = dfrom(p.d_to);
+  return a.getMonth() === b.getMonth()
+    ? `${a.getDate()}–${b.getDate()} ${MON[a.getMonth()]} ${a.getFullYear()}`
+    : `${a.getDate()} ${MON[a.getMonth()]} – ${b.getDate()} ${MON[b.getMonth()]} ${b.getFullYear()}`;
+}
+// Период, в который попадает дата; иначе ближайший следующий, иначе последний.
+function pickPeriodFor(dateStr){
+  const i = SCH.periods.findIndex(p => p.d_from <= dateStr && dateStr <= p.d_to);
+  if(i >= 0) return i;
+  const j = SCH.periods.findIndex(p => p.d_from > dateStr);
+  return j >= 0 ? j : SCH.periods.length - 1;
+}
 function shiftPeriod(step){
-  let y=SCH.y, m=SCH.m, h=SCH.half+step;
-  while(h>2){ h-=2; m++; if(m>12){ m=1; y++; } }
-  while(h<1){ h+=2; m--; if(m<1){ m=12; y--; } }
-  SCH.y=y; SCH.m=m; SCH.half=h;
+  const n = SCH.periods.length;
+  if(!n) return;
+  SCH.pi = Math.max(0, Math.min(n - 1, SCH.pi + step));
+  SCH.period = SCH.periods[SCH.pi] || null;
 }
 
 // Роль в графике: старший правит всё, менеджер и выше — тоже.
@@ -1741,29 +1807,33 @@ async function schGet(path){
 // Справочники тянутся один раз за запуск: они меняются редко, а период листают часто.
 async function schBoot(){
   if(SCH.booted) return;
-  const [venues, staff, settings] = await Promise.all([
+  const [venues, staff, settings, kinds, periods] = await Promise.all([
     schGet('venues?select=id,name,address,org,is_own'),
     schGet('staff?select=id,name,category,sched_role,hours_norm,user_id,active,sort&order=sort'),
     schGet('sched_settings?select=venue_id,data'),
+    schGet('event_kinds?select=id,name,color,hour_bonus,sort,active&order=sort'),
+    schGet('periods?select=id,d_from,d_to,title,state,year,month,half&dept=eq.bar&order=d_from'),
   ]);
   SCH.venues = venues;
   SCH.venue = venues.find(v=>v.is_own) || venues[0] || null;
   SCH.staff = staff.filter(s=>s.active);
   SCH.settings = (settings[0] && settings[0].data) || {};
+  SCH.kinds = kinds.filter(k=>k.active);
+  SCH.allKinds = kinds;
+  SCH.periods = periods;
+  if(SCH.pi < 0 || SCH.pi >= periods.length) SCH.pi = pickPeriodFor(iso(new Date()));
+  SCH.period = periods[SCH.pi] || null;
   SCH.booted = true;
 }
 
 async function schLoad(){
-  const days = periodDays(SCH.y, SCH.m, SCH.half);
-  const a = iso(days[0]), b = iso(days[days.length-1]);
-  const p = await schGet(`periods?select=*&venue_id=eq.${SCH.venue.id}&dept=eq.bar`
-    + `&year=eq.${SCH.y}&month=eq.${SCH.m}&half=eq.${SCH.half}`);
-  SCH.period = p[0] || null;
+  SCH.period = SCH.periods[SCH.pi] || null;
   if(!SCH.period){ SCH.shifts=[]; SCH.events=[]; SCH.notes=[]; return; }
+  const a = SCH.period.d_from, b = SCH.period.d_to;
   const [shifts, events, notes] = await Promise.all([
     schGet(`shifts?select=id,staff_id,day,layer,kind,start_h,end_h,hours,at_venue_id`
            + `&period_id=eq.${SCH.period.id}`),
-    schGet(`day_events?select=id,day,kind,title&venue_id=eq.${SCH.venue.id}`
+    schGet(`day_events?select=id,day,kind_id,title&venue_id=eq.${SCH.venue.id}`
            + `&day=gte.${a}&day=lte.${b}`),
     schGet(`day_notes?select=id,day,body&venue_id=eq.${SCH.venue.id}`
            + `&day=gte.${a}&day=lte.${b}`),
@@ -1774,8 +1844,9 @@ async function schLoad(){
 function schCacheSave(){
   try{ localStorage.setItem(SCH_CACHE, JSON.stringify({
     venue:SCH.venue, venues:SCH.venues, staff:SCH.staff, settings:SCH.settings,
+    kinds:SCH.kinds, allKinds:SCH.allKinds, periods:SCH.periods, pi:SCH.pi,
     period:SCH.period, shifts:SCH.shifts, events:SCH.events, notes:SCH.notes,
-    y:SCH.y, m:SCH.m, half:SCH.half, at:Date.now()})); }catch(e){}
+    at:Date.now()})); }catch(e){}
 }
 function schCacheLoad(){
   try{
@@ -1800,6 +1871,28 @@ const shiftLabel = s =>
   s.kind==='off' ? '×'
   : (s.start_h==null ? '·' : `${String(s.start_h).padStart(2,'0')}-${String(s.end_h).padStart(2,'0')}`);
 
+/* ---------- лимиты ----------
+   Три уровня, от общего к частному: правило дня недели -> надбавка за события
+   этого дня -> ручное переопределение конкретной даты. Последнее бьёт всё:
+   если старший руками поставил на 31 декабря свои цифры, никакие «понедельники»
+   и «концерты» их не пересчитывают. Ноль означает «не задано» — подсветки нет. */
+function limitsFor(d, events){
+  const s = SCH.settings || {};
+  const dow = String(d.getDay() === 0 ? 7 : d.getDay());
+  const key = iso(d);
+  const ovr = (s.day_override || {})[key];
+  if(ovr) return {hours:+(ovr.hours||0), min:+(ovr.min||0), manual:true};
+  let hours = +((s.hour_limit || {})[dow] || 0);
+  const min = +((s.min_staff || {})[dow] || 0);
+  if(hours && events && events.length){
+    for(const e of events){
+      const k = SCH.allKinds && SCH.allKinds.find(x=>x.id===e.kind_id);
+      if(k) hours += (+k.hour_bonus || 0);
+    }
+  }
+  return {hours, min, manual:false};
+}
+
 /* ---------- кто что может править ----------
    Три состояния полумесяца задают весь цикл: wish — бармены проставляют пожелания,
    draft — старший собирает из них график, published — график выкачен всем.
@@ -1821,18 +1914,22 @@ const schCanEdit = (staffId, layer) =>
   : layer === 'wish' && (schBoss() || (schMe() && schMe().id === staffId));
 
 function renderSched(){
-  const days = periodDays(SCH.y, SCH.m, SCH.half);
-  $('#schTitle').textContent = `${MON_N[SCH.m-1]} ${SCH.y} · ${SCH.half===1?'1–15':'16–'+days[days.length-1].getDate()}`;
-  $('#schState').textContent = SCH.period ? (ST_NAME[SCH.period.state]||'') : 'не составлен';
+  const days = periodDays(SCH.period);
+  $('#schTitle').textContent = periodTitle(SCH.period);
+  $('#schState').textContent = SCH.period
+    ? (ST_NAME[SCH.period.state]||'') + (days.length ? ` · ${plural(days.length,'день','дня','дней')}` : '')
+    : 'периода нет';
+  $('#schPrev').classList.toggle('off', SCH.pi <= 0);
+  $('#schNext').classList.toggle('off', SCH.pi >= SCH.periods.length-1);
 
   if(SCH.busy){ $('#schBody').innerHTML = `<div class="note">Загружаю…</div>`; return; }
   if(!SCH.period){
-    $('#schBody').innerHTML = (SCH.err ? `<div class="note">${SCH.err}</div>` : '')
-      + `<div class="note">На этот полумесяц графика ещё нет.</div>`
-      + (schBoss() ? `<button class="go" id="schMake">Создать график на этот полумесяц</button>
-           <div class="note" style="margin-top:8px">Сразу откроется сбор пожеланий: бармены
-           проставят свои дни, потом вы соберёте из них график.</div>` : '');
-    if(schBoss()) $('#schMake').onclick = schCreatePeriod;
+    $('#schBody').innerHTML = (SCH.err ? `<div class="note bad">${SCH.err}</div>` : '')
+      + `<div class="note">Периодов ещё нет.</div>`
+      + (schBoss() ? `<button class="go" id="schMake">Создать период</button>
+           <div class="note" style="margin-top:8px">Границы задаёте сами — хоть полмесяца,
+           хоть неделя. Период откроется сбором пожеланий.</div>` : '');
+    if(schBoss()) $('#schMake').onclick = ()=>openPeriodSheet(null);
     return;
   }
   const layer = schLayerShow();
@@ -1846,27 +1943,31 @@ function renderSched(){
   const plan = SCH.shifts.filter(s=>s.layer===layer);
   const byCell = {};                       // staff|день -> [смены]
   plan.forEach(s=>{ (byCell[s.staff_id+'|'+s.day] = byCell[s.staff_id+'|'+s.day] || []).push(s); });
+  const kindOf = id => SCH.allKinds && SCH.allKinds.find(k=>k.id===id);
+  const evName = e => (kindOf(e.kind_id)||{}).name || e.title || 'событие';
   const evDays = {};
-  SCH.events.forEach(e=>{ (evDays[e.day] = evDays[e.day]||[]).push(e.title); });
+  SCH.events.forEach(e=>{ (evDays[e.day] = evDays[e.day]||[]).push(e); });
   const noteDays = {};
   SCH.notes.forEach(n=>{ (noteDays[n.day] = noteDays[n.day]||[]).push(n.body); });
 
   // Счётчик барменов на дне: смены на ЧУЖОЙ точке сюда не идут — человек занят,
   // но не у нас.
   const onDay = d => plan.filter(s=>s.day===d && s.kind==='work' && !s.at_venue_id).length;
-  const lim = SCH.settings.min_staff || {};
-  const hourLim = SCH.settings.hour_limit || {};
-  const dowKey = d => String(d.getDay()===0 ? 7 : d.getDay());
   const dayHours = d => plan.filter(s=>s.day===d).reduce((a,s)=>a+(s.hours||0),0);
 
   const head = days.map(d=>{
     const k = iso(d), n = onDay(k);
-    const min = +(lim[dowKey(d)]||0), hl = +(hourLim[dowKey(d)]||0);
-    const few = min && n < min;
-    const over = hl && dayHours(k) > hl;
-    return `<th class="${few?'few':''}${over?' over':''}" data-day="${k}">
+    const L = limitsFor(d, evDays[k]);
+    const few = L.min && n < L.min;
+    const over = L.hours && dayHours(k) > L.hours;
+    const ev = evDays[k] || [];
+    // Точки событий красим в цвет вида: старший видит на шапке, что за день,
+    // не открывая его.
+    const dots = ev.map(e=>`<em style="color:${(kindOf(e.kind_id)||{}).color||'var(--acc)'}">•</em>`).join('');
+    return `<th class="${few?'few':''}${over?' over':''}" data-day="${k}"
+      title="${ev.map(evName).join(' · ')}">
       <i>${WD[d.getDay()]}</i><b>${d.getDate()}</b>
-      <u>${n}${evDays[k]?'<em>•</em>':''}</u></th>`;
+      <u>${n}${dots}</u></th>`;
   }).join('');
 
   const body = SCH.staff.map(st=>{
@@ -1899,12 +2000,15 @@ function renderSched(){
   }).join('');
 
   const notesHTML = Object.keys(noteDays).sort().map(d=>{
-    const dd = new Date(d+'T00:00:00');
-    return `<div class="schnote"><b>${dd.getDate()} ${MON[dd.getMonth()]}</b>${noteDays[d].join(' · ')}</div>`;
+    const dd = dfrom(d);
+    return `<div class="schnote" data-day="${d}"><b>${dd.getDate()} ${MON[dd.getMonth()]}</b>${
+      noteDays[d].join(' · ')}</div>`;
   }).join('');
   const evHTML = Object.keys(evDays).sort().map(d=>{
-    const dd = new Date(d+'T00:00:00');
-    return `<div class="schnote ev"><b>${dd.getDate()} ${MON[dd.getMonth()]}</b>${evDays[d].join(' · ')}</div>`;
+    const dd = dfrom(d);
+    const c = (kindOf(evDays[d][0].kind_id)||{}).color || 'var(--acc)';
+    return `<div class="schnote ev" data-day="${d}" style="border-left-color:${c}">
+      <b>${dd.getDate()} ${MON[dd.getMonth()]}</b>${evDays[d].map(evName).join(' · ')}</div>`;
   }).join('');
 
   // Панель старшего: включить правку, показать пожелания подложкой, двинуть состояние.
@@ -1915,7 +2019,9 @@ function renderSched(){
       ${st==='wish'?`<button class="chip go2" id="schToDraft">Собрать график</button>`:''}
       ${st==='draft'?`<button class="chip go2" id="schPub">Выкатить всем</button>`:''}
       ${st==='published'?`<button class="chip" id="schToDraft2">Вернуть в черновик</button>`:''}
+      <button class="chip" id="schPeriod">Границы периода</button>
       <button class="chip" id="schStaff">Сотрудники</button>
+      <button class="chip" id="schSettings">Настройки</button>
     </div>` : '';
 
   // Одна строка, объясняющая, что именно сейчас можно трогать. Без неё режим
@@ -1947,6 +2053,8 @@ function renderSched(){
     if($('#schToDraft2')) $('#schToDraft2').onclick = ()=>schSetState('draft');
     if($('#schPub')) $('#schPub').onclick = ()=>schSetState('published');
     $('#schStaff').onclick = renderStaff;
+    $('#schPeriod').onclick = ()=>openPeriodSheet(SCH.period);
+    $('#schSettings').onclick = renderSchSettings;
   }
 }
 
@@ -1959,20 +2067,284 @@ async function schWrite(path, opts){
   return r;
 }
 
-async function schGuard(fn){
+/* Справочник (точки, сотрудники, виды, настройки, список периодов) перечитываем
+   только когда он мог измениться. Правка клетки его не трогает, а это самое частое
+   действие: без флага каждое сохранение смены тянуло пять лишних запросов.
+   А вот выкатка и правка границ обязаны его обновить — состояние периода лежит
+   именно там, и без сброса кнопка «Выкатить» оставалась на экране после нажатия. */
+async function schGuard(fn, reboot){
   SCH.busy = true; renderSched();
   try{ await fn(); SCH.err=''; }
   catch(e){ SCH.err = 'Не удалось сохранить: ' + (e.message||e); }
   SCH.busy = false;
+  if(reboot !== false) SCH.booted = false;
   await schRefresh();
 }
 
-function schCreatePeriod(){
+// Тихий вариант: не гасит экран «Загружаю…», потому что вызывается из нижнего листа,
+// который должен остаться открытым и просто перерисоваться.
+async function schGuardQuiet(fn, reboot){
+  try{ await fn(); SCH.err=''; }
+  catch(e){ SCH.err = 'Не сохранилось: ' + (e.message||e); }
+  if(reboot) await schBootReload();
+  await schLoad();
+  renderSched();
+  if(SCH.day) drawDaySheet();
+}
+async function schBootReload(){ SCH.booted = false; await schBoot(); }
+
+async function schSaveSettings(data){
+  await schWrite(`sched_settings?venue_id=eq.${SCH.venue.id}&dept=eq.bar`,
+                 {method:'PATCH', body: JSON.stringify({data, updated_at:new Date().toISOString()})});
+  SCH.settings = data;
+}
+
+/* ---------- границы периода ----------
+   Заказчик 20.08.2026: полумесяц перестал быть 1–15 и 16–конец, границы двигает
+   старший. База не даёт периодам пересекаться и не пускает смену за границы,
+   поэтому здесь достаточно поймать явные ошибки и показать их по-человечески. */
+function openPeriodSheet(p){
+  const last = SCH.periods[SCH.periods.length-1];
+  // Новый период по умолчанию начинается назавтра после последнего и длится 15 дней —
+  // самый частый случай, и его не надо набирать руками.
+  const start = p ? p.d_from
+    : (last ? iso(new Date(dfrom(last.d_to).getTime() + 86400000)) : iso(new Date()));
+  const end = p ? p.d_to
+    : iso(new Date(dfrom(start).getTime() + 14*86400000));
+  SCH.per = {id: p && p.id, from:start, to:end, title:(p && p.title) || ''};
+  drawPeriodSheet();
+  $('#schModal').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+
+function drawPeriodSheet(){
+  const x = SCH.per;
+  const n = daysBetween(x.from, x.to) + 1;
+  const used = SCH.period && SCH.shifts.length && x.id === SCH.period.id;
+  $('#schCard').innerHTML = `
+    <div class="grip"><i></i><button class="cls" id="schCellClose"><b>‹</b>Закрыть</button></div>
+    <div class="schcell">
+      <h3>${x.id ? 'Границы периода' : 'Новый период'}</h3>
+      <p class="lead">${n>0 ? plural(n,'день','дня','дней') : 'конец раньше начала'}</p>
+      <div class="lbl">С какого дня</div>
+      <input class="nmin" type="date" id="perFrom" value="${x.from}">
+      <div class="lbl">По какой день включительно</div>
+      <input class="nmin" type="date" id="perTo" value="${x.to}">
+      <div class="lbl">Название (необязательно)</div>
+      <input class="nmin" id="perTitle" value="${(x.title||'').replace(/"/g,'&quot;')}"
+        placeholder="например: Октябрь 1">
+      <div class="chips-row" style="margin-top:10px">
+        ${[7,10,14,15,16].map(d=>`<button class="chip" data-len="${d}">${d} дн.</button>`).join('')}
+        <button class="chip" data-tomonth="1">до конца месяца</button>
+      </div>
+      ${used ? `<div class="note" style="margin-top:10px">В периоде уже есть смены.
+        Если сузить границы, смены за их пределами база не пропустит — сначала уберите их.</div>` : ''}
+      <div class="row" style="margin-top:14px">
+        <button class="go" id="perSave">Сохранить</button>
+        ${x.id ? '<button class="ghostbtn" id="perDel">Удалить период</button>' : ''}
+      </div>
+    </div>`;
+  $('#schCellClose').onclick = closeSchCell;
+  $('#perFrom').onchange = e=>{ SCH.per.from = e.target.value; drawPeriodSheet(); };
+  $('#perTo').onchange   = e=>{ SCH.per.to   = e.target.value; drawPeriodSheet(); };
+  $('#perTitle').oninput = e=>{ SCH.per.title = e.target.value; };
+  $('#perSave').onclick = periodSave;
+  if($('#perDel')) $('#perDel').onclick = periodDel;
+}
+
+function periodSave(){
+  const x = SCH.per;
+  if(daysBetween(x.from, x.to) < 0){ SCH.err = 'Конец периода раньше начала.'; renderSched(); return; }
+  const a = dfrom(x.from);
+  const body = {venue_id:SCH.venue.id, dept:'bar', d_from:x.from, d_to:x.to,
+                title:x.title || null,
+                // year/month/half остались подписью и сортировкой в отчётах
+                year:a.getFullYear(), month:a.getMonth()+1, half:a.getDate()<=15?1:2};
   return schGuard(async ()=>{
-    await schWrite('periods', {method:'POST', body: JSON.stringify({
-      venue_id:SCH.venue.id, dept:'bar', year:SCH.y, month:SCH.m, half:SCH.half, state:'wish'})});
+    if(x.id) await schWrite(`periods?id=eq.${x.id}`, {method:'PATCH', body: JSON.stringify(body)});
+    else { body.state = 'wish'; await schWrite('periods', {method:'POST', body: JSON.stringify(body)}); }
+    closeSchCell();
+    SCH.pi = -1;                       // после правки границ выберем период заново
+    SCH.jumpTo = x.from;
   });
 }
+function periodDel(){
+  if(!confirm('Удалить период вместе со всеми сменами в нём?')) return;
+  return schGuard(async ()=>{
+    await schWrite(`periods?id=eq.${SCH.per.id}`, {method:'DELETE'});
+    closeSchCell();
+    SCH.pi = -1;
+  });
+}
+
+/* ---------- виды событий: справочник старшего ---------- */
+function renderKinds(){
+  const boss = schBoss();
+  $('#kindsBody').innerHTML = !boss
+    ? '<div class="note">Виды событий правит старший бармен или менеджер.</div>'
+    : (SCH.allKinds||[]).map(k=>`
+      <div class="strow" data-id="${k.id}">
+        <div class="hd">
+          <span class="swatch" style="background:${k.color}"></span>
+          <input class="nmin" value="${(k.name||'').replace(/"/g,'&quot;')}" data-kname>
+          <button class="star${k.active?' on':''}" data-kactive>${k.active?'✓':'⊘'}</button>
+        </div>
+        <div class="chips-row">
+          ${KIND_COLORS.map(c=>`<button class="chip sw${k.color===c?' on':''}"
+             style="background:${c}" data-kcolor="${c}"></button>`).join('')}
+        </div>
+        <div class="chips-row">
+          <label class="nlab">+ часов к лимиту дня
+            <input class="hin" type="number" min="0" max="99" value="${k.hour_bonus}" data-kbonus></label>
+          <button class="chip" data-kup>↑</button>
+          <button class="chip" data-kdown>↓</button>
+          <button class="chip" data-kdel>удалить</button>
+        </div>
+      </div>`).join('')
+      + `<div class="row" style="margin-top:12px"><button class="go" id="kindAdd">Добавить вид</button></div>
+         <div class="note" style="margin-top:10px">«+ часов» поднимает дневной лимит,
+         когда событие стоит на дне: в квиз бар работает дольше, и перебор по часам
+         не должен подсвечиваться зря.</div>`;
+  if(boss) $('#kindAdd').onclick = kindAdd;
+  show('kindsscr');
+}
+const KIND_COLORS = ['#E0A45B','#7C5CFF','#4FB477','#5AA9E6','#E2564B','#A78BFA','#E6A0C4'];
+
+async function kindPatch(id, body){
+  try{
+    await schWrite(`event_kinds?id=eq.${id}`, {method:'PATCH', body: JSON.stringify(body)});
+    await schBootReload(); renderKinds();
+  }catch(e){ alert('Не сохранилось: ' + (e.message||e)); }
+}
+async function kindAdd(){
+  const name = prompt('Название вида события');
+  if(!name || !name.trim()) return;
+  const sort = Math.max(0, ...(SCH.allKinds||[]).map(k=>k.sort||0)) + 1;
+  try{
+    await schWrite('event_kinds', {method:'POST', body: JSON.stringify({
+      venue_id:SCH.venue.id, dept:'bar', name:name.trim(),
+      color:KIND_COLORS[sort % KIND_COLORS.length], sort})});
+    await schBootReload(); renderKinds();
+  }catch(e){ alert('Не сохранилось: ' + (e.message||e)); }
+}
+
+$('#kindsBody').addEventListener('click', async e=>{
+  const row = e.target.closest('.strow'); if(!row) return;
+  const id = row.dataset.id, k = (SCH.allKinds||[]).find(x=>x.id===id); if(!k) return;
+  const c = e.target.closest('[data-kcolor]');
+  if(c) return kindPatch(id, {color:c.dataset.kcolor});
+  if(e.target.closest('[data-kactive]')) return kindPatch(id, {active:!k.active});
+  if(e.target.closest('[data-kdel]')){
+    if(!confirm(`Удалить вид «${k.name}»? События этого вида останутся, но потеряют вид.`)) return;
+    try{ await schWrite(`event_kinds?id=eq.${id}`, {method:'DELETE'});
+         await schBootReload(); renderKinds(); }
+    catch(err){ alert('Не удалось: ' + (err.message||err)); }
+    return;
+  }
+  const up = e.target.closest('[data-kup]'), dn = e.target.closest('[data-kdown]');
+  if(up || dn){
+    const list = (SCH.allKinds||[]).slice().sort((a,b)=>a.sort-b.sort);
+    const i = list.findIndex(x=>x.id===id), j = i + (up ? -1 : 1);
+    if(j < 0 || j >= list.length) return;
+    await schWrite(`event_kinds?id=eq.${list[i].id}`, {method:'PATCH', body:JSON.stringify({sort:list[j].sort})});
+    await schWrite(`event_kinds?id=eq.${list[j].id}`, {method:'PATCH', body:JSON.stringify({sort:list[i].sort})});
+    await schBootReload(); renderKinds();
+  }
+});
+$('#kindsBody').addEventListener('change', async e=>{
+  const row = e.target.closest('.strow'); if(!row) return;
+  const id = row.dataset.id;
+  if(e.target.matches('[data-kname]') && e.target.value.trim())
+    await kindPatch(id, {name:e.target.value.trim()});
+  if(e.target.matches('[data-kbonus]'))
+    await kindPatch(id, {hour_bonus:+e.target.value || 0});
+});
+
+/* ---------- настройки графика ---------- */
+const DOW = [['1','пн'],['2','вт'],['3','ср'],['4','чт'],['5','пт'],['6','сб'],['7','вс']];
+
+function renderSchSettings(){
+  const s = SCH.settings || {};
+  const hl = s.hour_limit || {}, ms = s.min_staff || {};
+  const ovr = s.day_override || {};
+  const quick = (s.quick && s.quick.length ? s.quick : QUICK_DEF);
+  $('#setsBody').innerHTML = !schBoss()
+    ? '<div class="note">Настройки правит старший бармен или менеджер.</div>'
+    : `<div class="subhead">Лимит часов по дням недели</div>
+    <div class="note">Сумма часов всех смен дня. 0 — не проверять.</div>
+    <div class="dowgrid">${DOW.map(([k,n])=>`<label><i>${n}</i>
+      <input class="hin" type="number" min="0" max="400" value="${hl[k]||''}" data-hl="${k}"></label>`).join('')}</div>
+
+    <div class="subhead">Минимум барменов на смене</div>
+    <div class="note">Если в дне меньше — счётчик над днём краснеет. 0 — не проверять.</div>
+    <div class="dowgrid">${DOW.map(([k,n])=>`<label><i>${n}</i>
+      <input class="hin" type="number" min="0" max="20" value="${ms[k]||''}" data-ms="${k}"></label>`).join('')}</div>
+
+    <div class="subhead">Норма часов по умолчанию</div>
+    <div class="addrow"><label class="nlab">часов за период
+      <input class="hin" type="number" min="0" max="400" value="${s.hours_norm||''}" id="setNorm"></label></div>
+    <div class="note">Личную норму можно задать каждому отдельно на экране «Сотрудники».</div>
+
+    <div class="subhead">Частые смены</div>
+    <div class="note">Эти кнопки видит тот, кто заполняет клетку. Порядок — как здесь.</div>
+    <div class="chips-row" id="quickList">${quick.map(q=>
+      `<button class="chip" data-qdel="${q}">${q} <em>✕</em></button>`).join('')}</div>
+    <div class="addrow">
+      <input class="nmin" id="quickNew" placeholder="16-04" maxlength="5">
+      <button class="chip go2" id="quickAdd">Добавить</button>
+    </div>
+
+    ${Object.keys(ovr).length ? `<div class="subhead">Дни с ручными лимитами</div>
+      ${Object.keys(ovr).sort().map(d=>{
+        const dd = dfrom(d);
+        return `<div class="evrow"><span>${dd.getDate()} ${MON[dd.getMonth()]} —
+          ${ovr[d].hours||'—'} ч, ${ovr[d].min||'—'} чел.</span>
+          <button class="star" data-ovrdel="${d}">✕</button></div>`;
+      }).join('')}` : ''}
+
+    <div class="subhead">Виды событий</div>
+    <div class="row"><button class="ghostbtn" id="setsKinds">Открыть справочник видов</button></div>`;
+  if(schBoss()) $('#setsKinds').onclick = renderKinds;
+  if($('#quickAdd')) $('#quickAdd').onclick = ()=>{
+    const v = ($('#quickNew').value||'').trim();
+    if(!/^\d{1,2}-\d{1,2}$/.test(v)){ alert('Формат: 16-04'); return; }
+    const s2 = JSON.parse(JSON.stringify(SCH.settings||{}));
+    s2.quick = (s2.quick && s2.quick.length ? s2.quick : QUICK_DEF).slice();
+    if(!s2.quick.includes(v)) s2.quick.push(v);
+    setsSave(s2);
+  };
+  show('setsscr');
+}
+
+async function setsSave(data){
+  try{ await schSaveSettings(data); await schBootReload(); renderSchSettings(); }
+  catch(e){ alert('Не сохранилось: ' + (e.message||e)); }
+}
+$('#setsBody').addEventListener('click', e=>{
+  const q = e.target.closest('[data-qdel]');
+  if(q){
+    const s = JSON.parse(JSON.stringify(SCH.settings||{}));
+    s.quick = (s.quick && s.quick.length ? s.quick : QUICK_DEF).filter(x=>x!==q.dataset.qdel);
+    return setsSave(s);
+  }
+  const o = e.target.closest('[data-ovrdel]');
+  if(o){
+    const s = JSON.parse(JSON.stringify(SCH.settings||{}));
+    delete (s.day_override||{})[o.dataset.ovrdel];
+    return setsSave(s);
+  }
+});
+$('#setsBody').addEventListener('change', e=>{
+  const s = JSON.parse(JSON.stringify(SCH.settings||{}));
+  if(e.target.dataset.hl!=null){
+    s.hour_limit = s.hour_limit||{}; s.hour_limit[e.target.dataset.hl] = +e.target.value||0;
+  } else if(e.target.dataset.ms!=null){
+    s.min_staff = s.min_staff||{}; s.min_staff[e.target.dataset.ms] = +e.target.value||0;
+  } else if(e.target.id === 'setNorm'){
+    s.hours_norm = +e.target.value||0;
+  } else return;
+  setsSave(s);
+});
 
 function schSetState(next){
   return schGuard(async ()=>{
@@ -2000,7 +2372,117 @@ function schSaveCell(){
       at_venue_id: x.at || null, author_id: AUTH.uid}));
     if(rows.length) await schWrite('shifts', {method:'POST', body: JSON.stringify(rows)});
     closeSchCell();
+  }, false);
+}
+
+/* ---------- день: события и комментарий ----------
+   Всё, что раньше писали прямо в клетку (квиз, генка, ЕГАИС, концерт), живёт здесь.
+   Событие ставит любой сотрудник — так просил заказчик; убирает автор или старший.
+   Виды берутся из справочника event_kinds, который старший ведёт сам. */
+function openDaySheet(day){
+  SCH.day = {day, note:''};
+  drawDaySheet();
+  $('#schModal').classList.add('on');
+  document.body.style.overflow = 'hidden';
+}
+
+function drawDaySheet(){
+  const day = SCH.day.day, d = dfrom(day);
+  const evs = SCH.events.filter(e=>e.day===day);
+  const notes = SCH.notes.filter(n=>n.day===day);
+  const kindOf = id => (SCH.allKinds||[]).find(k=>k.id===id) || {};
+  const boss = schBoss();
+  const L = limitsFor(d, evs);
+  const plan = SCH.shifts.filter(s=>s.layer===schLayerShow() && s.day===day);
+  const hrs = plan.reduce((a,s)=>a+(s.hours||0),0);
+  const ppl = plan.filter(s=>s.kind==='work' && !s.at_venue_id).length;
+
+  $('#schCard').innerHTML = `
+    <div class="grip"><i></i><button class="cls" id="schCellClose"><b>‹</b>Закрыть</button></div>
+    <div class="schcell">
+      <h3>${WD[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}</h3>
+      <p class="lead">${plural(ppl,'бармен','бармена','барменов')} · ${hrs} ч${
+        L.hours?` из ${L.hours}${L.manual?' (задано вручную)':''}`:''}${
+        L.min?` · минимум ${L.min}`:''}</p>
+
+      <div class="lbl">События дня</div>
+      ${evs.length ? `<div class="evlist">${evs.map(e=>{
+        const k = kindOf(e.kind_id);
+        return `<div class="evrow" style="border-left-color:${k.color||'var(--acc)'}">
+          <span>${k.name || e.title || 'событие'}${k.hour_bonus?` <em>+${k.hour_bonus} ч</em>`:''}</span>
+          <button class="star" data-evdel="${e.id}" title="Убрать">✕</button></div>`;
+      }).join('')}</div>` : '<div class="note">Событий нет.</div>'}
+
+      <div class="lbl">Поставить событие</div>
+      <div class="chips-row">
+        ${(SCH.kinds||[]).map(k=>{
+          const on = evs.some(e=>e.kind_id===k.id);
+          return `<button class="chip${on?' on':''}" data-evadd="${k.id}"
+            ${on?'':`style="border-color:${k.color}"`}>${k.name}</button>`;
+        }).join('')}
+        <button class="chip" data-evfree="1">своё…</button>
+        ${boss?'<button class="chip" id="dayKinds">править виды</button>':''}
+      </div>
+
+      <div class="lbl">Комментарий к дню</div>
+      ${notes.map(n=>`<div class="evrow"><span>${n.body}</span>
+        <button class="star" data-notedel="${n.id}" title="Убрать">✕</button></div>`).join('')}
+      <div class="addrow">
+        <input class="nmin" id="dayNote" placeholder="например: до 01 как в четверг">
+        <button class="chip go2" id="dayNoteAdd">Добавить</button>
+      </div>
+
+      ${boss?`<div class="lbl">Лимиты именно на этот день</div>
+      <div class="ovrgrid">
+        <label class="nlab"><i>часов</i><input class="hin" id="ovrH" type="number" min="0" max="400"
+          value="${L.manual?L.hours:''}" placeholder="${L.hours||'—'}"></label>
+        <label class="nlab"><i>барменов</i><input class="hin" id="ovrM" type="number" min="0" max="20"
+          value="${L.manual?L.min:''}" placeholder="${L.min||'—'}"></label>
+      </div>
+      <div class="chips-row" style="margin-top:8px">
+        <button class="chip go2" id="ovrSave">Применить</button>
+        ${L.manual?'<button class="chip" id="ovrClear">Сбросить</button>':''}
+      </div>
+      <div class="note" style="margin-top:8px">Пусто — работает правило дня недели
+      плюс надбавка за события.</div>`:''}
+    </div>`;
+  $('#schCellClose').onclick = closeSchCell;
+  $('#dayNoteAdd').onclick = dayNoteAdd;
+  if($('#dayKinds')) $('#dayKinds').onclick = ()=>{ closeSchCell(); renderKinds(); };
+  if($('#ovrSave')) $('#ovrSave').onclick = ()=>dayOverride(
+      $('#ovrH').value, $('#ovrM').value);
+  if($('#ovrClear')) $('#ovrClear').onclick = ()=>dayOverride('', '');
+}
+
+async function dayEventAdd(kindId, title){
+  await schGuardQuiet(async ()=>{
+    await schWrite('day_events', {method:'POST', body: JSON.stringify({
+      venue_id:SCH.venue.id, dept:'bar', day:SCH.day.day,
+      kind_id:kindId||null, title:title||null, author_id:AUTH.uid})});
   });
+}
+async function dayEventDel(id){
+  await schGuardQuiet(()=>schWrite(`day_events?id=eq.${id}`, {method:'DELETE'}));
+}
+async function dayNoteAdd(){
+  const v = ($('#dayNote').value||'').trim(); if(!v) return;
+  await schGuardQuiet(async ()=>{
+    await schWrite('day_notes', {method:'POST', body: JSON.stringify({
+      venue_id:SCH.venue.id, dept:'bar', day:SCH.day.day, body:v, author_id:AUTH.uid})});
+  });
+}
+async function dayNoteDel(id){
+  await schGuardQuiet(()=>schWrite(`day_notes?id=eq.${id}`, {method:'DELETE'}));
+}
+
+// Переопределение лимита на конкретную дату живёт в настройках точки:
+// это правило, а не свойство дня, и общее для всех.
+async function dayOverride(h, m){
+  const s = JSON.parse(JSON.stringify(SCH.settings||{}));
+  s.day_override = s.day_override || {};
+  if(h === '' && m === '') delete s.day_override[SCH.day.day];
+  else s.day_override[SCH.day.day] = {hours:+h||0, min:+m||0};
+  await schGuardQuiet(()=>schSaveSettings(s));
 }
 
 const QUICK_DEF = ['16-04','10-18','10-22','12-01','18-04','09-13'];
@@ -2022,7 +2504,7 @@ function openSchCell(staffId, day, layer){
 function closeSchCell(){
   $('#schModal').classList.remove('on');
   document.body.style.overflow='';
-  SCH.cell = null;
+  SCH.cell = null; SCH.day = null; SCH.per = null;
 }
 
 function drawSchCell(){
@@ -2102,6 +2584,34 @@ function drawSchCell(){
 
 // Один делегированный обработчик на весь лист: перерисовка сносит слушатели.
 $('#schCard').addEventListener('click', e=>{
+  // --- лист дня: события, комментарии, ручной лимит
+  if(SCH.day){
+    const a = e.target.closest('[data-evadd]');
+    if(a) return dayEventAdd(a.dataset.evadd, null);
+    if(e.target.closest('[data-evfree]')){
+      const t = prompt('Название события'); if(t && t.trim()) dayEventAdd(null, t.trim());
+      return;
+    }
+    const d = e.target.closest('[data-evdel]');
+    if(d) return dayEventDel(d.dataset.evdel);
+    const nd = e.target.closest('[data-notedel]');
+    if(nd) return dayNoteDel(nd.dataset.notedel);
+    return;
+  }
+  // --- лист границ периода
+  if(SCH.per){
+    const L = e.target.closest('[data-len]');
+    if(L){
+      SCH.per.to = iso(new Date(dfrom(SCH.per.from).getTime() + (+L.dataset.len-1)*86400000));
+      return drawPeriodSheet();
+    }
+    if(e.target.closest('[data-tomonth]')){
+      const a = dfrom(SCH.per.from);
+      SCH.per.to = iso(new Date(a.getFullYear(), a.getMonth()+1, 0));
+      return drawPeriodSheet();
+    }
+    return;
+  }
   const c = SCH.cell; if(!c) return;
   const cur = () => c.list[c.i] || c.list[0];
   const del = e.target.closest('[data-del]');
@@ -2127,14 +2637,114 @@ $('#schModal').addEventListener('click', e=>{ if(e.target.id==='schModal') close
 // Тап по клетке сетки. Правку разрешает schCanEdit, поэтому data-ed ставится
 // только там, где она есть — лишних проверок в обработчике не нужно.
 $('#schBody').addEventListener('click', e=>{
-  const td = e.target.closest('td.c[data-ed]'); if(!td) return;
-  openSchCell(td.dataset.s, td.dataset.d, schEditLayer());
+  const td = e.target.closest('td.c[data-ed]');
+  if(td) return openSchCell(td.dataset.s, td.dataset.d, schEditLayer());
+  // Шапка дня и строки событий/комментариев ведут в один и тот же лист дня:
+  // событие ставит любой сотрудник, так просил заказчик.
+  const th = e.target.closest('th[data-day]');
+  if(th) return openDaySheet(th.dataset.day);
+  const nt = e.target.closest('.schnote[data-day]');
+  if(nt) return openDaySheet(nt.dataset.day);
+});
+
+/* ---------- мгновенная синхронизация ----------
+   Заказчик: «всё у всех моментально синхронно меняется». Realtime Supabase — это
+   Phoenix-канал поверх WebSocket; библиотеку не подключаем по той же причине, что
+   и раньше (приложение обязано открываться офлайн), поэтому здесь тонкий клиент
+   протокола: join, heartbeat, access_token.
+
+   Если сокет не поднялся — не беда: включается опрос раз в 15 секунд, пока экран
+   графика открыт. Пользователь разницы почти не заметит, а без сети не сломается
+   ни то, ни другое. */
+const RT = {ws:null, ref:0, hb:null, poll:null, joined:false, retry:0};
+const RT_TABLES = ['shifts','periods','day_events','day_notes','sched_settings',
+                   'staff','event_kinds'];
+
+function rtSend(msg){
+  if(RT.ws && RT.ws.readyState === 1) RT.ws.send(JSON.stringify(msg));
+}
+
+async function rtConnect(){
+  if(!authOn() || !AUTH || RT.ws) return;
+  let token;
+  try{ token = await ensureToken(); }catch(e){ return rtFallback(); }
+  if(!token) return rtFallback();
+  let ws;
+  try{
+    ws = new WebSocket(SB.url.replace(/^http/, 'ws')
+      + '/realtime/v1/websocket?apikey=' + encodeURIComponent(SB.key) + '&vsn=1.0.0');
+  }catch(e){ return rtFallback(); }
+  RT.ws = ws;
+  ws.onopen = ()=>{
+    RT.retry = 0;
+    rtSend({topic:'realtime:sched', event:'phx_join', ref:String(++RT.ref), payload:{config:{
+      broadcast:{self:false}, presence:{key:''},
+      postgres_changes: RT_TABLES.map(t=>({event:'*', schema:'public', table:t})),
+      // Без токена сервер применяет RLS анонима и не пришлёт ни одной строки.
+      private:false}, access_token: token}});
+    clearInterval(RT.hb);
+    RT.hb = setInterval(()=>rtSend({topic:'phoenix', event:'heartbeat', payload:{}, ref:String(++RT.ref)}), 25000);
+  };
+  ws.onmessage = ev=>{
+    let m; try{ m = JSON.parse(ev.data); }catch(e){ return; }
+    if(m.event === 'phx_reply' && m.payload && m.payload.status === 'ok'){ RT.joined = true; return; }
+    if(m.event === 'postgres_changes' || m.event === 'INSERT'
+       || m.event === 'UPDATE' || m.event === 'DELETE') rtTouched();
+  };
+  ws.onclose = ()=>{
+    clearInterval(RT.hb); RT.ws = null; RT.joined = false;
+    // Пока экран открыт — переподключаемся с нарастающей паузой, иначе тихо уходим.
+    if(!$('#sched').classList.contains('hidden')){
+      const wait = Math.min(30000, 1000 * Math.pow(2, RT.retry++));
+      setTimeout(rtConnect, wait);
+      rtFallback();
+    }
+  };
+  ws.onerror = ()=>{ try{ ws.close(); }catch(e){} };
+}
+
+// Изменения приходят пачками (правка клетки — это DELETE плюс INSERT), поэтому
+// перезагружаем не на каждое событие, а один раз через полсекунды тишины.
+let rtTimer = null;
+function rtTouched(){
+  clearTimeout(rtTimer);
+  rtTimer = setTimeout(async ()=>{
+    if($('#sched').classList.contains('hidden') && $('#setsscr').classList.contains('hidden')
+       && $('#staffscr').classList.contains('hidden') && $('#kindsscr').classList.contains('hidden')) return;
+    if(SCH.busy) return;
+    try{
+      await schBootReload(); await schLoad(); schCacheSave();
+      if(!$('#sched').classList.contains('hidden')) renderSched();
+      if(!$('#staffscr').classList.contains('hidden')) renderStaff();
+      if(!$('#setsscr').classList.contains('hidden')) renderSchSettings();
+      if(!$('#kindsscr').classList.contains('hidden')) renderKinds();
+      if(SCH.day) drawDaySheet();
+    }catch(e){}
+  }, 500);
+}
+
+function rtFallback(){
+  clearInterval(RT.poll);
+  RT.poll = setInterval(()=>{ if(!RT.joined) rtTouched(); }, 15000);
+}
+function rtStop(){
+  clearInterval(RT.hb); clearInterval(RT.poll); clearTimeout(rtTimer);
+  if(RT.ws){ try{ RT.ws.close(); }catch(e){} RT.ws = null; }
+  RT.joined = false;
+}
+// Уходим в фон — закрываем сокет: держать его открытым в кармане незачем.
+addEventListener('visibilitychange', ()=>{
+  if(document.hidden) rtStop();
+  else if(!$('#sched').classList.contains('hidden')){ rtConnect(); rtTouched(); }
 });
 
 async function schRefresh(){
   SCH.busy = true; SCH.err = ''; renderSched();
   try{
     await schBoot();
+    // После правки границ надо вернуться на тот же период, а не на «сегодня».
+    if(SCH.jumpTo){ SCH.pi = Math.max(0, SCH.periods.findIndex(p=>p.d_from===SCH.jumpTo));
+                    SCH.jumpTo = null; }
     await schLoad();
     SCH.err = '';
     schCacheSave();
@@ -2253,13 +2863,9 @@ function openSched(){
     show('sched');
     return;
   }
-  if(!SCH.y){
-    const now = new Date();
-    SCH.y = now.getFullYear(); SCH.m = now.getMonth()+1;
-    SCH.half = now.getDate() <= 15 ? 1 : 2;
-  }
   show('sched');
   schRefresh();
+  rtConnect();
 }
 $('#schPrev').addEventListener('click', ()=>{ shiftPeriod(-1); schRefresh(); });
 $('#schNext').addEventListener('click', ()=>{ shiftPeriod(1);  schRefresh(); });
@@ -2454,11 +3060,13 @@ const ROADMAP = [
   {gr:'График смен', st:'done', t:'Ввод смены', d:'нижний лист: лента частых смен, два ряда часов, выходной, вторая смена за день, работа на другой точке. Клетка перезаписывается целиком'},
   {gr:'График смен', st:'done', t:'Цикл выкатки', d:'состояния «собираем пожелания» → «черновик» → «выкачен». Бармен правит свою строку в пожеланиях, старший собирает график и выкатывает; пожелания включаются подложкой'},
   {gr:'Подразделение и ФОТ', st:'done', t:'Сотрудники точки', d:'старший меняет всем всё: имя, категорию, роль в графике, норму часов, порядок и включение. Кнопка «это я» привязывает аккаунт к карточке'},
-  {gr:'График смен', st:'work', t:'События дня', d:'квиз, генка, ЕГАИС, инвентаризация, концерт — отдельная сущность на конкретный день, а не текст в клетке. Создавать событие может любой сотрудник'},
+  {gr:'График смен', st:'done', t:'События дня', d:'свой справочник видов: старший заводит, переименовывает, красит и задаёт надбавку часов. Событие на день ставит любой сотрудник, убирает автор или старший. Комментарий к дню — отдельным полем'},
+  {gr:'График смен', st:'done', t:'Подвижные границы периода', d:'полумесяц перестал быть 1–15 и 16–конец: границы двигает старший, хоть неделя. База не даёт периодам пересекаться и не пускает смену за границы'},
+  {gr:'График смен', st:'done', t:'Мгновенная синхронизация', d:'Realtime поверх WebSocket: правка у одного видна у всех сразу. Если сокет не поднялся — опрос раз в 15 секунд. В фоне сокет закрывается'},
   {gr:'График смен', st:'work', t:'Уведомления о пожеланиях', d:'сейчас баннер в приложении. Заказчик просил связать с Telegram-ботом — тогда напоминание дойдёт и при закрытом приложении'},
   {gr:'График смен', st:'work', t:'Выходные красным', d:'после подтверждения графика дни, когда бармен не работает, закрашиваются красным в его строке'},
-  {gr:'График смен', st:'work', t:'Счётчик барменов на смене', d:'над каждым днём — сколько человек в смене; проблемные дни, где людей мало, подсвечиваются'},
-  {gr:'График смен', st:'work', t:'Лимиты часов по дням недели', d:'у каждого дня свой лимит; выход за него подсвечивается прямо в сетке'},
+  {gr:'График смен', st:'done', t:'Счётчик барменов и лимиты', d:'над днём — сколько человек в смене. Лимиты часов и минимум людей задаёт старший по дням недели, плюс надбавка за события и ручное переопределение конкретной даты'},
+  
   {gr:'График смен', st:'plan', t:'Заполнение с любого устройства', d:'главное требование: заполнять график быстро и понятно с телефона, а не только с компьютера'},
 
   // --- Моё подразделение и ФОТ
@@ -3215,6 +3823,7 @@ document.addEventListener('click', e=>{
   closeRecipe();
   if(b.dataset.kb) renderKB();
   else if(b.dataset.sched) openSched();
+  else if(b.dataset.sets) renderSchSettings();
   else if(b.dataset.learn){ renderLearnStat(); show('learn'); }
   else renderHome();
 });

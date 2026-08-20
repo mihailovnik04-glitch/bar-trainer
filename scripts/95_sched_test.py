@@ -23,6 +23,7 @@ SHOT = '--shot' in sys.argv
 errs = []
 DB = copy.deepcopy(BASE)
 LOG = []                       # что уходило на запись — по нему и проверяем
+GETS = []                      # чтения: по ним ловим лишние запросы
 
 
 def check(name, cond, extra=''):
@@ -54,6 +55,7 @@ def handle(route, request):
     m = request.method
 
     if m == 'GET':
+        GETS.append(table)
         out = [r for r in rows if match(r, params)]
         return route.fulfill(status=200, content_type='application/json',
                              body=json.dumps(out, ensure_ascii=False))
@@ -129,6 +131,7 @@ with sync_playwright() as pw:
     check('до включения правки клетки не тапаются', pg.locator('.schgrid td.c.ed').count() == 0)
     pg.click('#schEdit'); pg.wait_for_timeout(200)
     check('правка включилась', pg.locator('.schgrid td.c.ed').count() > 0)
+    GETS.clear()
 
     # ---------------------------------------------------------- ввод смены
     pg.locator('.schgrid td.c.ed').first.click()
@@ -151,6 +154,12 @@ with sync_playwright() as pw:
               row['start_h'] == 16 and row['end_h'] == 4 and row['layer'] == 'plan'
               and row['kind'] == 'work', json.dumps(row, ensure_ascii=False))
     check('клетка перезаписывается целиком (был DELETE)', len(writes('shifts', 'DELETE')) == 1)
+    # Правка клетки не должна перечитывать справочник: точки, сотрудники, виды
+    # и список периодов от неё не меняются. Раньше на каждое сохранение уходило
+    # пять лишних запросов.
+    check('сохранение смены не тянет справочник',
+          'staff' not in GETS[-6:] and 'venues' not in GETS[-6:] and 'event_kinds' not in GETS[-6:],
+          ', '.join(GETS[-6:]))
 
     # выходной: один тап, вся клетка становится выходным
     pg.locator('.schgrid td.c.ed').nth(3).click(); pg.wait_for_timeout(300)
@@ -209,16 +218,88 @@ with sync_playwright() as pw:
     if SHOT:
         pg.screenshot(path=str(ROOT / 'build' / 'sched-staff.png'), full_page=True)
 
-    # ------------------------------------------------ период, которого нет
-    pg.click('[data-sched="1"]'); pg.wait_for_timeout(400)
-    for _ in range(4):
-        pg.click('#schNext'); pg.wait_for_timeout(250)
-    check('пустой период предлагает создать график', pg.locator('#schMake').count() == 1)
-    pg.click('#schMake'); pg.wait_for_timeout(600)
-    made = writes('periods', 'POST')
-    check('период создаётся сбором пожеланий',
-          made and made[-1][3].get('state') == 'wish',
-          json.dumps(made[-1][3] if made else {}, ensure_ascii=False))
+    # ------------------------------------------- события дня и комментарии
+    pg.click('[data-sched="1"]'); pg.wait_for_timeout(500)
+    ev_day = BASE['day_events'][0]['day']
+    pg.click(f'.schgrid thead th[data-day="{ev_day}"]'); pg.wait_for_timeout(400)
+    check('лист дня открылся', pg.locator('#schModal.on').count() == 1)
+    check('событие дня показано', pg.locator('#schCard .evrow').count() >= 1)
+    check('виды событий предложены',
+          pg.locator('#schCard [data-evadd]').count() == len(BASE['event_kinds']),
+          str(pg.locator('#schCard [data-evadd]').count()))
+    free = [k for k in BASE['event_kinds'] if k['name'] != 'Квиз'][0]
+    pg.click(f'#schCard [data-evadd="{free["id"]}"]'); pg.wait_for_timeout(600)
+    ev = writes('day_events', 'POST')
+    check('событие ставится на день', ev and ev[-1][3]['kind_id'] == free['id'],
+          json.dumps(ev[-1][3] if ev else {}, ensure_ascii=False))
+    pg.fill('#dayNote', 'проверка комментария')
+    pg.click('#dayNoteAdd'); pg.wait_for_timeout(600)
+    nt = writes('day_notes', 'POST')
+    check('комментарий к дню сохраняется',
+          nt and nt[-1][3]['body'] == 'проверка комментария',
+          json.dumps(nt[-1][3] if nt else {}, ensure_ascii=False))
+    # Ручной лимит на конкретный день — уходит в настройки точки, а не в день.
+    pg.fill('#ovrH', '150'); pg.fill('#ovrM', '5')
+    pg.click('#ovrSave'); pg.wait_for_timeout(600)
+    ss = writes('sched_settings', 'PATCH')
+    check('ручной лимит дня сохраняется',
+          ss and ss[-1][3]['data'].get('day_override', {}).get(ev_day, {}).get('hours') == 150,
+          json.dumps(ss[-1][3] if ss else {}, ensure_ascii=False)[:200])
+    if SHOT:
+        pg.screenshot(path=str(ROOT / 'build' / 'sched-day.png'), full_page=True)
+    pg.click('#schCellClose'); pg.wait_for_timeout(300)
+
+    # ------------------------------------------------- границы периода
+    pg.click('#schPeriod'); pg.wait_for_timeout(400)
+    check('лист границ открылся', pg.locator('#perFrom').count() == 1)
+    check('границы взяты из периода',
+          pg.input_value('#perFrom') == BASE['periods'][3]['d_from'],
+          pg.input_value('#perFrom'))
+    pg.click('#schCard [data-len="7"]'); pg.wait_for_timeout(300)
+    check('быстрая длина меняет конец',
+          pg.input_value('#perTo') != BASE['periods'][3]['d_to'], pg.input_value('#perTo'))
+    pg.fill('#perTitle', 'Проба')
+    pg.click('#perSave'); pg.wait_for_timeout(700)
+    pp = writes('periods', 'PATCH')
+    check('границы уходят на сервер',
+          pp and pp[-1][3].get('title') == 'Проба' and pp[-1][3].get('d_to'),
+          json.dumps(pp[-1][3] if pp else {}, ensure_ascii=False))
+
+    # ------------------------------------------------- настройки и виды
+    pg.click('#schSettings'); pg.wait_for_timeout(500)
+    check('настройки открылись', pg.locator('#setsscr').is_visible())
+    check('семь дней недели в лимитах', pg.locator('#setsBody [data-hl]').count() == 7)
+    pg.locator('#setsBody [data-hl="1"]').fill('120')
+    pg.locator('#setsBody [data-hl="1"]').dispatch_event('change')
+    pg.wait_for_timeout(600)
+    ss = writes('sched_settings', 'PATCH')
+    check('лимит часов по дню недели сохраняется',
+          ss and ss[-1][3]['data'].get('hour_limit', {}).get('1') == 120,
+          json.dumps(ss[-1][3]['data'].get('hour_limit') if ss else {}, ensure_ascii=False))
+    pg.fill('#quickNew', '14-02')
+    pg.click('#quickAdd'); pg.wait_for_timeout(600)
+    ss = writes('sched_settings', 'PATCH')
+    check('частая смена добавляется', ss and '14-02' in (ss[-1][3]['data'].get('quick') or []),
+          json.dumps(ss[-1][3]['data'].get('quick') if ss else [], ensure_ascii=False))
+    if SHOT:
+        pg.screenshot(path=str(ROOT / 'build' / 'sched-sets.png'), full_page=True)
+
+    pg.click('#setsKinds'); pg.wait_for_timeout(500)
+    check('справочник видов открылся', pg.locator('#kindsscr').is_visible())
+    check('виды выведены', pg.locator('#kindsBody .strow').count() == len(BASE['event_kinds']))
+    pg.locator('#kindsBody .strow').first.locator('[data-kbonus]').fill('12')
+    pg.locator('#kindsBody .strow').first.locator('[data-kbonus]').dispatch_event('change')
+    pg.wait_for_timeout(600)
+    kk = writes('event_kinds', 'PATCH')
+    check('надбавка часов у вида сохраняется', kk and kk[-1][3].get('hour_bonus') == 12,
+          json.dumps(kk[-1][3] if kk else {}, ensure_ascii=False))
+    pg.locator('#kindsBody .strow').first.locator('[data-kcolor]').nth(2).click()
+    pg.wait_for_timeout(600)
+    kk = writes('event_kinds', 'PATCH')
+    check('цвет вида сохраняется', kk and kk[-1][3].get('color'),
+          json.dumps(kk[-1][3] if kk else {}, ensure_ascii=False))
+    if SHOT:
+        pg.screenshot(path=str(ROOT / 'build' / 'sched-kinds.png'), full_page=True)
 
     check('нет ошибок в консоли', not js_errors, ' | '.join(js_errors[:3]))
     b.close()

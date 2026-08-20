@@ -65,7 +65,7 @@ print('готовим двух подопытных сотрудников (в �
 
 # Берём реальные строки, но подставляем выдуманные uid: реальные аккаунты трогать незачем.
 venue = one("select id from public.venues where is_own limit 1")['id']
-period = one("select id, state from public.periods order by year desc, month desc, half desc limit 1")
+period = one("select id, state, d_from::text, d_to::text from public.periods order by d_from desc limit 1")
 staff = sql("select id, name from public.staff order by sort limit 2")
 SENIOR, PLAIN = staff[0]['id'], staff[1]['id']
 UID_S, UID_P, UID_X = ('11111111-1111-1111-1111-111111111111',
@@ -89,7 +89,9 @@ def run(uid, role, body):
     return sql(as_user(uid, role, setup, body))
 
 
-day = '2099-01-01'                      # дата вне любых боевых периодов
+# Дата внутри самого свежего периода: триггер shift_in_period не пустит смену
+# за его границы, а проверять надо именно политики, а не триггер.
+day = period['d_from']
 ins = ("insert into public.shifts (period_id, staff_id, venue_id, day, layer, kind, start_h, end_h) "
        f"values ('{period['id']}', '%s', '{venue}', '{day}', '%s', 'work', 16, 4)")
 
@@ -98,7 +100,9 @@ print('старший бармен')
 r = run(UID_S, 'staff', "select public.is_boss() as b, public.my_venue() as v;")
 check('распознан как старший', r[0]['b'] is True)
 check('видит свою точку', r[0]['v'] == venue)
-r = run(UID_S, 'staff', (ins % (PLAIN, 'plan')) + " ; select count(*) n from public.shifts where day='%s';" % day)
+# Считаем ровно свою вставку: день теперь внутри боевого периода, где смены уже есть.
+mine = ("select count(*) n from public.shifts where day='%s' and start_h=16 and end_h=4 and layer='%%s'" % day)
+r = run(UID_S, 'staff', (ins % (PLAIN, 'plan')) + ' ; ' + (mine % 'plan') + ';')
 check('ставит смену в график чужому', r[0]['n'] == 1, str(r))
 r = run(UID_S, 'staff', f"update public.periods set state='published' where id='{period['id']}'"
                         f" ; select state from public.periods where id='{period['id']}';")
@@ -116,7 +120,7 @@ try:
     check('НЕ может писать в график', False, 'запись прошла, а не должна была')
 except urllib.error.HTTPError:
     check('НЕ может писать в график', True)
-r = run(UID_P, 'staff', (ins % (PLAIN, 'wish')) + " ; select count(*) n from public.shifts where day='%s';" % day)
+r = run(UID_P, 'staff', (ins % (PLAIN, 'wish')) + ' ; ' + (mine % 'wish') + ';')
 check('пишет своё пожелание', r[0]['n'] == 1, str(r))
 try:
     run(UID_P, 'staff', ins % (SENIOR, 'wish'))
@@ -134,6 +138,49 @@ check('НЕ может выкатить график', r[0]['state'] == period['
 # Читать разрешено всё: заказчик решил, что видно и чужие пожелания, и черновик.
 r = run(UID_P, 'staff', "select count(*) n from public.shifts;")
 check('видит весь график точки', r[0]['n'] > 100, str(r))
+
+print()
+print('события дня и справочник видов')
+# Событие ставит ЛЮБОЙ сотрудник — так просил заказчик. А вот сам справочник видов
+# правит только старший: иначе список расползётся.
+r = run(UID_P, 'staff', f"""insert into public.day_events (venue_id, dept, day, title, author_id)
+        values ('{venue}', 'bar', '{day}', 'проба', '{UID_P}')
+        ; select count(*) n from public.day_events where day='{day}' and title='проба';""")
+check('бармен ставит событие дня', r[0]['n'] == 1, str(r))
+r = run(UID_P, 'staff', f"""insert into public.day_notes (venue_id, dept, day, body, author_id)
+        values ('{venue}', 'bar', '{day}', 'проба', '{UID_P}')
+        ; select count(*) n from public.day_notes where day='{day}' and body='проба';""")
+check('бармен пишет комментарий к дню', r[0]['n'] == 1, str(r))
+try:
+    run(UID_P, 'staff', f"""insert into public.event_kinds (venue_id, dept, name)
+                            values ('{venue}', 'bar', 'самовольный вид')""")
+    check('бармен НЕ заводит вид события', False, 'запись прошла, а не должна была')
+except urllib.error.HTTPError:
+    check('бармен НЕ заводит вид события', True)
+r = run(UID_S, 'staff', f"""insert into public.event_kinds (venue_id, dept, name)
+        values ('{venue}', 'bar', 'новый вид')
+        ; select count(*) n from public.event_kinds where name='новый вид';""")
+check('старший заводит вид события', r[0]['n'] == 1, str(r))
+r = run(UID_P, 'staff', "select count(*) n from public.event_kinds;")
+check('виды видны всем', r[0]['n'] >= 6, str(r))
+# Настройки (лимиты, частые смены, ручные переопределения) — только старший.
+r = run(UID_P, 'staff', f"""update public.sched_settings set data='{{"hour_limit":{{"1":999}}}}'::jsonb
+        where venue_id='{venue}'
+        ; select data->'hour_limit'->>'1' h from public.sched_settings where venue_id='{venue}';""")
+check('бармен НЕ меняет лимиты', (r[0]['h'] or '0') != '999', str(r))
+r = run(UID_S, 'staff', f"""update public.sched_settings set data='{{"hour_limit":{{"1":120}}}}'::jsonb
+        where venue_id='{venue}'
+        ; select data->'hour_limit'->>'1' h from public.sched_settings where venue_id='{venue}';""")
+check('старший меняет лимиты', r[0]['h'] == '120', str(r))
+
+print()
+print('границы периодов')
+r = run(UID_S, 'staff', f"""update public.periods set d_to = d_to + 1 where id='{period['id']}'
+        ; select d_to::text t from public.periods where id='{period['id']}';""")
+check('старший двигает границу', r[0]['t'] > period.get('d_to', ''), str(r))
+r = run(UID_P, 'staff', f"""update public.periods set d_to = d_to + 5 where id='{period['id']}'
+        ; select d_to::text t from public.periods where id='{period['id']}';""")
+check('бармен НЕ двигает границу', r[0]['t'] == period.get('d_to'), str(r))
 
 print()
 print('посторонний аккаунт без карточки сотрудника')
