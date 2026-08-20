@@ -160,6 +160,43 @@ with sync_playwright() as pw:
     tot2 = pg.evaluate("document.querySelector('#ftab .tot')?1:0")
     check('в тренировке выход показан', tot2 == 1)
 
+    # --- кнопка возврата не должна уезжать при прокрутке НИ НА ОДНОМ экране.
+    # Заказчик 20.08.2026: «во всех разделах и подразделах должна всегда висеть
+    # кнопка возврата, как далеко вниз человек бы ни листал».
+    def back_visible(open_js, name):
+        pg.evaluate('window.scrollTo(0,0)')
+        pg.evaluate(open_js)
+        pg.wait_for_timeout(250)
+        pg.evaluate('window.scrollTo(0, 6000)')
+        pg.wait_for_timeout(200)
+        r = pg.evaluate('''() => {
+          const scr = [...document.querySelectorAll('#home,#quiz,#result,#errors,#ref,#setup,'
+            + '#qbase,#kb,#attest,#stub,#learn,#profile,#roadmap,#sched,#staffscr')]
+            .find(e => !e.classList.contains('hidden'));
+          if(!scr) return {ok:false, why:'экран не найден'};
+          const btn = scr.querySelector('.scrhead .back, .top .back');
+          if(!btn) return {ok:false, why:'кнопки возврата нет'};
+          const b = btn.getBoundingClientRect();
+          return {ok: b.bottom > 0 && b.top < 220 && b.width > 0, why:`top=${Math.round(b.top)}`};
+        }''')
+        check(f'кнопка возврата видна после прокрутки: {name}', r['ok'], r.get('why', ''))
+
+    back_visible("openRef()", 'справочник')
+    back_visible("openQB()", 'база вопросов')
+    back_visible("openErrors()", 'мои ошибки')
+    back_visible("renderKB()", 'база знаний')
+    back_visible("renderSetup()", 'настройка тренажёра')
+    back_visible("renderLearnStat(); show('learn')", 'обучение')
+    back_visible("renderProfile()", 'профиль')
+    # Роадмап открыт только владельцу — иначе renderRoadmap() уводит на главную.
+    back_visible("AUTH.role='owner'; renderRoadmap()", 'роадмап')
+    back_visible("openStub('paystat')", 'заглушка')
+    back_visible("start('exam'); finish('end')", 'итоги аттестации')
+    # График и сотрудники: сервера в этом тесте нет, экран покажет ошибку связи —
+    # но шапка с возвратом обязана остаться на месте и в этом случае.
+    back_visible("openSched()", 'график')
+    back_visible("renderStaff()", 'сотрудники')
+
     check('нет ошибок в консоли', not js_errors, ' | '.join(js_errors[:3]))
     b.close()
 

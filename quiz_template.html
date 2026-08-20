@@ -34,7 +34,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 
 /* ---------- шапка ---------- */
 .top{display:flex;align-items:center;gap:12px;margin:0 -16px 14px;padding:0 16px;
-  min-height:34px;position:sticky;top:0;z-index:30;background:var(--bg)}
+  min-height:34px;position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
 .top .back{width:34px;height:34px;border-radius:11px;background:var(--card);display:grid;place-items:center;
   font-size:18px;color:var(--ink-2);transition:.18s}
 .top .back:active{transform:scale(.92)}
@@ -237,8 +237,12 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
 /* шапка экрана: заголовок и возврат на главную (у quiz своя шапка #top).
    Липкая: в справочнике и базе вопросов список длинный, и без этого до кнопки
    «назад» приходилось листать вверх через сотни строк. */
+/* Кнопка возврата обязана быть видна всегда, как бы далеко ни листали, — поэтому
+   шапка липкая на КАЖДОМ экране. Прилипает не к нулю, а к безопасной зоне:
+   body сдвинут на env(safe-area-inset-top), но липкий элемент при отрыве считает
+   позицию от края viewport и уезжал бы под вырез iPhone. */
 .scrhead{display:flex;align-items:center;gap:10px;margin:0 -16px 12px;padding:6px 16px 8px;
-  position:sticky;top:0;z-index:30;background:var(--bg)}
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
 .scrhead::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;
   background:var(--line);opacity:.7}
 .scrhead h1{font-size:23px;margin:0}
@@ -418,8 +422,8 @@ details.cheat b{color:var(--ink)}
   text-transform:uppercase;letter-spacing:.06em}
 .schgrid thead th b{display:block;font-size:14px;line-height:1.15}
 /* Счётчик барменов на смене. Смены на чужой точке в него не входят. */
-.schgrid thead th u{display:block;text-decoration:none;font-family:var(--mono);font-size:10.5px;
-  color:var(--ink-3)}
+.schgrid thead th u{display:block;text-decoration:none;font-family:var(--mono);font-size:10px;
+  color:var(--ink-3);margin:3px 6px 0;padding-top:3px;border-top:1px solid #ffffff12}
 .schgrid thead th u em{font-style:normal;color:var(--acc)}
 .schgrid thead th.few u{color:var(--bad)}          /* людей меньше минимума */
 .schgrid thead th.over b{color:var(--acc)}         /* перебор по часам */
@@ -435,6 +439,40 @@ details.cheat b{color:var(--ink)}
 .schnote b{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;
   letter-spacing:.08em;margin-bottom:2px}
 .schnote.ev{border-left:3px solid var(--acc)}
+.schbar{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px}
+.schbar::-webkit-scrollbar{display:none}
+.schbar .chip{flex:0 0 auto}
+.chip.go2{background:var(--acc);color:#17140F;border-color:var(--acc);font-weight:700}
+.chip.bad{background:#E2564B33;border-color:var(--bad);color:#F3A8A2}
+.chip em{font-style:normal;margin-left:6px;opacity:.6}
+.note.bad{border-color:var(--bad);color:#F3A8A2}
+/* Клетка, которую можно править: еле заметная рамка, чтобы было видно зону тапа. */
+.schgrid td.c.ed{cursor:pointer;box-shadow:inset 0 0 0 1px #ffffff10}
+.schgrid td.c.ed:active{background:#ffffff1a}
+/* Пожелание под пустой клеткой — светло-серая заливка с приглушённым текстом,
+   ровно как просил заказчик: видно, что человек просил, но это ещё не график. */
+.schgrid td.c.wishbg{background:#ffffff12;color:var(--ink-3)}
+/* нижний лист «смена на день» */
+.schcell{padding:2px 2px 8px}
+.schcell h3{margin:0;font-size:18px}
+.schcell .lead{margin:2px 0 12px;font-size:12.5px;color:var(--ink-3)}
+.schcell .lbl{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  margin:12px 0 6px}
+.hrow{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.hrow::-webkit-scrollbar{display:none}
+.hb{flex:0 0 auto;min-width:42px;padding:9px 0;border-radius:11px;background:var(--card-2);
+  border:1px solid var(--line);font-family:var(--mono);font-size:15px;color:var(--ink-2)}
+.hb.on{background:var(--acc);border-color:var(--acc);color:#17140F;font-weight:700}
+.hb:active{transform:scale(.94)}
+/* сотрудники */
+.strow{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:11px 12px;margin-bottom:8px}
+.strow .hd{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.strow .nmin{flex:1;min-width:0;background:var(--card-2);border:1px solid var(--line);
+  border-radius:10px;padding:8px 10px;color:var(--ink);font-size:14.5px}
+.strow .nlab{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-3)}
+.strow .hin{width:66px;background:var(--card-2);border:1px solid var(--line);border-radius:10px;
+  padding:7px 8px;color:var(--ink);font-family:var(--mono);font-size:14px}
 
 /* ---------- «впиши весь состав» ---------- */
 .fillt tr.act td{color:var(--acc)}
@@ -687,6 +725,12 @@ details.cheat b{color:var(--ink)}
     <div id="schBody"></div>
   </div>
 
+  <!-- СОТРУДНИКИ (правит старший) -->
+  <div id="staffscr" class="hidden">
+    <div class="scrhead"><button class="back" data-sched="1">‹</button><h1>Сотрудники</h1></div>
+    <div id="staffBody"></div>
+  </div>
+
   <!-- РОАДМАП (только владельцу) -->
   <div id="roadmap" class="hidden">
     <div class="scrhead"><button class="back" data-home="1">‹</button><h1>Роадмап</h1></div>
@@ -734,6 +778,9 @@ details.cheat b{color:var(--ink)}
 </div>
 
 <div class="modal" id="modal"><div class="sheet-card" id="sheetCard"></div></div>
+<!-- Отдельная модалка для смены: у карточки рецепта своя история и свой popstate,
+     смешивать их — гарантированно сломать кнопку «назад» на Android. -->
+<div class="modal" id="schModal"><div class="sheet-card" id="schCard"></div></div>
 
 <script src="media.js"></script>
 <script src="recipes.js"></script>
@@ -880,11 +927,12 @@ let S = null, tick = null;
 // зачёт по числу ошибок. Отличается только пул, поэтому проверка режима одна на всех.
 const isExam = () => !!S && (S.mode==='exam' || S.mode==='examfav');
 const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb','attest','stub',
-                 'learn','profile','roadmap','sched'];
+                 'learn','profile','roadmap','sched','staffscr'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
   closeRecipe();
+  if(typeof closeSchCell === 'function' && SCH.cell) closeSchCell();
   $('#top').classList.toggle('hidden', id!=='quiz');
 }
 
@@ -1513,7 +1561,11 @@ function finish(why){
           <div class="ans" style="color:var(--bad);text-decoration:line-through">${myAnswerText(q, rec.my)}</div>
           <div class="ans">${answerText(q)}</div></div></button>`;
     }).join('') : '';
+  // Итоги стали длинными: в аттестации под ними идёт разбор всех ошибок. Без липкой
+  // шапки человек, долистав до конца, оставался без выхода с экрана.
   $('#result').innerHTML = `
+    <div class="scrhead"><button class="back" data-home="1">‹</button>
+      <h1 style="font-size:19px">${isExam()?'Аттестация':'Итоги'}</h1></div>
     <div class="res">
       <div class="big ${passed===null? '' : (passed?'win':'lose')}">${S.right}<span style="font-size:22px;color:var(--ink-3)">/${isExam()?S.list.length:S.done.length}</span></div>
       <h1 style="font-size:22px;margin:12px 0 4px">${title}</h1>
@@ -1748,19 +1800,50 @@ const shiftLabel = s =>
   s.kind==='off' ? '×'
   : (s.start_h==null ? '·' : `${String(s.start_h).padStart(2,'0')}-${String(s.end_h).padStart(2,'0')}`);
 
+/* ---------- кто что может править ----------
+   Три состояния полумесяца задают весь цикл: wish — бармены проставляют пожелания,
+   draft — старший собирает из них график, published — график выкачен всем.
+   Слой правки следует из состояния и роли, отдельного переключателя нет:
+   лишний выбор на телефоне только мешает. */
+function schLayerShow(){
+  if(!SCH.period) return 'plan';
+  return SCH.period.state === 'wish' ? 'wish' : 'plan';
+}
+function schEditLayer(){
+  if(!SCH.period) return null;
+  if(schBoss() && SCH.edit) return 'plan';            // старший собирает график
+  if(SCH.period.state === 'wish' && schMe()) return 'wish';  // бармен пишет пожелания
+  return null;
+}
+// Бармен правит только свою строку, старший — любую.
+const schCanEdit = (staffId, layer) =>
+  layer === 'plan' ? schBoss()
+  : layer === 'wish' && (schBoss() || (schMe() && schMe().id === staffId));
+
 function renderSched(){
   const days = periodDays(SCH.y, SCH.m, SCH.half);
   $('#schTitle').textContent = `${MON_N[SCH.m-1]} ${SCH.y} · ${SCH.half===1?'1–15':'16–'+days[days.length-1].getDate()}`;
   $('#schState').textContent = SCH.period ? (ST_NAME[SCH.period.state]||'') : 'не составлен';
 
-  if(SCH.err){ $('#schBody').innerHTML = `<div class="note">${SCH.err}</div>`; return; }
   if(SCH.busy){ $('#schBody').innerHTML = `<div class="note">Загружаю…</div>`; return; }
   if(!SCH.period){
-    $('#schBody').innerHTML = `<div class="note">На этот полумесяц графика ещё нет.</div>`;
+    $('#schBody').innerHTML = (SCH.err ? `<div class="note">${SCH.err}</div>` : '')
+      + `<div class="note">На этот полумесяц графика ещё нет.</div>`
+      + (schBoss() ? `<button class="go" id="schMake">Создать график на этот полумесяц</button>
+           <div class="note" style="margin-top:8px">Сразу откроется сбор пожеланий: бармены
+           проставят свои дни, потом вы соберёте из них график.</div>` : '');
+    if(schBoss()) $('#schMake').onclick = schCreatePeriod;
     return;
   }
-  // Показываем собранный график; пожелания станут подложкой на следующем шаге.
-  const plan = SCH.shifts.filter(s=>s.layer==='plan');
+  const layer = schLayerShow();
+  const editL = schEditLayer();
+  // Пожелания подложкой: старшему в черновике надо видеть, кто что просил.
+  const wish = {};
+  if(layer === 'plan' && SCH.showWish)
+    SCH.shifts.filter(s=>s.layer==='wish')
+              .forEach(s=>{ (wish[s.staff_id+'|'+s.day] = wish[s.staff_id+'|'+s.day]||[]).push(s); });
+
+  const plan = SCH.shifts.filter(s=>s.layer===layer);
   const byCell = {};                       // staff|день -> [смены]
   plan.forEach(s=>{ (byCell[s.staff_id+'|'+s.day] = byCell[s.staff_id+'|'+s.day] || []).push(s); });
   const evDays = {};
@@ -1790,15 +1873,24 @@ function renderSched(){
     const mine = plan.filter(s=>s.staff_id===st.id);
     const hrs = mine.reduce((a,s)=>a+(s.hours||0),0);
     const nsh = mine.filter(s=>s.kind==='work').length;
+    const canEd = editL && schCanEdit(st.id, editL);
     const cells = days.map(d=>{
-      const list = byCell[st.id+'|'+iso(d)] || [];
-      if(!list.length) return `<td class="c" data-s="${st.id}" data-d="${iso(d)}"></td>`;
+      const key = st.id+'|'+iso(d);
+      const list = byCell[key] || [];
+      const at = `data-s="${st.id}" data-d="${iso(d)}"` + (canEd ? ' data-ed="1"' : '');
+      if(!list.length){
+        // Пустая клетка с пожеланием под ней: старший видит, что человек просил,
+        // ещё до того, как поставит смену.
+        const w = wish[key];
+        return `<td class="c${canEd?' ed':''}${w?' wishbg':''}" ${at}>${
+          w ? w.map(shiftLabel).join('<br>') : ''}</td>`;
+      }
       const cls = list[0].kind==='off' ? 'off'
                 : list[0].at_venue_id ? 'away' : 'work';
       const txt = list.map(shiftLabel).join('<br>');
       const away = list[0].at_venue_id
         ? (SCH.venues.find(v=>v.id===list[0].at_venue_id)||{}).name : '';
-      return `<td class="c ${cls}" data-s="${st.id}" data-d="${iso(d)}"
+      return `<td class="c ${cls}${canEd?' ed':''}" ${at}
         ${away?`title="${away}"`:''}>${txt}${away?`<em>${away.slice(0,4)}</em>`:''}</td>`;
     }).join('');
     return `<tr><td class="nm" title="${st.name}" data-staff="${st.id}"><b>${shortName(st.name)}</b>
@@ -1815,8 +1907,31 @@ function renderSched(){
     return `<div class="schnote ev"><b>${dd.getDate()} ${MON[dd.getMonth()]}</b>${evDays[d].join(' · ')}</div>`;
   }).join('');
 
-  $('#schBody').innerHTML = `
-    <div class="schscroll"><table class="schgrid">
+  // Панель старшего: включить правку, показать пожелания подложкой, двинуть состояние.
+  const st = SCH.period.state;
+  const bar = schBoss() ? `<div class="schbar">
+      <button class="chip${SCH.edit?' on':''}" id="schEdit">${SCH.edit?'✎ правлю':'✎ править'}</button>
+      ${st!=='wish'?`<button class="chip${SCH.showWish?' on':''}" id="schWish">пожелания подложкой</button>`:''}
+      ${st==='wish'?`<button class="chip go2" id="schToDraft">Собрать график</button>`:''}
+      ${st==='draft'?`<button class="chip go2" id="schPub">Выкатить всем</button>`:''}
+      ${st==='published'?`<button class="chip" id="schToDraft2">Вернуть в черновик</button>`:''}
+      <button class="chip" id="schStaff">Сотрудники</button>
+    </div>` : '';
+
+  // Одна строка, объясняющая, что именно сейчас можно трогать. Без неё режим
+  // «правлю пожелания» неотличим от «правлю график».
+  const hint = editL === 'plan'
+      ? 'Тап по клетке — поставить смену. Правите график целиком.'
+    : editL === 'wish'
+      ? 'Тап по своей строке — записать пожелание на день.'
+    : st === 'wish'
+      ? 'Идёт сбор пожеланий. График соберёт старший бармен.'
+      : '';
+
+  $('#schBody').innerHTML = bar
+    + (SCH.err ? `<div class="note bad">${SCH.err}</div>` : '')
+    + (hint ? `<div class="note">${hint}</div>` : '')
+    + `<div class="schscroll"><table class="schgrid">
       <thead><tr><th class="nm">${SCH.staff.length} чел.</th>${head}</tr></thead>
       <tbody>${body}</tbody>
     </table></div>
@@ -1824,7 +1939,197 @@ function renderSched(){
     ${notesHTML?`<div class="subhead">Комментарии</div>${notesHTML}`:''}
     <div class="note" style="margin-top:12px">Точка: ${SCH.venue?SCH.venue.name:'—'}${
       SCH.venue&&SCH.venue.address?' · '+SCH.venue.address:''}</div>`;
+
+  if(schBoss()){
+    $('#schEdit').onclick = ()=>{ SCH.edit = !SCH.edit; renderSched(); };
+    if($('#schWish')) $('#schWish').onclick = ()=>{ SCH.showWish = !SCH.showWish; renderSched(); };
+    if($('#schToDraft'))  $('#schToDraft').onclick  = ()=>schSetState('draft');
+    if($('#schToDraft2')) $('#schToDraft2').onclick = ()=>schSetState('draft');
+    if($('#schPub')) $('#schPub').onclick = ()=>schSetState('published');
+    $('#schStaff').onclick = renderStaff;
+  }
 }
+
+/* ---------- запись ---------- */
+async function schWrite(path, opts){
+  const o = Object.assign({}, opts);
+  o.headers = Object.assign({'Prefer':'return=minimal'}, o.headers||{});
+  const r = await sbRest(path, o);
+  if(!r.ok) throw new Error(`${r.status} ${await r.text()}`);
+  return r;
+}
+
+async function schGuard(fn){
+  SCH.busy = true; renderSched();
+  try{ await fn(); SCH.err=''; }
+  catch(e){ SCH.err = 'Не удалось сохранить: ' + (e.message||e); }
+  SCH.busy = false;
+  await schRefresh();
+}
+
+function schCreatePeriod(){
+  return schGuard(async ()=>{
+    await schWrite('periods', {method:'POST', body: JSON.stringify({
+      venue_id:SCH.venue.id, dept:'bar', year:SCH.y, month:SCH.m, half:SCH.half, state:'wish'})});
+  });
+}
+
+function schSetState(next){
+  return schGuard(async ()=>{
+    const body = {state: next};
+    if(next === 'published'){ body.published_at = new Date().toISOString();
+                              body.published_by = AUTH.uid; }
+    await schWrite(`periods?id=eq.${SCH.period.id}`, {method:'PATCH', body: JSON.stringify(body)});
+  });
+}
+
+/* ---------- нижний лист: смена на день ----------
+   Клетка перезаписывается целиком: удаляем всё, что было у человека в этот день
+   на этом слое, и пишем заново. Это на порядок проще точечных правок, а строк
+   в клетке максимум две. */
+function schSaveCell(){
+  const c = SCH.cell;
+  return schGuard(async ()=>{
+    await schWrite(`shifts?period_id=eq.${SCH.period.id}&staff_id=eq.${c.staff}`
+                   + `&day=eq.${c.day}&layer=eq.${c.layer}`, {method:'DELETE'});
+    const rows = c.list.map(x=>({
+      period_id:SCH.period.id, staff_id:c.staff, venue_id:SCH.venue.id, day:c.day,
+      layer:c.layer, kind:x.kind,
+      start_h: x.kind==='off' ? null : (x.start==null ? null : x.start),
+      end_h:   x.kind==='off' ? null : (x.end==null   ? null : x.end),
+      at_venue_id: x.at || null, author_id: AUTH.uid}));
+    if(rows.length) await schWrite('shifts', {method:'POST', body: JSON.stringify(rows)});
+    closeSchCell();
+  });
+}
+
+const QUICK_DEF = ['16-04','10-18','10-22','12-01','18-04','09-13'];
+const parseQuick = s => {
+  const m = /^(\d{1,2})-(\d{1,2})$/.exec(s.trim());
+  return m ? {kind:'work', start:+m[1], end:+m[2], at:null} : null;
+};
+
+function openSchCell(staffId, day, layer){
+  const st = SCH.staff.find(s=>s.id===staffId); if(!st) return;
+  const have = SCH.shifts.filter(s=>s.staff_id===staffId && s.day===day && s.layer===layer);
+  SCH.cell = {staff:staffId, day, layer, i:0,
+    list: have.map(s=>({kind:s.kind, start:s.start_h, end:s.end_h, at:s.at_venue_id}))};
+  if(!SCH.cell.list.length) SCH.cell.list.push({kind:'work', start:null, end:null, at:null});
+  drawSchCell();
+  $('#schModal').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeSchCell(){
+  $('#schModal').classList.remove('on');
+  document.body.style.overflow='';
+  SCH.cell = null;
+}
+
+function drawSchCell(){
+  const c = SCH.cell; if(!c) return;
+  const st = SCH.staff.find(s=>s.id===c.staff);
+  const d = new Date(c.day+'T00:00:00');
+  const cur = c.list[c.i] || c.list[0];
+  const quick = (SCH.settings.quick && SCH.settings.quick.length ? SCH.settings.quick : QUICK_DEF);
+
+  // Два ряда часов вместо колёсика: колесо на телефоне промахивается, а ряд
+  // с прокруткой попадает пальцем с первого раза и виден целиком.
+  const hours = (sel, which) => [...Array(24).keys()].map(h=>
+    `<button class="hb${sel===h?' on':''}" data-h="${h}" data-w="${which}">${String(h).padStart(2,'0')}</button>`).join('');
+
+  const others = (SCH.venues||[]).filter(v=>!v.is_own);
+  const tabs = c.list.map((x,i)=>{
+    const lbl = x.kind==='off' ? 'выходной'
+      : (x.start==null ? 'смена' : `${String(x.start).padStart(2,'0')}-${String(x.end).padStart(2,'0')}`);
+    return `<button class="chip${i===c.i?' on':''}" data-tab="${i}">${lbl}${
+      c.list.length>1?` <em data-del="${i}">✕</em>`:''}</button>`;
+  }).join('');
+
+  $('#schCard').innerHTML = `
+    <div class="grip"><i></i><button class="cls" id="schCellClose"><b>‹</b>Закрыть</button></div>
+    <div class="schcell">
+      <h3>${st.name}</h3>
+      <p class="lead">${WD[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}${
+        c.layer==='wish'?' · пожелание':''}</p>
+
+      ${c.list.length>1||c.list[0].kind!=='off'?`<div class="chips-row">${tabs}
+        <button class="chip" id="schAdd">+ смена</button></div>`:''}
+
+      <div class="lbl">Частые смены</div>
+      <div class="chips-row">${quick.map(q=>{
+        const p = parseQuick(q);
+        const on = p && cur.kind==='work' && cur.start===p.start && cur.end===p.end;
+        return `<button class="chip${on?' on':''}" data-q="${q}">${q}</button>`;
+      }).join('')}
+        <button class="chip${cur.kind==='off'?' on bad':''}" data-off="1">выходной</button>
+      </div>
+
+      ${cur.kind==='off' ? '' : `
+      <div class="lbl">С какого часа</div>
+      <div class="hrow" id="hrowA">${hours(cur.start, 'a')}</div>
+      <div class="lbl">До какого часа</div>
+      <div class="hrow" id="hrowB">${hours(cur.end, 'b')}</div>
+      <div class="lbl">Точка</div>
+      <div class="chips-row">
+        <button class="chip${!cur.at?' on':''}" data-at="">${SCH.venue?SCH.venue.name:'своя'}</button>
+        ${others.map(v=>`<button class="chip${cur.at===v.id?' on':''}" data-at="${v.id}">${v.name}</button>`).join('')}
+      </div>`}
+
+      <div class="row" style="margin-top:14px">
+        <button class="go" id="schCellSave">Сохранить</button>
+        <button class="ghostbtn" id="schCellClear">Очистить день</button>
+      </div>
+    </div>`;
+
+  // Ряды часов длинные: подкручиваем к выбранному, иначе «16» приходится искать.
+  ['#hrowA','#hrowB'].forEach(sel=>{
+    const row = $(sel); if(!row) return;
+    const on = row.querySelector('.hb.on');
+    if(on) row.scrollLeft = on.offsetLeft - row.clientWidth/2 + on.offsetWidth/2;
+  });
+  $('#schCellClose').onclick = closeSchCell;
+  $('#schCellSave').onclick = ()=>{
+    // Незаполненные смены не сохраняем: пустая строка в клетке — это мусор.
+    SCH.cell.list = SCH.cell.list.filter(x=>x.kind==='off' || x.start!=null || x.at);
+    schSaveCell();
+  };
+  $('#schCellClear').onclick = ()=>{ SCH.cell.list = []; schSaveCell(); };
+  if($('#schAdd')) $('#schAdd').onclick = ()=>{
+    SCH.cell.list.push({kind:'work', start:null, end:null, at:null});
+    SCH.cell.i = SCH.cell.list.length-1; drawSchCell();
+  };
+}
+
+// Один делегированный обработчик на весь лист: перерисовка сносит слушатели.
+$('#schCard').addEventListener('click', e=>{
+  const c = SCH.cell; if(!c) return;
+  const cur = () => c.list[c.i] || c.list[0];
+  const del = e.target.closest('[data-del]');
+  if(del){ e.stopPropagation(); c.list.splice(+del.dataset.del,1);
+           c.i = Math.max(0, Math.min(c.i, c.list.length-1)); drawSchCell(); return; }
+  const tab = e.target.closest('[data-tab]');
+  if(tab){ c.i = +tab.dataset.tab; drawSchCell(); return; }
+  const q = e.target.closest('[data-q]');
+  if(q){ Object.assign(cur(), parseQuick(q.dataset.q)); drawSchCell(); return; }
+  if(e.target.closest('[data-off]')){
+    // Выходной — это про весь день, а не про одну из двух смен.
+    c.list = [{kind:'off', start:null, end:null, at:null}]; c.i = 0; drawSchCell(); return;
+  }
+  const h = e.target.closest('[data-h]');
+  if(h){ const v = +h.dataset.h;
+         if(h.dataset.w==='a') cur().start = v; else cur().end = v;
+         cur().kind = 'work'; drawSchCell(); return; }
+  const at = e.target.closest('[data-at]');
+  if(at){ cur().at = at.dataset.at || null; cur().kind = 'work'; drawSchCell(); return; }
+});
+$('#schModal').addEventListener('click', e=>{ if(e.target.id==='schModal') closeSchCell(); });
+
+// Тап по клетке сетки. Правку разрешает schCanEdit, поэтому data-ed ставится
+// только там, где она есть — лишних проверок в обработчике не нужно.
+$('#schBody').addEventListener('click', e=>{
+  const td = e.target.closest('td.c[data-ed]'); if(!td) return;
+  openSchCell(td.dataset.s, td.dataset.d, schEditLayer());
+});
 
 async function schRefresh(){
   SCH.busy = true; SCH.err = ''; renderSched();
@@ -1842,6 +2147,105 @@ async function schRefresh(){
   SCH.busy = false;
   renderSched();
 }
+
+/* ---------- сотрудники ----------
+   Старший меняет всем всё: имя, категорию, роль в графике, норму часов, порядок
+   и включение. Отдельный экран, а не диалог из сетки: править состав приходится
+   редко, зато сразу пачкой.
+
+   Здесь же привязка аккаунта к карточке. Без неё бармен не может проставить
+   пожелания: RLS ищет его строку по staff.user_id, а импорт заполнил только имена. */
+function staffRowHTML(s){
+  const linked = !!s.user_id;
+  const me = AUTH && s.user_id === AUTH.uid;
+  return `<div class="strow" data-id="${s.id}">
+    <div class="hd">
+      <input class="nmin" value="${(s.name||'').replace(/"/g,'&quot;')}" data-name>
+      <button class="star${s.active?' on':''}" data-active title="Работает на точке">${s.active?'✓':'⊘'}</button>
+    </div>
+    <div class="chips-row">
+      ${[1,2,3].map(c=>`<button class="chip${s.category===c?' on':''}" data-cat="${c}">${c}-я кат.</button>`).join('')}
+      <button class="chip${s.sched_role==='senior'?' on go2':''}" data-senior>старший</button>
+    </div>
+    <div class="chips-row">
+      <label class="nlab">норма часов
+        <input class="hin" type="number" min="0" max="400" value="${s.hours_norm==null?'':s.hours_norm}" data-norm>
+      </label>
+      <button class="chip" data-up>↑</button>
+      <button class="chip" data-down>↓</button>
+      ${me ? '<span class="chip on">это вы</span>'
+           : linked ? '<span class="chip">аккаунт привязан</span>'
+                    : '<button class="chip" data-me>это я</button>'}
+    </div>
+  </div>`;
+}
+
+function renderStaff(){
+  const boss = schBoss();
+  $('#staffBody').innerHTML = !boss
+    ? '<div class="note">Состав правит старший бармен или менеджер.</div>'
+    : SCH.staff.slice().sort((a,b)=>a.sort-b.sort).map(staffRowHTML).join('')
+      + `<div class="row" style="margin-top:12px"><button class="go" id="stAdd">Добавить сотрудника</button></div>
+         <div class="note" style="margin-top:10px">Кнопка «это я» привязывает вашу учётку
+         к карточке — без неё вы не сможете проставлять свои пожелания.</div>`;
+  if(boss) $('#stAdd').onclick = staffAdd;
+  show('staffscr');
+}
+
+async function staffPatch(id, body){
+  try{
+    await schWrite(`staff?id=eq.${id}`, {method:'PATCH', body: JSON.stringify(body)});
+    Object.assign(SCH.staff.find(s=>s.id===id) || {}, body);
+    SCH.booted = false;                     // справочник изменился — перечитать
+  }catch(e){ alert('Не сохранилось: ' + (e.message||e)); }
+}
+
+async function staffAdd(){
+  const name = prompt('Имя и фамилия сотрудника');
+  if(!name || !name.trim()) return;
+  const sort = Math.max(0, ...SCH.staff.map(s=>s.sort||0)) + 1;
+  try{
+    await schWrite('staff', {method:'POST', body: JSON.stringify({
+      venue_id:SCH.venue.id, dept:'bar', name:name.trim(), category:1, sort})});
+    SCH.booted = false; await schBoot(); renderStaff();
+  }catch(e){ alert('Не сохранилось: ' + (e.message||e)); }
+}
+
+$('#staffBody').addEventListener('click', async e=>{
+  const row = e.target.closest('.strow'); if(!row) return;
+  const id = row.dataset.id, s = SCH.staff.find(x=>x.id===id); if(!s) return;
+  const cat = e.target.closest('[data-cat]');
+  if(cat){ await staffPatch(id, {category:+cat.dataset.cat}); await schBoot(); renderStaff(); return; }
+  if(e.target.closest('[data-senior]')){
+    await staffPatch(id, {sched_role: s.sched_role==='senior' ? 'bartender' : 'senior'});
+    await schBoot(); renderStaff(); return;
+  }
+  if(e.target.closest('[data-active]')){
+    await staffPatch(id, {active: !s.active}); await schBoot(); renderStaff(); return;
+  }
+  if(e.target.closest('[data-me]')){
+    await staffPatch(id, {user_id: AUTH.uid}); await schBoot(); renderStaff(); return;
+  }
+  const up = e.target.closest('[data-up]'), dn = e.target.closest('[data-down]');
+  if(up || dn){
+    const list = SCH.staff.slice().sort((a,b)=>a.sort-b.sort);
+    const i = list.findIndex(x=>x.id===id), j = i + (up ? -1 : 1);
+    if(j < 0 || j >= list.length) return;
+    await staffPatch(list[i].id, {sort: list[j].sort});
+    await staffPatch(list[j].id, {sort: list[i].sort});
+    await schBoot(); renderStaff(); return;
+  }
+});
+// Имя и норму сохраняем по потере фокуса: сохранять на каждую букву — лишние запросы.
+$('#staffBody').addEventListener('change', async e=>{
+  const row = e.target.closest('.strow'); if(!row) return;
+  const id = row.dataset.id;
+  if(e.target.matches('[data-name]') && e.target.value.trim())
+    await staffPatch(id, {name: e.target.value.trim()});
+  if(e.target.matches('[data-norm]'))
+    await staffPatch(id, {hours_norm: e.target.value === '' ? null : +e.target.value});
+  await schBoot();
+});
 
 function openSched(){
   if(!authOn() || !AUTH){
@@ -2047,9 +2451,11 @@ const ROADMAP = [
 
   // --- График смен
   {gr:'График смен', st:'done', t:'Сетка графика', d:'сотрудники × дни за полумесяц, прилипшая колонка имён, часы и смены по каждому, счётчик барменов над днём, выходные, работа на другой точке, листание периодов. История из рабочей таблицы за три месяца уже залита'},
-  {gr:'График смен', st:'work', t:'Ввод смены', d:'нижний лист: лента частых смен, два барабана часов, выходной, вторая смена за день, работа на другой точке'},
+  {gr:'График смен', st:'done', t:'Ввод смены', d:'нижний лист: лента частых смен, два ряда часов, выходной, вторая смена за день, работа на другой точке. Клетка перезаписывается целиком'},
+  {gr:'График смен', st:'done', t:'Цикл выкатки', d:'состояния «собираем пожелания» → «черновик» → «выкачен». Бармен правит свою строку в пожеланиях, старший собирает график и выкатывает; пожелания включаются подложкой'},
+  {gr:'Подразделение и ФОТ', st:'done', t:'Сотрудники точки', d:'старший меняет всем всё: имя, категорию, роль в графике, норму часов, порядок и включение. Кнопка «это я» привязывает аккаунт к карточке'},
   {gr:'График смен', st:'work', t:'События дня', d:'квиз, генка, ЕГАИС, инвентаризация, концерт — отдельная сущность на конкретный день, а не текст в клетке. Создавать событие может любой сотрудник'},
-  {gr:'График смен', st:'work', t:'Пожелания и выкатка', d:'всем приходит уведомление заполнить пожелания на полмесяца. Пожелания видны светло-серыми клетками с чёрным текстом. Дальше старший бармен собирает график и выкатывает его — снова уведомление всем'},
+  {gr:'График смен', st:'work', t:'Уведомления о пожеланиях', d:'сейчас баннер в приложении. Заказчик просил связать с Telegram-ботом — тогда напоминание дойдёт и при закрытом приложении'},
   {gr:'График смен', st:'work', t:'Выходные красным', d:'после подтверждения графика дни, когда бармен не работает, закрашиваются красным в его строке'},
   {gr:'График смен', st:'work', t:'Счётчик барменов на смене', d:'над каждым днём — сколько человек в смене; проблемные дни, где людей мало, подсвечиваются'},
   {gr:'График смен', st:'work', t:'Лимиты часов по дням недели', d:'у каждого дня свой лимит; выход за него подсвечивается прямо в сетке'},
@@ -2808,6 +3214,7 @@ document.addEventListener('click', e=>{
   const b = e.target.closest('.scrhead .back'); if(!b) return;
   closeRecipe();
   if(b.dataset.kb) renderKB();
+  else if(b.dataset.sched) openSched();
   else if(b.dataset.learn){ renderLearnStat(); show('learn'); }
   else renderHome();
 });
