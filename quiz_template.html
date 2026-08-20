@@ -390,6 +390,52 @@ details.cheat b{color:var(--ink)}
 .pad .quick::-webkit-scrollbar{display:none}
 .pad .quick button{flex:0 0 auto;padding:9px 14px;font-size:15px;border-radius:11px;color:var(--ink-2)}
 
+/* ---------- график смен ----------
+   Сетка «сотрудник × день» как в рабочей таблице: колонка с именами прилипшая,
+   дни листаются вбок. Вертикально шапка не липнет намеренно — при восьми
+   сотрудниках таблица короче экрана, а overflow-x:auto всё равно сделал бы
+   контейнер прокручиваемым и по вертикали, оторвав шапку от страницы. */
+.schtop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.schnav{width:36px;height:36px;flex:0 0 36px;border-radius:12px;background:var(--card);
+  display:grid;place-items:center;font-size:19px;color:var(--ink-2)}
+.schnav:active{background:var(--card-2)}
+.schper{flex:1;text-align:center;min-width:0}
+.schper b{display:block;font-size:16px}
+.schper span{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em}
+.schscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);
+  border-radius:14px;background:var(--card)}
+.schscroll::-webkit-scrollbar{height:0}
+.schgrid{border-collapse:separate;border-spacing:0;font-size:12.5px;width:max-content}
+.schgrid th,.schgrid td{white-space:nowrap;text-align:center;padding:0}
+.schgrid .nm{position:sticky;left:0;z-index:2;background:var(--card);text-align:left;
+  min-width:124px;max-width:124px;padding:7px 10px;border-right:1px solid var(--line)}
+.schgrid .nm b{display:block;font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.schgrid .nm span{font-size:10.5px;color:var(--ink-3);font-family:var(--mono)}
+.schgrid thead .nm{background:var(--card-2);color:var(--ink-3);font-weight:400;font-size:11px}
+.schgrid thead th{background:var(--card-2);min-width:56px;padding:5px 3px;
+  border-bottom:1px solid var(--line);vertical-align:top}
+.schgrid thead th i{display:block;font-style:normal;font-size:10px;color:var(--ink-3);
+  text-transform:uppercase;letter-spacing:.06em}
+.schgrid thead th b{display:block;font-size:14px;line-height:1.15}
+/* Счётчик барменов на смене. Смены на чужой точке в него не входят. */
+.schgrid thead th u{display:block;text-decoration:none;font-family:var(--mono);font-size:10.5px;
+  color:var(--ink-3)}
+.schgrid thead th u em{font-style:normal;color:var(--acc)}
+.schgrid thead th.few u{color:var(--bad)}          /* людей меньше минимума */
+.schgrid thead th.over b{color:var(--acc)}         /* перебор по часам */
+.schgrid tbody tr+tr td{border-top:1px solid var(--line)}
+.schgrid td.c{font-family:var(--mono);font-size:12px;padding:7px 4px;color:var(--ink);
+  border-left:1px solid #ffffff08;line-height:1.25}
+.schgrid td.c.off{background:#E2564B22;color:#E2564B;font-size:14px}
+.schgrid td.c.away{background:#E0A45B1f;color:var(--acc)}
+.schgrid td.c.away em{display:block;font-style:normal;font-size:9px;opacity:.8}
+.schgrid td.c.wish{background:#ffffff14;color:#F6F2EA}
+.schnote{background:var(--card);border-radius:12px;padding:9px 12px;margin-top:8px;
+  font-size:13px;color:var(--ink-2)}
+.schnote b{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;
+  letter-spacing:.08em;margin-bottom:2px}
+.schnote.ev{border-left:3px solid var(--acc)}
+
 /* ---------- «впиши весь состав» ---------- */
 .fillt tr.act td{color:var(--acc)}
 .fillt td .slot{display:inline-block;min-width:58px;text-align:right;border-bottom:1.5px dashed var(--line);
@@ -497,7 +543,7 @@ details.cheat b{color:var(--ink)}
     <button class="mode" data-mode="sched">
       <b>График</b>
       <span>Смены по точке, как в таблице. Свою точку видят все, все точки — директор.</span>
-      <div class="tags"><i>скоро</i></div>
+      <div class="tags"><i id="schTag">полумесяц</i></div>
     </button>
     <button class="mode" data-mode="learn">
       <b>Обучение</b>
@@ -628,6 +674,17 @@ details.cheat b{color:var(--ink)}
       <b>Назначенная <span style="color:var(--ink-3);font-size:12px">скоро</span></b>
       <span>Аттестацию ставит управляющий: дата, состав вопросов и результат уходят в общий отчёт.</span>
     </button>
+  </div>
+
+  <!-- ГРАФИК СМЕН -->
+  <div id="sched" class="hidden">
+    <div class="scrhead"><button class="back" data-home="1">‹</button><h1>График</h1></div>
+    <div class="schtop">
+      <button class="schnav" id="schPrev" title="Предыдущий полумесяц">‹</button>
+      <div class="schper"><b id="schTitle">—</b><span id="schState"></span></div>
+      <button class="schnav" id="schNext" title="Следующий полумесяц">›</button>
+    </div>
+    <div id="schBody"></div>
   </div>
 
   <!-- РОАДМАП (только владельцу) -->
@@ -823,7 +880,7 @@ let S = null, tick = null;
 // зачёт по числу ошибок. Отличается только пул, поэтому проверка режима одна на всех.
 const isExam = () => !!S && (S.mode==='exam' || S.mode==='examfav');
 const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb','attest','stub',
-                 'learn','profile','roadmap'];
+                 'learn','profile','roadmap','sched'];
 
 function show(id){
   SCREENS.forEach(x=>$('#'+x).classList.toggle('hidden', x!==id));
@@ -1582,6 +1639,227 @@ const CHEATS = `
 Крафтовые смеси — 750 мл воды и не менее 5 минут. Тизаны завариваются по правилу чёрного.</div></div></details>
 `;
 
+/* ---------- график смен ----------
+   Единственный экран приложения, который без сети бесполезен: график общий,
+   и localStorage тут не помощник. Поэтому последний просмотренный период
+   кладётся в кеш — чтобы в баре без интернета можно было хотя бы посмотреть,
+   кто сегодня работает. Запись — только онлайн. */
+const SCH = {venue:null, staff:[], settings:{}, period:null,
+             shifts:[], events:[], notes:[], y:0, m:0, half:1,
+             booted:false, busy:false, err:''};
+const SCH_CACHE = 'barquiz.sched';
+const MON = ['января','февраля','марта','апреля','мая','июня','июля','августа',
+             'сентября','октября','ноября','декабря'];
+const MON_N = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август',
+               'Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const WD = ['вс','пн','вт','ср','чт','пт','сб'];
+const ST_NAME = {wish:'собираем пожелания', draft:'черновик', published:'выкачен'};
+
+// Полумесяц: 1–15 и 16–конец месяца. Второй бывает 13, 15 или 16 дней.
+function periodDays(y, m, half){
+  const last = new Date(y, m, 0).getDate();
+  const from = half===1 ? 1 : 16, to = half===1 ? 15 : last;
+  const out = [];
+  for(let d=from; d<=to; d++) out.push(new Date(y, m-1, d));
+  return out;
+}
+const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+function shiftPeriod(step){
+  let y=SCH.y, m=SCH.m, h=SCH.half+step;
+  while(h>2){ h-=2; m++; if(m>12){ m=1; y++; } }
+  while(h<1){ h+=2; m--; if(m<1){ m=12; y--; } }
+  SCH.y=y; SCH.m=m; SCH.half=h;
+}
+
+// Роль в графике: старший правит всё, менеджер и выше — тоже.
+const schMe = () => SCH.staff.find(s=>s.user_id && AUTH && s.user_id===AUTH.uid) || null;
+const schBoss = () => {
+  const r = (AUTH&&AUTH.role)||'staff';
+  if(r==='manager'||r==='director'||r==='owner') return true;
+  const me = schMe();
+  return !!(me && me.sched_role==='senior');
+};
+
+async function schGet(path){
+  const r = await sbRest(path, {method:'GET'});
+  if(!r.ok) throw new Error('rest '+r.status);
+  return r.json();
+}
+
+// Справочники тянутся один раз за запуск: они меняются редко, а период листают часто.
+async function schBoot(){
+  if(SCH.booted) return;
+  const [venues, staff, settings] = await Promise.all([
+    schGet('venues?select=id,name,address,org,is_own'),
+    schGet('staff?select=id,name,category,sched_role,hours_norm,user_id,active,sort&order=sort'),
+    schGet('sched_settings?select=venue_id,data'),
+  ]);
+  SCH.venues = venues;
+  SCH.venue = venues.find(v=>v.is_own) || venues[0] || null;
+  SCH.staff = staff.filter(s=>s.active);
+  SCH.settings = (settings[0] && settings[0].data) || {};
+  SCH.booted = true;
+}
+
+async function schLoad(){
+  const days = periodDays(SCH.y, SCH.m, SCH.half);
+  const a = iso(days[0]), b = iso(days[days.length-1]);
+  const p = await schGet(`periods?select=*&venue_id=eq.${SCH.venue.id}&dept=eq.bar`
+    + `&year=eq.${SCH.y}&month=eq.${SCH.m}&half=eq.${SCH.half}`);
+  SCH.period = p[0] || null;
+  if(!SCH.period){ SCH.shifts=[]; SCH.events=[]; SCH.notes=[]; return; }
+  const [shifts, events, notes] = await Promise.all([
+    schGet(`shifts?select=id,staff_id,day,layer,kind,start_h,end_h,hours,at_venue_id`
+           + `&period_id=eq.${SCH.period.id}`),
+    schGet(`day_events?select=id,day,kind,title&venue_id=eq.${SCH.venue.id}`
+           + `&day=gte.${a}&day=lte.${b}`),
+    schGet(`day_notes?select=id,day,body&venue_id=eq.${SCH.venue.id}`
+           + `&day=gte.${a}&day=lte.${b}`),
+  ]);
+  SCH.shifts=shifts; SCH.events=events; SCH.notes=notes;
+}
+
+function schCacheSave(){
+  try{ localStorage.setItem(SCH_CACHE, JSON.stringify({
+    venue:SCH.venue, venues:SCH.venues, staff:SCH.staff, settings:SCH.settings,
+    period:SCH.period, shifts:SCH.shifts, events:SCH.events, notes:SCH.notes,
+    y:SCH.y, m:SCH.m, half:SCH.half, at:Date.now()})); }catch(e){}
+}
+function schCacheLoad(){
+  try{
+    const c = JSON.parse(localStorage.getItem(SCH_CACHE)||'null');
+    if(!c) return false;
+    Object.assign(SCH, c, {booted:true});
+    return true;
+  }catch(e){ return false; }
+}
+
+// «Уржумов Василий» -> «Уржумов В.»: полное имя в колонку 124 px не влезает,
+// а обрезанное многоточием «Уржумов Васил…» читается хуже инициала.
+function shortName(n){
+  const p = (n||'').trim().split(/\s+/);
+  return p.length > 1 ? `${p[0]} ${p[1][0]}.` : (p[0]||'');
+}
+const plural = (n, one, few, many) => {
+  const a = Math.abs(n) % 100, b = a % 10;
+  return n + ' ' + (a > 10 && a < 20 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many);
+};
+const shiftLabel = s =>
+  s.kind==='off' ? '×'
+  : (s.start_h==null ? '·' : `${String(s.start_h).padStart(2,'0')}-${String(s.end_h).padStart(2,'0')}`);
+
+function renderSched(){
+  const days = periodDays(SCH.y, SCH.m, SCH.half);
+  $('#schTitle').textContent = `${MON_N[SCH.m-1]} ${SCH.y} · ${SCH.half===1?'1–15':'16–'+days[days.length-1].getDate()}`;
+  $('#schState').textContent = SCH.period ? (ST_NAME[SCH.period.state]||'') : 'не составлен';
+
+  if(SCH.err){ $('#schBody').innerHTML = `<div class="note">${SCH.err}</div>`; return; }
+  if(SCH.busy){ $('#schBody').innerHTML = `<div class="note">Загружаю…</div>`; return; }
+  if(!SCH.period){
+    $('#schBody').innerHTML = `<div class="note">На этот полумесяц графика ещё нет.</div>`;
+    return;
+  }
+  // Показываем собранный график; пожелания станут подложкой на следующем шаге.
+  const plan = SCH.shifts.filter(s=>s.layer==='plan');
+  const byCell = {};                       // staff|день -> [смены]
+  plan.forEach(s=>{ (byCell[s.staff_id+'|'+s.day] = byCell[s.staff_id+'|'+s.day] || []).push(s); });
+  const evDays = {};
+  SCH.events.forEach(e=>{ (evDays[e.day] = evDays[e.day]||[]).push(e.title); });
+  const noteDays = {};
+  SCH.notes.forEach(n=>{ (noteDays[n.day] = noteDays[n.day]||[]).push(n.body); });
+
+  // Счётчик барменов на дне: смены на ЧУЖОЙ точке сюда не идут — человек занят,
+  // но не у нас.
+  const onDay = d => plan.filter(s=>s.day===d && s.kind==='work' && !s.at_venue_id).length;
+  const lim = SCH.settings.min_staff || {};
+  const hourLim = SCH.settings.hour_limit || {};
+  const dowKey = d => String(d.getDay()===0 ? 7 : d.getDay());
+  const dayHours = d => plan.filter(s=>s.day===d).reduce((a,s)=>a+(s.hours||0),0);
+
+  const head = days.map(d=>{
+    const k = iso(d), n = onDay(k);
+    const min = +(lim[dowKey(d)]||0), hl = +(hourLim[dowKey(d)]||0);
+    const few = min && n < min;
+    const over = hl && dayHours(k) > hl;
+    return `<th class="${few?'few':''}${over?' over':''}" data-day="${k}">
+      <i>${WD[d.getDay()]}</i><b>${d.getDate()}</b>
+      <u>${n}${evDays[k]?'<em>•</em>':''}</u></th>`;
+  }).join('');
+
+  const body = SCH.staff.map(st=>{
+    const mine = plan.filter(s=>s.staff_id===st.id);
+    const hrs = mine.reduce((a,s)=>a+(s.hours||0),0);
+    const nsh = mine.filter(s=>s.kind==='work').length;
+    const cells = days.map(d=>{
+      const list = byCell[st.id+'|'+iso(d)] || [];
+      if(!list.length) return `<td class="c" data-s="${st.id}" data-d="${iso(d)}"></td>`;
+      const cls = list[0].kind==='off' ? 'off'
+                : list[0].at_venue_id ? 'away' : 'work';
+      const txt = list.map(shiftLabel).join('<br>');
+      const away = list[0].at_venue_id
+        ? (SCH.venues.find(v=>v.id===list[0].at_venue_id)||{}).name : '';
+      return `<td class="c ${cls}" data-s="${st.id}" data-d="${iso(d)}"
+        ${away?`title="${away}"`:''}>${txt}${away?`<em>${away.slice(0,4)}</em>`:''}</td>`;
+    }).join('');
+    return `<tr><td class="nm" title="${st.name}" data-staff="${st.id}"><b>${shortName(st.name)}</b>
+      <span>${hrs} ч · ${plural(nsh,'смена','смены','смен')}${
+        st.sched_role==='senior'?' · старший':''}</span></td>${cells}</tr>`;
+  }).join('');
+
+  const notesHTML = Object.keys(noteDays).sort().map(d=>{
+    const dd = new Date(d+'T00:00:00');
+    return `<div class="schnote"><b>${dd.getDate()} ${MON[dd.getMonth()]}</b>${noteDays[d].join(' · ')}</div>`;
+  }).join('');
+  const evHTML = Object.keys(evDays).sort().map(d=>{
+    const dd = new Date(d+'T00:00:00');
+    return `<div class="schnote ev"><b>${dd.getDate()} ${MON[dd.getMonth()]}</b>${evDays[d].join(' · ')}</div>`;
+  }).join('');
+
+  $('#schBody').innerHTML = `
+    <div class="schscroll"><table class="schgrid">
+      <thead><tr><th class="nm">${SCH.staff.length} чел.</th>${head}</tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>
+    ${evHTML?`<div class="subhead">События</div>${evHTML}`:''}
+    ${notesHTML?`<div class="subhead">Комментарии</div>${notesHTML}`:''}
+    <div class="note" style="margin-top:12px">Точка: ${SCH.venue?SCH.venue.name:'—'}${
+      SCH.venue&&SCH.venue.address?' · '+SCH.venue.address:''}</div>`;
+}
+
+async function schRefresh(){
+  SCH.busy = true; SCH.err = ''; renderSched();
+  try{
+    await schBoot();
+    await schLoad();
+    SCH.err = '';
+    schCacheSave();
+  }catch(e){
+    // Нет сети — показываем то, что сохранилось с прошлого раза, и говорим об этом.
+    const had = schCacheLoad();
+    SCH.err = had ? '' : 'Не удалось загрузить график: нет связи с сервером.';
+    if(had) SCH.err = 'Нет связи — показан сохранённый график.';
+  }
+  SCH.busy = false;
+  renderSched();
+}
+
+function openSched(){
+  if(!authOn() || !AUTH){
+    $('#schBody').innerHTML = '<div class="note">График работает только для сотрудников с аккаунтом.</div>';
+    show('sched');
+    return;
+  }
+  if(!SCH.y){
+    const now = new Date();
+    SCH.y = now.getFullYear(); SCH.m = now.getMonth()+1;
+    SCH.half = now.getDate() <= 15 ? 1 : 2;
+  }
+  show('sched');
+  schRefresh();
+}
+$('#schPrev').addEventListener('click', ()=>{ shiftPeriod(-1); schRefresh(); });
+$('#schNext').addEventListener('click', ()=>{ shiftPeriod(1);  schRefresh(); });
+
 /* ---------- карточка рецепта ---------- */
 const mark = t => t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')
   .replace(/(Взбить|взбить|Перемешать|перемешать|Отфильтровать|отфильтровать|Украсить|украсить|Прогреть|прогреть|Охладить|охладить|размять мадлером|слить талую воду|не варить|проварить|слоями|Стир)/g,'<b>$1</b>');
@@ -1768,7 +2046,8 @@ const ROADMAP = [
   {gr:'Обучение', st:'plan', t:'База знаний · СанПиН', d:'внутренние проверки и требования РПН'},
 
   // --- График смен
-  {gr:'График смен', st:'work', t:'Сетка графика — ближайшее', d:'сотрудники × дни, полумесячные блоки. В клетке дня только смена в формате «16-04»: два числа и заранее проставленное тире, ничего лишнего. Свободный текст — отдельным комментарием, не в клетке'},
+  {gr:'График смен', st:'done', t:'Сетка графика', d:'сотрудники × дни за полумесяц, прилипшая колонка имён, часы и смены по каждому, счётчик барменов над днём, выходные, работа на другой точке, листание периодов. История из рабочей таблицы за три месяца уже залита'},
+  {gr:'График смен', st:'work', t:'Ввод смены', d:'нижний лист: лента частых смен, два барабана часов, выходной, вторая смена за день, работа на другой точке'},
   {gr:'График смен', st:'work', t:'События дня', d:'квиз, генка, ЕГАИС, инвентаризация, концерт — отдельная сущность на конкретный день, а не текст в клетке. Создавать событие может любой сотрудник'},
   {gr:'График смен', st:'work', t:'Пожелания и выкатка', d:'всем приходит уведомление заполнить пожелания на полмесяца. Пожелания видны светло-серыми клетками с чёрным текстом. Дальше старший бармен собирает график и выкатывает его — снова уведомление всем'},
   {gr:'График смен', st:'work', t:'Выходные красным', d:'после подтверждения графика дни, когда бармен не работает, закрашиваются красным в его строке'},
@@ -1835,11 +2114,8 @@ function renderRoadmap(){
 /* ---------- разделы, которых ещё нет ---------- */
 /* Каркас заведён заранее: сотрудники видят, что будет, а доступ уже раздаётся
    по роли и категории. Роль и точка приходят из аккаунта, сам сотрудник их не меняет. */
+// «График» больше не заглушка — у него настоящий экран, см. openSched().
 const STUBS = {
-  sched: {title:'График', lead:'Смены по точке — как в таблице, только читать.',
-    roles:['staff','manager','director','owner'],
-    items:[['Моя точка','Смены и кто на смене'],
-           ['Все точки','Видит только директор']]},
   paystat: {title:'Статистика', lead:'Деньги и дисциплина за выбранный период.',
     roles:['staff','manager','director','owner'],
     items:[['Зарплата','Начисления по сменам и итог за период'],
@@ -2491,7 +2767,8 @@ document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   else if(m==='profile') renderProfile();
   else if(m==='roadmap') renderRoadmap();
   else if(m==='attest') renderAttest();
-  else if(m==='sched' || m==='paystat' || m==='card' || m==='training') openStub(m);
+  else if(m==='sched') openSched();
+  else if(m==='paystat' || m==='card' || m==='training') openStub(m);
   else if(m==='kb') renderKB();
   else if(m==='ref') openRef();
   else if(m==='setup') renderSetup();
