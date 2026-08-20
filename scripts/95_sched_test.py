@@ -301,6 +301,39 @@ with sync_playwright() as pw:
     if SHOT:
         pg.screenshot(path=str(ROOT / 'build' / 'sched-kinds.png'), full_page=True)
 
+    # ------------------------------------------------- профиль: мои смены
+    # Без привязки аккаунта к карточке профиль обязан честно сказать об этом,
+    # а не показать пустой список — иначе человек решит, что смен нет.
+    pg.evaluate("renderProfile()"); pg.wait_for_timeout(700)
+    txt = pg.locator('#profShifts').inner_text()
+    check('без привязки профиль объясняет, что делать', 'это я' in txt, txt[:90])
+
+    # Привязываем первого сотрудника к текущей учётке и задаём ему норму.
+    me = BASE['staff'][0]
+    pg.evaluate("""([id, uid]) => {
+      const s = SCH.staff.find(x=>x.id===id);
+      s.user_id = uid; s.hours_norm = 140;
+    }""", [me['id'], 'test-uid'])
+    pg.evaluate("renderMyShifts()"); pg.wait_for_timeout(700)
+    check('мои смены показаны', pg.locator('#profShifts .myrow').count() > 0,
+          str(pg.locator('#profShifts .myrow').count()))
+    check('шкала нагрузки есть', pg.locator('#profShifts .loadbar').count() == 1)
+    bar = pg.locator('#profShifts .loadbar').inner_text()
+    check('шкала считает процент от нормы', '% от нормы 140 ч' in bar, bar)
+    # Часы в профиле обязаны совпасть с часами этого человека в сетке.
+    want = sum(s['hours'] or 0 for s in DB['shifts']
+               if s['layer'] == 'plan' and s['staff_id'] == me['id'])
+    got = int(pg.evaluate(
+        "+document.querySelectorAll('#profShifts .stats b')[1].textContent"))
+    check('часы в профиле сходятся с сеткой', got == want, f'{got} против {want}')
+    n_mine = pg.locator('#profShifts .myrow').count()
+    pg.click('#profShifts [data-mine="0"]'); pg.wait_for_timeout(500)
+    check('линза «всё подразделение» показывает больше',
+          pg.locator('#profShifts .myrow').count() > n_mine,
+          f'{pg.locator("#profShifts .myrow").count()} против {n_mine}')
+    if SHOT:
+        pg.screenshot(path=str(ROOT / 'build' / 'sched-profile.png'), full_page=True)
+
     check('нет ошибок в консоли', not js_errors, ' | '.join(js_errors[:3]))
     b.close()
 

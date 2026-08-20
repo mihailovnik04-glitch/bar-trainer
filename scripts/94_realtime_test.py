@@ -119,14 +119,21 @@ try:
           rtConnect();
         }''')
 
-        def wait_for(js, tries=60, gap=200):
+        def wait_for(js, tries=100, gap=200):
             for _ in range(tries):
                 pg.wait_for_timeout(gap)
                 if pg.evaluate(js):
                     return True
             return False
 
-        check('канал Realtime открылся', wait_for('window.__rtState() === 1'),
+        # Подключение идёт через интернет и иногда не успевает с первого раза.
+        # Одна повторная попытка убирает мигание проверки, не пряча настоящую поломку:
+        # если Realtime сломан, не поможет и десять попыток.
+        opened = wait_for('window.__rtState() === 1', tries=60)
+        if not opened:
+            pg.evaluate('RT.ws = null; rtConnect();')
+            opened = wait_for('window.__rtState() === 1', tries=60)
+        check('канал Realtime открылся', opened,
               f'readyState={pg.evaluate("window.__rtState()")}')
         check('подписка принята сервером', wait_for('RT.joined'))
 

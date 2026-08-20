@@ -498,6 +498,30 @@ details.cheat b{color:var(--ink)}
 .ovrgrid .nlab{flex-direction:column;align-items:stretch;gap:4px}
 .ovrgrid .nlab i{font-style:normal;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em}
 .ovrgrid .hin{width:100%}
+/* Шкала нагрузки в профиле. Полоса упирается в 150%: при 300% она перестаёт
+   что-либо показывать, а цвет и подпись всё равно скажут главное. */
+.loadbar{position:relative;height:34px;border-radius:11px;background:var(--card-2);
+  border:1px solid var(--line);overflow:hidden;margin-top:10px}
+.loadbar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink-3);
+  transition:width .35s ease-out}
+.loadbar span{position:absolute;inset:0;display:grid;place-items:center;font-size:12.5px;
+  font-family:var(--mono);color:var(--ink)}
+.loadbar.good i{background:#4FB47755} .loadbar.good{border-color:var(--ok)}
+.loadbar.low  i{background:#E0A45B44} .loadbar.low{border-color:var(--acc)}
+.loadbar.high i{background:#E2564B44} .loadbar.high{border-color:var(--bad)}
+.mylist{margin-top:10px;display:flex;flex-direction:column;gap:5px}
+.myrow{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:11px;
+  padding:8px 11px;font-size:13.5px}
+.myrow i{font-style:normal;font-family:var(--mono);font-size:12px;color:var(--ink-3);
+  flex:0 0 52px}
+.myrow b{font-family:var(--mono);font-size:14px;flex:0 0 58px}
+.myrow span{color:var(--ink-3);font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.myrow.off b{color:var(--bad)}
+.myday{display:flex;align-items:baseline;gap:8px;margin:10px 0 2px;font-size:12px;
+  color:var(--ink-2);text-transform:uppercase;letter-spacing:.08em}
+.myday em{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink-3);
+  text-transform:none;letter-spacing:0}
+.myday:first-child{margin-top:0}
 .addrow{display:flex;gap:8px;margin-top:8px}
 .addrow .nmin{flex:1;min-width:0}
 .addrow .chip{flex:0 0 auto}
@@ -3018,21 +3042,116 @@ function renderProfile(){
         <span>${ROLE_NAME[acc_.role||'staff']} · ${acc_.cat||1}-я категория${
           acc_.venue?' · '+acc_.venue:''}</span></div>
     </div>
-    <div class="subhead">Работа</div>
-    <div class="stats">
-      <div><b>—</b><span>СМЕН ЗА МЕСЯЦ</span></div>
-      <div><b>—</b><span>ОПОЗДАНИЙ</span></div>
-      <div><b>—</b><span>ЧАСОВ</span></div>
-    </div>
-    <div class="note">Смены, опоздания, часы и зарплата появятся вместе с графиком
-      и системой учёта прихода. Статистика по тестам — в разделе «Обучение».</div>
+    <div class="subhead">Мои смены</div>
+    <div id="profShifts"><div class="note">Загружаю график…</div></div>
     <div class="subhead">Вход на другом устройстве</div>
     <div id="qrBox"></div>
     <div class="row"><button class="ghostbtn" id="profLogout">Выйти из аккаунта</button></div>`;
   const lo = $('#profLogout'); if(lo) lo.onclick = logout;
   renderQR();
   show('profile');
+  renderMyShifts();
 }
+
+/* ---------- мои смены в профиле ----------
+   Заказчик: сотрудник видит свои смены за период, а по переключению линзы — все смены
+   подразделения. Плюс личная норма часов и цветная шкала: 100% идеал, меньше —
+   недоработка, больше — переработка.
+
+   Данные те же, что у экрана графика, поэтому если он ещё не открывался — подгружаем
+   молча. Своя карточка ищется по staff.user_id: пока в «Сотрудниках» не нажали «это я»,
+   приложение не знает, кто вы в графике, и честно об этом пишет. */
+let PROF_ALL = false;
+
+async function renderMyShifts(){
+  const box = $('#profShifts'); if(!box) return;
+  if(!authOn() || !AUTH){
+    box.innerHTML = '<div class="note">Смены доступны сотрудникам с аккаунтом.</div>';
+    return;
+  }
+  try{
+    await schBoot();
+    if(!SCH.shifts.length || !SCH.period) await schLoad();
+  }catch(e){
+    box.innerHTML = '<div class="note">Нет связи с сервером — смены не загрузились.</div>';
+    return;
+  }
+  const me = schMe();
+  if(!me){
+    box.innerHTML = `<div class="note">Ваша учётка ещё не привязана к карточке сотрудника.
+      Откройте «График → Сотрудники» и нажмите «это я» на своей строке.</div>`;
+    return;
+  }
+  if(!SCH.period){ box.innerHTML = '<div class="note">Периодов графика пока нет.</div>'; return; }
+
+  const layer = schLayerShow();
+  const list = SCH.shifts.filter(s=>s.layer===layer);
+  const mine = list.filter(s=>s.staff_id===me.id);
+  const hrs  = mine.reduce((a,s)=>a+(s.hours||0), 0);
+  const work = mine.filter(s=>s.kind==='work');
+  const off  = mine.filter(s=>s.kind==='off');
+  // Личная норма важнее общей: у людей разная занятость.
+  const norm = +(me.hours_norm || (SCH.settings||{}).hours_norm || 0);
+  const pct  = norm ? Math.round(hrs / norm * 100) : 0;
+  // Полоса упирается в 150%: при 300% шкала перестаёт что-либо показывать.
+  const w = norm ? Math.min(100, Math.round(pct / 1.5)) : 0;
+  const tone = !norm ? '' : pct < 90 ? 'low' : pct > 110 ? 'high' : 'good';
+
+  // В режиме «всё подразделение» строк за полумесяц под сотню, и сплошным списком
+  // они нечитаемы — разбиваем по дням заголовком.
+  let lastDay = '';
+  const rows = (PROF_ALL ? list : mine).slice()
+    .sort((a,b)=> a.day < b.day ? -1 : a.day > b.day ? 1
+                : ((SCH.staff.findIndex(x=>x.id===a.staff_id)) -
+                   (SCH.staff.findIndex(x=>x.id===b.staff_id))))
+    .map(s=>{
+      const d = dfrom(s.day);
+      const who = PROF_ALL ? (SCH.staff.find(x=>x.id===s.staff_id)||{}).name : '';
+      const away = s.at_venue_id ? (SCH.venues.find(v=>v.id===s.at_venue_id)||{}).name : '';
+      let head = '';
+      if(PROF_ALL && s.day !== lastDay){
+        lastDay = s.day;
+        const n = list.filter(x=>x.day===s.day && x.kind==='work' && !x.at_venue_id).length;
+        head = `<div class="myday">${WD[d.getDay()]}, ${d.getDate()} ${MON[d.getMonth()]}
+          <em>${plural(n,'бармен','бармена','барменов')}</em></div>`;
+      }
+      return head + `<div class="myrow${s.kind==='off'?' off':''}">
+        ${PROF_ALL ? '' : `<i>${WD[d.getDay()]} ${d.getDate()}</i>`}
+        <b>${shiftLabel(s)}</b>
+        <span>${who ? shortName(who) + ' · ' : ''}${s.kind==='off' ? 'выходной'
+              : (away ? away : plural(s.hours||0,'час','часа','часов'))}</span></div>`;
+    }).join('');
+
+  box.innerHTML = `
+    <div class="note" style="margin-bottom:8px">${periodTitle(SCH.period)} ·
+      ${ST_NAME[SCH.period.state]||''}${layer==='wish'?' (показаны пожелания)':''}</div>
+    <div class="stats">
+      <div><b>${work.length}</b><span>СМЕН</span></div>
+      <div><b>${hrs}</b><span>ЧАСОВ</span></div>
+      <div><b>${off.length}</b><span>ВЫХОДНЫХ</span></div>
+    </div>
+    ${norm ? `<div class="loadbar ${tone}">
+        <i style="width:${w}%"></i>
+        <span>${pct}% от нормы ${norm} ч</span>
+      </div>
+      <div class="note">${pct < 90 ? 'Недоработка по норме.'
+        : pct > 110 ? 'Переработка по норме.' : 'В норме.'}</div>`
+      : `<div class="note">Норма часов не задана. Её ставит старший на экране
+         «Сотрудники» или общую — в «Настройках графика».</div>`}
+    <div class="chips-row" style="margin-top:10px">
+      <button class="chip${PROF_ALL?'':' on'}" data-mine="1">мои смены</button>
+      <button class="chip${PROF_ALL?' on':''}" data-mine="0">всё подразделение</button>
+    </div>
+    <div class="mylist">${rows || '<div class="note">В этом периоде смен нет.</div>'}</div>`;
+}
+
+// Слушаем экран, а не #profShifts: тот создаётся только при отрисовке профиля,
+// и на момент загрузки скрипта его ещё нет.
+$('#profile').addEventListener('click', e=>{
+  const b = e.target.closest('[data-mine]'); if(!b) return;
+  PROF_ALL = b.dataset.mine === '0';
+  renderMyShifts();
+});
 
 /* ---------- роадмап ---------- */
 /* Виден только владельцу: это план развития, а не справка для смены.
@@ -3081,8 +3200,8 @@ const ROADMAP = [
   {gr:'Подразделение и ФОТ', st:'plan', t:'Карта точек для директора', d:'просмотр других точек картой, а не списком'},
 
   // --- Профиль
-  {gr:'Профиль', st:'work', t:'Мой график', d:'в профиле свои смены, по переключению линзы — все смены подразделения'},
-  {gr:'Профиль', st:'work', t:'Норма часов и нагрузка', d:'у каждого бармена своя норма; цветная шкала показывает 100% как идеал, меньше — недоработка, больше — переработка'},
+  {gr:'Профиль', st:'done', t:'Мой график', d:'свои смены за период списком, по переключению линзы — все смены подразделения с разбивкой по дням и счётчиком барменов'},
+  {gr:'Профиль', st:'done', t:'Норма часов и нагрузка', d:'личная норма важнее общей; цветная шкала: 90–110% — в норме, меньше — недоработка, больше — переработка. Норму ставит старший'},
   {gr:'Профиль', st:'plan', t:'Статистика по работе', d:'смены, опоздания, часы и зарплата за период'},
   // --- Достижения и рейтинг
   {gr:'Достижения и рейтинг', st:'plan', t:'Система достижений', d:'каркас: достижение = условие + значок + вес в рейтинге. Выдаётся автоматически по событиям (сдал аттестацию, прошёл хардкор, закрыл блок теории, отработал стаж). Хранится в общей базе, а не только на устройстве — иначе рейтинг не собрать'},
