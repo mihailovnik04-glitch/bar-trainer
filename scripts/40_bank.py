@@ -14,6 +14,7 @@ extras = json.load(open(f'{W}/data/extras.json', encoding='utf-8'))
 import sys
 sys.path.insert(0, f'{W}/scripts')
 from config import CHAPTERS, MNEMO, FAMILY_NOTE, TECH_FIX
+from morph import how_many, unit_word, genitive
 
 SIMPLE = re.compile(r'^(\d+[.,]?\d*)\s*(мл|гр)\.?$')
 WITHGR = re.compile(r'(\d+[.,]?\d*)\s*гр')
@@ -155,20 +156,26 @@ def steps_for(v):
     if v <= 60: return [10, 15, 20, 30]
     return [20, 25, 30, 40]
 
-def distractors(v, unit, rnd, fine=False):
-    """3 неверных варианта. Обычно отклонение 10–40, а для веса украшений (fine)
-    шаг 1–3 грамма: розмарин 4 гр против варианта 24 гр — не вопрос, а подарок."""
+# Шаг неверных вариантов у украшений задан по виду украшения — правила лежат
+# в config.py, потому что по ним же 99_verify проверяет готовый банк.
+from config import gar_steps
+
+def distractors(v, unit, rnd, fine=False, steps=None):
+    """3 неверных варианта. Обычно отклонение 10–40; у веса украшений шаг свой,
+    по виду украшения (см. gar_steps): розмарин 4 гр против варианта 24 гр —
+    не вопрос, а подарок."""
     out = []
     tries = 0
-    steps = [1, 2, 3] if fine else None
+    if steps is None:
+        steps = [1, 2, 3] if fine else None
     while len(out) < 3 and tries < 400:
         tries += 1
         d = rnd.choice(steps or steps_for(v)) * rnd.choice([-1, 1])
         cand = round(v + d, 1)
         if cand <= 0: continue
-        if not fine and v >= 100: cand = round(cand / 5) * 5
+        if steps is None and not fine and v >= 100: cand = round(cand / 5) * 5
         if cand == v or cand in out: continue
-        if not fine and abs(cand - v) < 10: continue
+        if steps is None and not fine and abs(cand - v) < 10: continue
         out.append(cand)
     k = 0
     while len(out) < 3:                  # веса 1–2 гр не дают трёх вариантов вниз
@@ -228,12 +235,54 @@ def tag_of(d):
         parts.append(d['total'])
     return ' · '.join(parts)
 
+# ------------------------------------------------- сеты шотов
+# «Сет из 4 шотов» написано в первой строке способа приготовления — единственное место,
+# где количество шотов вообще указано. Нужно для двух вещей: понять, что это шоты
+# (б/А сет «Нулевой пациент 0,0» лежит на листе «Лимонады и БА», и в фильтре «Шотики»
+# его не было), и посчитать украшение на один шот против всего сета.
+WORD_N = {'двух': 2, 'трех': 3, 'трёх': 3, 'четырех': 4, 'четырёх': 4,
+          'пяти': 5, 'шести': 6, 'восьми': 8}
+SHOT_RE = re.compile(r'сет\s+из\s+(\d+|[а-яё]+)\s+([а-яё\s]*?)шот', re.I)
+# «пара №1», «пара №2» — строки-разделители внутри «В Питере — пить!»: сет собран
+# из трёх пар, и у каждой пары свой состав и своё украшение.
+PART_RE = re.compile(r'^пара\s*№\s*\d+$', re.I)
+
+def shots_of(d):
+    """Сколько шотов в сете. 0 — если это не сет."""
+    m = SHOT_RE.search(d.get('method') or '')
+    if not m:
+        return 0
+    raw = m.group(1)
+    n = int(raw) if raw.isdigit() else WORD_N.get(raw.lower().replace('ё', 'е'), 0)
+    if 'пар' in (m.group(2) or '').lower():   # «сет из трёх ПАР шотов» — это шесть штук
+        n *= 2
+    return n
+
+def parts_of(d):
+    """Сколько частей («пара №N») внутри сета. 0 — сет неделимый."""
+    return sum(1 for n, _ in d['ing'] if PART_RE.match(n.strip()))
+
+# Вид напитка в фильтрах тренажёра — не всегда лист исходника: сет шотов остаётся
+# шотами, на каком бы листе он ни лежал. В справочнике лист настоящий, там порядок
+# «как в Excel», и трогать его нельзя.
+def kind_sheet(d):
+    if d['sheet'] == 'Шотики':
+        return 'Шотики'
+    if shots_of(d) or str(d.get('glass') or '').startswith('Шоты'):
+        return 'Шотики'
+    return d['sheet']
+
 for d in drinks:
     if 'Безо льда' in d['name']:
         continue
     nm = pretty(d['name'])
     tg = tag_of(d)
-    sh = d['sheet']
+    sh = kind_sheet(d)
+    nshots = shots_of(d)
+    nparts = parts_of(d)
+    # Сколько шотов приходится на одну часть сета: у «В Питере — пить!» это пара,
+    # то есть 2 шота, и украшение в её строке относится именно к паре, а не ко всем шести.
+    part_shots = (nshots // nparts) if (nparts and nshots and nshots % nparts == 0) else 0
     im = thumb(d['photos'][0] if d['photos'] else '')
     seen = {}
     for n, a in d['ing']:
@@ -243,36 +292,64 @@ for d in drinks:
     # такие строки спрашиваем раздельно и обязательно уточняем, о чём речь.
     both = {clean_gar(n).lower() for n, _ in d['ing'] if 'укр' in n.lower()} &            {n.strip().lower() for n, _ in d['ing'] if 'укр' not in n.lower()}
 
-    def ask(n, a, is_gar):
+    def pair(v, unit, sk, q, cat, hint='', img=None, steps=None, fine=False):
+        """Один и тот же факт двумя способами: точный ввод и выбор из четырёх.
+        Раньше кидали монетку 60/40, и половина граммовок точным вводом не спрашивалась
+        вовсе — заказчик просил, чтобы спрашивалось всё и во всех комбинациях.
+        В одну сессию оба не попадут: dedupe схлопывает их по общему sk."""
+        kw = dict(cat=cat, drink=nm, tag=tg, sh=sh, q=q, hint=hint,
+                  img=im if img is None else img, sk=sk)
+        add(t='num', unit=unit, a=v, **kw)
+        opts = distractors(v, unit, rnd, fine=fine, steps=steps) + [v]
+        rnd.shuffle(opts)
+        add(t='choice', opts=[f'{fmtnum(o)} {unit}' for o in opts], ai=opts.index(v), **kw)
+
+    def ask(n, a, is_gar, part=''):
         p = parse_amount(a)
         if not p: return
         v, unit, hint = p
         label = clean_gar(n)
         dual = label.lower() in both
+        head = how_many(unit, label)
+        # Сколько шотов покрывает эта строка: у делимого сета — своя часть, иначе весь сет
+        cover = part_shots if (part and part_shots) else nshots
+        cover_txt = (f'{part.replace("пара", "пары")} ({cover} шота)' if part and part_shots
+                     else f'всего сета из {cover} шотов')
         if is_gar:
-            cat = 'garnish'
-            title = gar_label(n, a)
-            q = (f'Сколько «{title}» идёт ТОЛЬКО на украшение?' if dual
-                 else f'Сколько «{title}» идёт на украшение?')
-            hint = ''            # «указано как 4 шт - 8 гр» просили убрать
-        else:
-            cat = 'grams'
-            q = (f'Сколько «{label}» идёт в состав, не считая украшения?' if dual
-                 else f'Сколько «{label}»?')
-        kw = dict(cat=cat, drink=nm, tag=tg, sh=sh, q=q, hint=hint, img=im,
-                  sk=f'{nm}|{label}|{"g" if is_gar else "i"}')
-        # 60% — ввод точного значения, 40% — выбор из четырёх (заказчик просил больше выбора)
-        if rnd.random() < 0.40:
-            opts = distractors(v, unit, rnd, fine=(is_gar and unit == 'гр' and v <= 30)) + [v]
-            rnd.shuffle(opts)
-            add(t='choice', opts=[f'{fmtnum(o)} {unit}' for o in opts], ai=opts.index(v), **kw)
-        else:
-            add(t='num', unit=unit, a=v, **kw)
+            # Форму нарезки и количество штук из вопроса про вес убрали (просьба 20.08.2026):
+            # «сколько граммов лимона» — вопрос, «сколько граммов Лимон · 2 вейджа» — ответ.
+            hint = ''            # «указано как 4 шт - 8 гр» тоже просили убрать
+            if cover:
+                # У сета вес украшения в таблице указан на весь сет (а у «В Питере» —
+                # на свою пару). Молча спрашивать «сколько» — значит спрашивать неизвестно
+                # что, поэтому охват пишем всегда явно.
+                q = f'{head} идёт на украшение {cover_txt}?'
+            else:
+                q = (f'{head} идёт ТОЛЬКО на украшение?' if dual
+                     else f'{head} идёт на украшение?')
+            pair(v, unit, f'{nm}|{label}|g', q, 'garnish', hint=hint,
+                 steps=gar_steps(label, v), fine=(unit == 'гр' and v <= 30))
+            # ...и второй вопрос — на один шот, но только когда деление даёт величину,
+            # которую действительно отмеряют. 2 гр мяты на 4 шота = 0,5 гр в шот — так
+            # никто не работает, такой вопрос не задаём.
+            if cover:
+                per = v / cover
+                if per >= 1 and float(per).is_integer():
+                    pair(per, unit, f'{nm}|{label}|gone',
+                         f'{head} идёт на украшение ОДНОГО шота?', 'garnish',
+                         steps=gar_steps(label, per), fine=(unit == 'гр' and per <= 30))
+            return
+        q = (f'{head} идёт в состав, не считая украшения?' if dual else f'{head}?')
+        pair(v, unit, f'{nm}|{label}|i', q, 'grams', hint=hint)
 
+    part = ''
     for n, a in d['ing']:
+        if PART_RE.match(n.strip()):     # строка-разделитель, а не ингредиент
+            part = n.strip().lower()
+            continue
         if seen[n] > 1:      # неоднозначные повторы (напр. водка в двух парах шотов)
             continue
-        ask(n, a, 'укр' in n.lower())
+        ask(n, a, 'укр' in n.lower(), part)
 
     # --- суммарный вес продукта, который идёт и внутрь, и на украшение
     for prod in sorted(both):
@@ -284,9 +361,30 @@ for d in drinks:
         if len(vals) != 2 or vals[0][1] != vals[1][1]: continue
         total_v, unit = vals[0][0] + vals[1][0], vals[0][1]
         label = next(clean_gar(n) for n, _ in d['ing'] if clean_gar(n).lower() == prod)
-        add(t='num', cat='grams', drink=nm, tag=tg, sh=sh, img=im, unit=unit, a=total_v,
-            q=f'Сколько «{label}» уходит на напиток ВСЕГО — и в состав, и на украшение?',
-            hint='', sk=f'{nm}|{label}|sum')
+        pair(total_v, unit, f'{nm}|{label}|sum',
+             f'{how_many(unit, label)} уходит на напиток ВСЕГО — и в состав, и на украшение?',
+             'grams')
+
+    # --- сколько граммов украшений уходит на напиток целиком
+    # Заказчик просил это для «В Питере — пить!», но правило общее: где украшений
+    # больше одного и все они в граммах, сумма — такой же проверяемый факт.
+    gar_g = [parse_amount(a) for n, a in d['ing'] if 'укр' in n.lower()]
+    gar_g = [p for p in gar_g if p and p[1] == 'гр']
+    if len(gar_g) >= 2:
+        tot_g = sum(p[0] for p in gar_g)
+        q_all = (f'Сколько граммов украшений уходит на весь сет из {nshots} шотов?'
+                 if nshots else 'Сколько граммов украшений уходит на напиток целиком?')
+        pair(tot_g, 'гр', f'{nm}|украшения|garsum', q_all, 'garnish')
+
+    # --- сколько жидкости наливается всего
+    # У сетов шотов состав расписан по парам, и «выход» ощущается как что-то отдельное
+    # от суммы. Спрашиваем прямо: сколько всего налито.
+    liq_all = [parse_amount(a) for n, a in d['ing'] if 'укр' not in n.lower()]
+    liq_all = [p for p in liq_all if p and p[1] == 'мл']
+    if nshots and len(liq_all) >= 3:
+        pair(sum(p[0] for p in liq_all), 'мл', f'{nm}|жидкость|liqsum',
+             f'Сколько миллилитров жидкости наливается на весь сет из {nshots} шотов?',
+             'grams')
 
     # --- посуда (немного, только характерная). Картинку не показываем:
     # по фото бокал угадывается без знания рецептуры.
@@ -294,10 +392,11 @@ for d in drinks:
     if gl not in GLASS_SKIP and gl in GLASS_RARE:
         add(t='glass', cat='glass', drink=nm, tag=tg, sh=sh, img='',
             q='В какой посуде подаётся напиток?', ans=gl, sk=f'{nm}|glass')
-    # --- чем украшается
+    # --- чем украшается. Картинку тут не показываем: на фото украшение видно целиком,
+    # и вопрос превращается в «посмотри на снимок» (просьба 20.08.2026).
     gars = [gar_label(n, a) for n, a in d['ing'] if 'укр' in n.lower()]
     if len(gars) >= 2:
-        add(t='garset', cat='garnish', drink=nm, tag=tg, sh=sh, img=im,
+        add(t='garset', cat='garnish', drink=nm, tag=tg, sh=sh, img='',
             q='Чем украшается напиток?', ans=' + '.join(gars), sk=f'{nm}|garset')
 
 # Правило нарезки бамбука лежит на листе «ПФ» отдельной строкой-инструкцией.
@@ -338,7 +437,7 @@ piece_n = 0
 for d in drinks:
     if 'Безо льда' in d['name']:
         continue
-    nm, tg, sh = pretty(d['name']), tag_of(d), d['sheet']
+    nm, tg, sh = pretty(d['name']), tag_of(d), kind_sheet(d)
     im = thumb(d['photos'][0] if d['photos'] else '')
     seen_g = {}
     for n, a in d['ing']:
@@ -366,7 +465,8 @@ for d in drinks:
             hint=(BAMBOO_RULE if 'бамбук' in label.lower() else ''),
             # В самом вопросе только название: форма вида «2 × две половинки»
             # выдавала бы ответ. Правило нарезки уходит в подсказку.
-            q=f'Сколько штук «{label}» идёт на украшение?',
+            q=(f'{how_many("шт", label)} идёт на украшение всего сета из {shots_of(d)} шотов?'
+               if shots_of(d) else f'{how_many("шт", label)} идёт на украшение?'),
             opts=opts, ai=opts.index(cnt), sk=f'{nm}|{label}|pcs')
         piece_n += 1
 
@@ -409,7 +509,7 @@ for d in drinks:
         continue                                  # мало строк или повторы названий
     if abs(sum(r[2] for r in liq) - out) > 0.01:
         continue                                  # выход не сходится — пропуск не вычислить
-    nm, tg, sh = pretty(d['name']), tag_of(d), d['sheet']
+    nm, tg, sh = pretty(d['name']), tag_of(d), kind_sheet(d)
     im = thumb(d['photos'][0] if d['photos'] else '')
 
     # 1. одна стёртая строка. Раньше брали одну случайную на напиток — теперь до трёх разных,
@@ -444,7 +544,11 @@ for d in drinks:
 # ------------------------------------------------- метод приготовления (редко)
 # CLAUDE.md раньше запрещал такие вопросы; заказчик 20.08.2026 попросил добавить их,
 # но именно редко — один вопрос на каждый пятый напиток.
-TECHS = ['Билд', 'Шейк', 'Стир', 'Блендер', 'Питчер']
+TECHS = ['Билд', 'Шейк', 'Стир', 'Блендер', 'Питчер', 'Слоями']
+# Билд и Стир в одном наборе вариантов — ловушка, а не вопрос: чтобы охладить билд,
+# бармен фактически стирует, и выбрать «правильный» из этой пары нельзя (просьба 20.08.2026).
+# Стир остаётся только там, где он прямо написан в исходнике, и никогда не соседствует с билдом.
+CONFUSING = {('Билд', 'Стир'), ('Стир', 'Билд')}
 method_n = 0
 for i, d in enumerate(drinks):
     if 'Безо льда' in d['name'] or i % 5:
@@ -456,11 +560,21 @@ for i, d in enumerate(drinks):
     tech = TECH_FIX.get(d['name'], d['tech'])
     if tech not in TECHS:
         continue
-    others = [t for t in TECHS if t != tech]
+    # Билд и Стир не должны оказаться в одном наборе НИ ПРИ КАКОМ правильном ответе:
+    # даже когда верен «Питчер», пара «Билд / Стир» среди вариантов сбивает с толку.
+    others, picked = [t for t in TECHS if t != tech], []
     rnd.shuffle(others)
-    opts = others[:3] + [tech]
+    for t in others:
+        if CONFUSING & {(t, x) for x in picked + [tech]}:
+            continue
+        picked.append(t)
+        if len(picked) == 3:
+            break
+    if len(picked) < 3:
+        continue
+    opts = picked + [tech]
     rnd.shuffle(opts)
-    add(t='choice', cat='method', drink=nm, tag=tag_of(d), sh=d['sheet'],
+    add(t='choice', cat='method', drink=nm, tag=tag_of(d), sh=kind_sheet(d),
         q='Каким способом готовится напиток?', hint='',
         img=thumb(d['photos'][0] if d['photos'] else ''),
         opts=opts, ai=opts.index(tech), sk=f'{nm}|tech')
@@ -488,9 +602,10 @@ for bi, r0 in enumerate(rows_):
         add(t='num', cat='garnish', drink='Эталон украшения', tag='эталон', sh='Украшения',
             q=f'Сколько весит: {label}?', hint='', img=im, unit=unit, a=v,
             sk=f'эталон|{label}|num')
-        # Заказчик просил больше вопросов про вес ягод и украшений: тот же эталон
-        # ещё раз в виде выбора, с шагом в 1–3 грамма.
-        opts = distractors(v, unit, rnd, fine=True) + [v]
+        # Тот же эталон ещё раз выбором, с шагом по виду украшения: у вейджа он пятёрками,
+        # у зелени — граммами, иначе неверные варианты видно не глядя.
+        opts = distractors(v, unit, rnd, fine=True,
+                           steps=gar_steps(label.partition(' - ')[0], v)) + [v]
         rnd.shuffle(opts)
         add(t='choice', cat='garnish', drink='Эталон украшения', tag='эталон', sh='Украшения',
             q=f'Какой вес у: {label}?', hint='', img=im,
@@ -523,22 +638,24 @@ for q in bank:
 # устроены так же, как по коктейлям: спрашиваем только измеримое — граммовки, дозы,
 # температуру, время экстракции и кнопку пролива, — и только то, что написано в файле.
 def ask_amount(cat, sheet, who, label, amount, im='', extra_sk=''):
-    """Один вопрос про величину: ввод числа или выбор из четырёх."""
+    """Величина двумя способами сразу: точный ввод и выбор из четырёх.
+    Общий sk у обоих — dedupe не пустит их в одну сессию, но спросить может любой."""
     p = parse_amount(amount)
     if not p:
         return 0
     v, unit, hint = p
     fine = unit == 'гр' and v <= 30
+    q = f'{how_many(unit, label)}?'
     kw = dict(cat=cat, drink=who, tag='', sh=sheet, img=im, hint=hint,
               sk=f'{who}|{label}|{extra_sk or cat}')
-    if rnd.random() < 0.40:
-        opts = distractors(v, unit, rnd, fine=fine) + [v]
-        rnd.shuffle(opts)
-        add(t='choice', q=f'Сколько «{label}»?',
-            opts=[f'{fmtnum(o)} {unit}' for o in opts], ai=opts.index(v), **kw)
-    else:
-        add(t='num', q=f'Сколько «{label}»?', unit=unit, a=v, **kw)
-    return 1
+    add(t='num', q=q, unit=unit, a=v, **kw)
+    # gar_steps здесь не применяем: классы «вейдж/ягода/зелень» относятся к украшениям,
+    # а тут кофе, чай и заготовки. Иначе «Конфитюр Лимон» ловил бы шаг цитрусов
+    # и получал варианты 100/105/95 мл — вопрос без вопроса.
+    opts = distractors(v, unit, rnd, fine=fine) + [v]
+    rnd.shuffle(opts)
+    add(t='choice', q=q, opts=[f'{fmtnum(o)} {unit}' for o in opts], ai=opts.index(v), **kw)
+    return 2
 
 extra_n = 0
 
@@ -577,8 +694,16 @@ for c in extras['coffee']:
         extra_n += 1
 
 # --- чай: дозировка, температура, количество ложек, состав крафтовых смесей
-TEMPS = sorted({t['temp'] for t in extras['tea']['simple'] if t['temp']})
-for t in extras['tea']['simple']:
+# «Таежный Микс» и «Фруктовый Пунш» есть на листе «Чай» дважды: простой засыпкой
+# (12 и 15 гр) и крафтовой смесью. В баре готовят только крафт, поэтому простые версии
+# из тренажёра и справочника убраны (просьба заказчика 20.08.2026). В исходнике они
+# остаются как есть — данные мы не правим.
+TEA_SKIP = {'таежный микс', 'фруктовый пунш'}
+tea_simple = [t for t in extras['tea']['simple']
+              if t['name'].strip().lower().replace('ё', 'е') not in TEA_SKIP]
+
+TEMPS = sorted({t['temp'] for t in tea_simple if t['temp']})
+for t in tea_simple:
     nm = t['name'].strip()
     extra_n += ask_amount('tea', 'Чай', nm, 'заварка на порцию', t['dose'])
     if t['temp'] and len(TEMPS) >= 2:
@@ -748,7 +873,7 @@ for c in extras['coffee']:
     chips = [x for x in ('эспрессо-машина', c['extract'], c['milk']) if x]
     extra_card(c['name'], 'Кофе', c['ing'], c['total'], c['method'], chips,
                ('Кнопка пролива: ' + c['button']) if c['button'] else '')
-for t in extras['tea']['simple']:
+for t in tea_simple:
     # заказчик просил: где доза меряется ложками, писать и количество ложек
     ing = [['Заварка', t['dose']]]
     if t['spoons'].isdigit():

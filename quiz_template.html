@@ -20,6 +20,10 @@ html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
   font-size:16px;line-height:1.4;overscroll-behavior:none;
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+/* touch-action:manipulation убирает у Safari/Chrome ожидание второго касания:
+   без него быстрый двойной тап по цифре зумит страницу, а первый тап приходит
+   с задержкой 300 мс — на паде это ощущалось как «кнопка не нажалась». */
+button,label,summary,.opt,.chip,.mode,.row a{touch-action:manipulation}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .wrap{max-width:560px;margin:0 auto;padding:18px 16px 28px;min-height:100%;display:flex;flex-direction:column}
 /* Экраны — flex-элементы колонки, а у них min-width:auto: горизонтальная лента чипсов
@@ -122,6 +126,41 @@ h1{font-size:27px;line-height:1.1;letter-spacing:-.5px;margin:8px 0 6px;font-wei
 .fb.ok{background:#4FB4771f;color:#9EE0B8}
 .fb.bad{background:#E2564B1f;color:#F3A8A2}
 .fb b{font-family:var(--mono)}
+/* Разбор: вердикт, свой ответ против правильного, состав целиком, выход. */
+.fb .verd{font-family:var(--sans);font-weight:700;font-size:15px}
+.fb .verd .vnote{font-weight:400;opacity:.55;font-size:12px;margin-left:6px}
+.fb .cmp{display:flex;gap:8px;margin-top:9px;flex-wrap:wrap}
+.fb .cmp .c{flex:1 1 130px;background:#0003;border-radius:11px;padding:7px 10px;
+  border-left:3px solid transparent}
+.fb .cmp .c span{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:2px}
+.fb .cmp .c b{font-size:16px;line-height:1.25;word-break:break-word}
+.fb .cmp .c.ok{border-left-color:var(--ok);color:#9EE0B8}
+.fb .cmp .c.bad{border-left-color:var(--bad);color:#F3A8A2;text-decoration:line-through;
+  text-decoration-color:#E2564B99}
+.fb .fbcard{display:flex;align-items:center;gap:10px;margin-top:10px;background:#0003;
+  border-radius:11px;padding:7px 10px;cursor:pointer}
+.fb .fbcard img{width:38px;height:38px;border-radius:9px;object-fit:cover;flex:0 0 38px}
+.fb .fbcard .t{min-width:0;flex:1}
+.fb .fbcard .t b{display:block;font-family:var(--sans);font-size:14px;color:var(--ink)}
+.fb .fbcard .t span{font-size:11.5px;color:var(--ink-3)}
+.fb .fbcard i{font-style:normal;font-size:12px;color:var(--acc);white-space:nowrap}
+.fb .comp{display:grid;grid-template-columns:1fr auto;gap:1px 10px;margin-top:9px;
+  background:#0002;border-radius:11px;padding:8px 10px}
+.fb .comp dt{font-size:12.5px;color:var(--ink-2);line-height:1.5;min-width:0}
+.fb .comp dd{margin:0;font-family:var(--mono);font-size:12.5px;color:var(--ink);
+  text-align:right;line-height:1.5}
+.fb .comp dt.hd{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);
+  border-top:1px solid var(--line);margin-top:6px;padding-top:6px}
+.fb .comp dd.hd{border-top:1px solid var(--line);margin-top:6px;padding-top:6px}
+.fb .comp dt.g{color:var(--ink-3)}
+.fb .comp dd.g{color:var(--acc)}
+.fb .fbtot{display:flex;justify-content:space-between;margin-top:9px;padding-top:8px;
+  border-top:1px solid #ffffff14;font-size:12.5px;color:var(--ink-2)}
+.fb .fbtot b{font-size:14px;color:var(--ink)}
+/* Шапка вопроса кликабельна только после ответа: до ответа это была бы подсказка. */
+.q .drink.open{cursor:pointer}
+.q .drink.open b::after{content:' ›';color:var(--acc)}
 .pill{display:inline-block;font-family:var(--mono);background:#0003;border-radius:8px;padding:2px 7px;margin-left:4px}
 
 /* результат */
@@ -274,7 +313,12 @@ details.cheat b{color:var(--ink)}
 .star.off{font-size:15px}
 .star.off.on{color:var(--bad)}
 .rrow .h .star{background:transparent;width:28px;height:28px;flex:0 0 28px;font-size:15px}
-.q .drink .star{margin-left:auto}
+/* Две звезды: слева — коктейль целиком, справа — сам вопрос. Раньше была только
+   вторая, и человек, положивший в избранное коктейль, видел в вопросе пустую звезду
+   и решал, что избранное не сохранилось. */
+.q .drink .stars{margin-left:auto;display:flex;gap:6px;flex:none}
+.q .drink .stars .star{flex:0 0 30px;width:30px;height:30px;font-size:15px}
+.q .drink .stars .star:first-child{background:transparent;border:1px solid var(--line)}
 
 /* ---------- чипсы фильтров (виды напитков, темы вопросов) ---------- */
 .chips-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;
@@ -306,14 +350,18 @@ details.cheat b{color:var(--ink)}
 /* Ответ дан — клавиатура больше не нужна. Прячем её, иначе вердикт «Верно/Неверно»
    уезжает под нижний край экрана (проверяли на iPhone 12). */
 .numbox.answered .pad{display:none}
-/* Отклик на нажатие: на телефоне палец закрывает кнопку, и без вспышки непонятно,
-   засчиталось ли касание. Анимация короче времени между двумя нажатиями. */
-.pad button{position:relative;overflow:hidden}
-.pad button.hit{background:var(--acc);color:#17140F;transform:scale(.93)}
-.pad button.hit::after{content:'';position:absolute;inset:0;background:#fff;opacity:.35;
-  animation:flash .18s ease-out forwards}
-@keyframes flash{to{opacity:0}}
-.numbox .disp.hit{border-color:var(--acc)}
+/* Отклик на нажатие: на телефоне палец закрывает кнопку, и без отклика непонятно,
+   засчиталось ли касание. Раньше кнопка целиком заливалась акцентом — слишком резко.
+   Теперь короткая пульсация: сжатие и расходящееся кольцо, без смены цвета.
+   Вешается на pointerdown, поэтому не ждёт click и не запаздывает. */
+.pad button{position:relative}
+.pad button.hit{animation:pulse .26s cubic-bezier(.22,.9,.3,1)}
+@keyframes pulse{
+  0%  {transform:scale(.94); box-shadow:0 0 0 0 rgba(224,164,91,.45)}
+  55% {transform:scale(1.015);box-shadow:0 0 0 7px rgba(224,164,91,0)}
+  100%{transform:none;        box-shadow:0 0 0 0 rgba(224,164,91,0)}
+}
+.numbox .disp.hit{border-color:rgba(224,164,91,.55)}
 /* На компьютере число набирают с клавиатуры — экранные цифры только занимают место.
    Кнопка «Ответ» остаётся: ей же отвечает мышь. */
 /* базовое правило идёт до медиазапроса, иначе перебивает его при равной специфичности */
@@ -330,9 +378,14 @@ details.cheat b{color:var(--ink)}
 .pad button{background:var(--card-2);border:1px solid var(--line);border-radius:13px;
   padding:clamp(6px,1.15vh,14px) 0;font-family:var(--mono);font-size:clamp(16px,2vh,21px);
   transition:transform .12s,background .18s}
-.pad button:active{transform:scale(.93);background:var(--line)}
+.pad button:active{transform:scale(.96)}
 .pad button.act{background:var(--acc);color:#17140F;font-family:var(--sans);font-size:16px;font-weight:700}
 .pad button.sub{color:var(--ink-2);font-size:19px}
+/* Стрелки над «2» и «3»: ниже цифр по высоте, чтобы не отъедать место у пада. */
+.pad button.nav{padding:clamp(3px,.7vh,7px) 0;font-size:clamp(14px,1.7vh,18px);
+  color:var(--acc);background:transparent;border-color:transparent}
+.pad button.nav:active{background:var(--card-2)}
+@media (hover:hover) and (pointer:fine){ .pad button.nav, .pad>span{display:none} }
 .pad .quick{grid-column:1/-1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .pad .quick::-webkit-scrollbar{display:none}
 .pad .quick button{flex:0 0 auto;padding:9px 14px;font-size:15px;border-radius:11px;color:var(--ink-2)}
@@ -424,7 +477,8 @@ details.cheat b{color:var(--ink)}
 <div class="wrap">
   <div class="top hidden" id="top">
     <button class="back" id="back">‹</button>
-    <button class="back hidden" id="prev" title="Предыдущий вопрос">↶</button>
+    <button class="back hidden" id="prev" title="Предыдущий вопрос">‹‹</button>
+    <button class="back hidden" id="fwd" title="Следующий вопрос">››</button>
     <div class="bar"><i id="prog"></i></div>
     <div class="count" id="count"></div>
     <div class="hearts" id="hearts"></div>
@@ -564,6 +618,11 @@ details.cheat b{color:var(--ink)}
       <b>Пробная</b>
       <span>Тренировочный прогон: проходить можно сколько угодно раз, результат остаётся на устройстве.</span>
       <div class="tags"><i>75 вопросов</i><i>30:00</i></div>
+    </button>
+    <button class="mode" id="attFav">
+      <b>Пробная по избранному</b>
+      <span>Тот же формат, но только по коктейлям, ингредиентам и вопросам, отмеченным звездой.</span>
+      <div class="tags"><i id="attFavN">—</i><i>30:00</i></div>
     </button>
     <button class="mode ghost">
       <b>Назначенная <span style="color:var(--ink-3);font-size:12px">скоро</span></b>
@@ -713,6 +772,13 @@ let REF_SORT = store.refSort==='src' ? 'src' : 'ch';   // порядок спр�
 const fmt = v => Number.isInteger(v) ? String(v) : String(v).replace('.',',');
 const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0; [a[i],a[j]]=[a[j],a[i]];} return a; };
 const mmss = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+// Что человек ввёл на самом деле — нужно, чтобы в разборе показать его ответ
+// рядом с правильным, а не только правильный.
+function myAnswer(q){
+  if(q.t==='mfill') return PAD ? PAD.vals.slice() : [];
+  if(q.t==='num'||q.t==='fill') return PAD ? PAD.vals[0] : '';
+  return S ? S.pick : null;
+}
 const answerText = q =>
   q.t==='mfill' ? q.a.map(v=>fmt(v)).join(' · ')+' '+q.unit
 : (q.t==='num'||q.t==='fill') ? `${fmt(q.a)} ${q.unit}`
@@ -721,10 +787,14 @@ const qLabel = q => q.q.replace(/^Сколько\s+/,'').replace(/^весит:\s
    .replace(/\?$/,'').replace(/ идёт в украшение/,' · украшение')
    .replace(/^В какой посуде.*$/,'Посуда').replace(/^Чем украшается.*$/,'Набор украшений');
 
-function pickExam(){
+function pickExam(favOnly){
   // «впиши весь состав» — тоже ввод числа, только полей несколько
   const isNum = q => q.t==='num'||q.t==='fill'||q.t==='mfill';
-  const pool = BANK.filter(q=>playable(q) && (q.t!=='mfill' || q.a.length<=4));  // без простыней и выключенного
+  let pool = BANK.filter(q=>playable(q) && (q.t!=='mfill' || q.a.length<=4));  // без простыней и выключенного
+  // Аттестация по избранному: тот же формат и те же квоты, но пул сужен звёздами.
+  // Если избранного мало, квоты не наберутся — добор ниже возьмёт что есть,
+  // и аттестация будет короче 75 вопросов. Это честнее, чем разбавлять её чужими.
+  if(favOnly) pool = pool.filter(favQuestion);
   const by = c => pool.filter(q=>q.cat===c && isNum(q));
   const byc = c => pool.filter(q=>q.cat===c && !isNum(q));
   const take = (arr,n) => shuffle(arr.slice()).slice(0,n);
@@ -749,6 +819,9 @@ function pickExam(){
 
 /* ---------- состояние ---------- */
 let S = null, tick = null;
+// «Пробная» и «Пробная по избранному» — один и тот же формат: таймер, скрытый выход,
+// зачёт по числу ошибок. Отличается только пул, поэтому проверка режима одна на всех.
+const isExam = () => !!S && (S.mode==='exam' || S.mode==='examfav');
 const SCREENS = ['home','quiz','result','errors','ref','setup','qbase','login','kb','attest','stub',
                  'learn','profile','roadmap'];
 
@@ -827,10 +900,21 @@ function filtHTML(words, goto, clear){
 
 // Один и тот же факт спрашивается по-разному: точным вводом, выбором, пропуском в составе.
 // В одной сессии это выглядит как повтор, поэтому от каждой строки рецепта берём один вопрос.
+// Хвост sk — это СПОСОБ спрашивания (точный ввод, выбор, пропуск в составе, весь состав).
+// Один факт, спрошенный по-разному, в одной сессии повторяться не должен, поэтому хвост
+// отбрасывается. А вот «glass», «garset», «tech», «sum», «pcs» — это разные ФАКТЫ одного
+// напитка. Раньше у них хвоста не было, и они схлопывались в общий ключ «Напиток|i»:
+// из посуды, набора украшений и техники в сессию попадал только один вопрос из трёх,
+// а по 24 напиткам вопросы просто пропадали.
+const ASK_I = {i:1, fill:1, mfill:1};
+const ASK_X = {num:1, choice:1};
 function dedupKey(q){
   const p = (q.sk||q.id).split('|');
-  const kind = p[p.length-1]==='g' ? 'g' : 'i';   // украшение и состав — всё-таки разные факты
-  return p.slice(0,-1).join('|')+'|'+kind;
+  const last = p[p.length-1];
+  if(ASK_I[last]) return p.slice(0,-1).join('|')+'|i';
+  if(last==='g')  return p.slice(0,-1).join('|')+'|g';
+  if(ASK_X[last]) return p.slice(0,-1).join('|')+'|x';
+  return q.sk || q.id;
 }
 // У зелёных чаёв доза и температура одинаковы (8 гр, 80 °C), у чёрных — свои 10 гр
 // и 100 °C. Три подряд одинаковых вопроса про разные сорта ничему не учат, поэтому
@@ -918,16 +1002,36 @@ $('#setOff').addEventListener('click', e=>{
 $('#setTotal').addEventListener('change', e=>{ store.showTotal=e.target.checked; save(); });
 $('#setGo').addEventListener('click', ()=>{ if(trainPool(OPT).length) start('train'); });
 
+/* ---------- случайный порядок ----------
+   В банке варианты и строки состава лежат в фиксированном порядке, и человек
+   быстро начинал помнить «правильный — третий» или «суперджус всегда предпоследний».
+   Поэтому перед сессией каждый вопрос копируется с перемешанными вариантами
+   и строками. Копия, а не правка BANK: id и разбор ошибок должны остаться прежними. */
+function shuffleOpts(q){
+  if(!q.opts || q.opts.length < 2) return q;
+  const ord = shuffle(q.opts.map((_,i)=>i));
+  return Object.assign({}, q, {opts: ord.map(i=>q.opts[i]), ai: ord.indexOf(q.ai)});
+}
+function shuffleRows(q){
+  if((q.t!=='mfill' && q.t!=='fill') || !q.rows) return q;
+  let bi = 0;
+  const tagged = q.rows.map(r => ({r, a: r[1]==='' ? (q.t==='mfill' ? q.a[bi++] : q.a) : null}));
+  shuffle(tagged);
+  const a = tagged.filter(x=>x.a!=null).map(x=>x.a);
+  return Object.assign({}, q, {rows: tagged.map(x=>x.r), a: q.t==='mfill' ? a : q.a});
+}
+const varied = q => shuffleRows(shuffleOpts(q));
+
 /* ---------- запуск ---------- */
 function start(mode){
   let list;
-  if(mode==='exam') list = pickExam();
+  if(mode==='exam' || mode==='examfav') list = pickExam(mode==='examfav');
   else if(mode==='train') list = shuffle(trainPool(OPT));
   else list = dedupe(shuffle(Object.keys(store.errors).map(id=>BY_ID[id]).filter(Boolean)));
   if(!list.length){ renderHome(); return; }
   if(mode==='train'){ store.sess = null; save(); }
-  S = {mode, list, k:0, right:0, wrong:0, lives:EX_LIVES, left:EX_SEC, done:[],
-       t0:Date.now(), ans:{}, again:{}};
+  S = {mode, list:list.map(varied), k:0, right:0, wrong:0, lives:EX_LIVES, left:EX_SEC, done:[],
+       t0:Date.now(), ans:{}, again:{}, pick:null};
   runSession();
 }
 
@@ -942,14 +1046,16 @@ function resumeSession(){
   const sv = store.sess; if(!sv) return;
   const list = sv.ids.map(id=>BY_ID[id]).filter(Boolean);
   if(!list.length){ store.sess=null; save(); renderSetup(); return; }
-  S = {mode:'train', list, k:Math.min(sv.k,list.length-1), right:sv.right||0, wrong:sv.wrong||0,
-       lives:EX_LIVES, left:EX_SEC, done:[], t0:sv.t0||Date.now(), ans:sv.ans||{}, again:{}};
+  S = {mode:'train', list:list.map(varied), k:Math.min(sv.k,list.length-1),
+       right:sv.right||0, wrong:sv.wrong||0,
+       lives:EX_LIVES, left:EX_SEC, done:[], t0:sv.t0||Date.now(), ans:sv.ans||{},
+       again:{}, pick:null};
   runSession();
 }
 
 function runSession(){
   show('quiz');
-  if(S.mode==='exam'){
+  if(isExam()){
     $('#timer').textContent = mmss(S.left);
     clearInterval(tick);
     tick = setInterval(()=>{
@@ -964,7 +1070,7 @@ function runSession(){
 /* ---------- отрисовка вопроса ---------- */
 // Выход напитка — подсказка: зная его, пропуск считается арифметикой. На экзамене
 // не показываем никогда, в тренировке это выбор пользователя.
-const showTotal = () => S.mode!=='exam' && !!store.showTotal;
+const showTotal = () => !isExam() && !!store.showTotal;
 // Подсказка «выход = сумма всех жидкостей» имеет смысл, только когда выход виден.
 // С выключённым показом это просто дразнилка, а на экзамене — ещё и лишний намёк.
 const hintOf = q => (q.hint && q.hint.indexOf('выход') === 0 && !showTotal()) ? '' : q.hint;
@@ -979,6 +1085,7 @@ function renderQ(){
     ? `<span style="color:var(--bad)">${S.wrong} ошиб.</span>`
     : '<span style="color:var(--ink-3)">без ошибок</span>';
   $('#prev').classList.toggle('hidden', S.k===0);
+  $('#fwd').classList.toggle('hidden', !canFwd());
   const img = q.img ? `<img src="${src(q.img)}" alt="">` : '';
   const nBlanks = q.t==='mfill' ? q.a.length : (q.t==='fill' ? 1 : 0);
   let bi = -1;
@@ -997,7 +1104,10 @@ function renderQ(){
   $('#quiz').innerHTML = `<div class="q" id="qc">
       <div class="drink">${img}<div><span>${kind}</span><b>${q.drink}</b>
         ${q.tag?`<div class="tagline">${q.tag}</div>`:''}</div>
-        ${starHTML(isFavQ(q.id), 'id="favQ"')}</div>
+        <div class="stars">
+          ${starHTML(isFav(q.drink), 'data-fav="'+q.drink.replace(/"/g,'&quot;')+'" title="Коктейль в избранном"')}
+          ${starHTML(isFavQ(q.id), 'id="favQ" title="Этот вопрос в избранном"')}
+        </div></div>
       <h2>${q.q}</h2>
       ${hintOf(q)?`<div class="hint">${hintOf(q)}</div>`:''}
       ${body}
@@ -1018,8 +1128,29 @@ function renderQ(){
 // поэтому цифры вводятся своим падом. Он же обслуживает несколько полей у «впиши состав».
 let PAD = null;
 
+// Все ли поля заполнены и куда прыгать дальше — нужно и кнопке «Дальше», и стрелкам.
+const padFull = () => PAD.vals.every(v=>v!=='');
+function padNextEmpty(){
+  for(let k=1;k<=PAD.n;k++){ const i=(PAD.i+k)%PAD.n; if(PAD.vals[i]==='') return i; }
+  return -1;
+}
+function padGo(i){
+  if(!PAD || !PAD.many) return;
+  PAD.i = (i + PAD.n) % PAD.n;
+  padDraw();
+  const tr = $('#ftab') && $('#ftab').querySelectorAll('tr[data-b]')[PAD.i];
+  if(tr) tr.scrollIntoView({block:'nearest'});
+}
+
 function padHTML(q, nBlanks){
   const many = nBlanks > 1;
+  // Ряд стрелок стоит прямо над цифрами «2» и «3»: переключает ингредиент,
+  // не трогая набранное число. Тыкать в узкую строку таблицы на телефоне неудобно.
+  const navrow = many
+    ? `<span></span>
+       <button data-step="-1" class="nav" title="Предыдущий ингредиент">↑</button>
+       <button data-step="1"  class="nav" title="Следующий ингредиент">↓</button>`
+    : '';
   return `<div class="numbox" id="numbox">
     <div class="disp" id="disp">
       <span class="val ph" id="val">0<i></i></span>
@@ -1027,8 +1158,9 @@ function padHTML(q, nBlanks){
     </div>
     ${many?`<div class="hint" id="slotHint"></div>`:''}
     <div class="padhint">Введите число с клавиатуры · Enter — ответить${
-      many?' · Tab или Enter — следующее поле':''}</div>
+      many?' · Tab или ↑/↓ — другое поле':''}</div>
     <div class="pad">
+      ${navrow}
       ${[1,2,3,4,5,6,7,8,9].map(d=>`<button data-d="${d}">${d}</button>`).join('')}
       <button data-d="," class="sub">,</button>
       <button data-d="0">0</button>
@@ -1051,7 +1183,9 @@ function padDraw(){
     });
     $('#slotHint').textContent = 'Поле '+(PAD.i+1)+' из '+PAD.n+' · '+
       rows[PAD.i].firstElementChild.textContent.trim();
-    $('#ok').textContent = PAD.i===PAD.n-1 ? 'Ответ' : 'Дальше';
+    // «Ответ» появляется, как только заполнены все поля, а не только на последнем:
+    // человек мог начать с середины и дозаполнить пропуски вразнобой.
+    $('#ok').textContent = padFull() ? 'Ответ' : 'Дальше';
   } else if(tab){
     const tr=tab.querySelector('tr[data-b]');
     if(tr){ tr.classList.add('act'); tr.querySelector('.slot').textContent = v ? v+' '+q.unit : '—'; }
@@ -1061,9 +1195,14 @@ function padDraw(){
 function initPad(q, nBlanks){
   PAD = {q, n:Math.max(1,nBlanks), i:0, vals:new Array(Math.max(1,nBlanks)).fill(''),
          many:nBlanks>1, locked:false};
+  // Отклик рисуем на pointerdown: click приходит только когда палец оторван,
+  // и на телефоне это читалось как запаздывание анимации.
+  $('#numbox').addEventListener('pointerdown', e=>{
+    const b=e.target.closest('button'); if(b && !PAD.locked) hit(b);
+  });
   $('#numbox').addEventListener('click', e=>{
     const b=e.target.closest('button'); if(!b || PAD.locked) return;
-    hit(b);
+    if(b.dataset.step){ padGo(PAD.i + (+b.dataset.step)); return; }
     if(b.dataset.d!=null){
       const d=b.dataset.d;
       if(d===',' && (PAD.vals[PAD.i].includes(',')||!PAD.vals[PAD.i])) return;
@@ -1074,7 +1213,11 @@ function initPad(q, nBlanks){
     if(b.dataset.q!=null){ PAD.vals[PAD.i]=b.dataset.q; padDraw(); return; }
     if(b.id==='ok'){
       if(!PAD.vals[PAD.i]) return;
-      if(PAD.i < PAD.n-1){ PAD.i++; padDraw(); return; }
+      // Все поля заполнены — проверяем сразу, где бы ни стоял курсор. Раньше
+      // с середины списка приходилось «спускаться» кнопкой «Дальше» по одному.
+      if(padFull()){ submitNum(); return; }
+      const nx = padNextEmpty();
+      if(nx >= 0){ padGo(nx); return; }
       submitNum();
     }
   });
@@ -1092,10 +1235,10 @@ function hit(b){
   b.classList.remove('hit');
   void b.offsetWidth;                   // перезапуск анимации при быстрых нажатиях
   b.classList.add('hit');
-  setTimeout(()=>b.classList.remove('hit'), 170);
+  setTimeout(()=>b.classList.remove('hit'), 260);
   const d = $('#disp');
-  if(d){ d.classList.add('hit'); setTimeout(()=>d.classList.remove('hit'), 170); }
-  if(navigator.vibrate) try{ navigator.vibrate(8); }catch(e){}
+  if(d){ d.classList.add('hit'); setTimeout(()=>d.classList.remove('hit'), 200); }
+  if(navigator.vibrate) try{ navigator.vibrate(6); }catch(e){}
 }
 
 const numOf = t => parseFloat((t||'').replace(',','.'));
@@ -1129,6 +1272,7 @@ function submitChoice(i, btn){
   const q=S.list[S.k];
   const btns=$('#quiz').querySelectorAll('.opt');
   if(btns[0].disabled) return;
+  S.pick = i;
   btns.forEach((b,j)=>{ b.disabled=true;
     if(j===q.ai) b.classList.add('ok');
     else if(j===i) b.classList.add('bad');
@@ -1136,17 +1280,58 @@ function submitChoice(i, btn){
   grade(i===q.ai);
 }
 
+/* ---------- разбор ответа ----------
+   Раньше здесь была одна строка «Правильный ответ: 40 мл». Заказчик просил показывать
+   меню целиком: свой ответ против правильного, весь состав с граммовками, выход
+   и переход в карточку — не уходя с вопроса. */
+function myAnswerText(q, my){
+  if(my==null || my==='' || (Array.isArray(my) && !my.length)) return '—';
+  if(q.t==='mfill') return my.map(v=>v===''?'—':v).join(' · ')+' '+q.unit;
+  if(q.t==='num'||q.t==='fill') return my+' '+q.unit;
+  return (q.opts && q.opts[my]!=null) ? q.opts[my] : '—';
+}
+
+function fbHTML(q, ok, my, note){
+  const r = (q.r!=null && REC.recipes[q.r]) ? REC.recipes[q.r] : null;
+  // Выход пишем всегда, где он вообще известен: заказчик просил видеть его в каждом разборе.
+  const total = (r && r.total) || q.total || '';
+  const cmp = ok
+    ? `<div class="cmp"><div class="c ok"><span>правильно</span><b>${answerText(q)}</b></div></div>`
+    : `<div class="cmp">
+         <div class="c bad"><span>ваш ответ</span><b>${myAnswerText(q, my)}</b></div>
+         <div class="c ok"><span>правильно</span><b>${answerText(q)}</b></div>
+       </div>`;
+  // Полное меню показываем только при разборе ошибки: верный ответ листается сам,
+  // читать там нечего, а простыня успевала бы только мигнуть.
+  const menu = (!ok && r)
+    ? `<div class="fbcard" data-r="${q.r}">
+         ${r.img?`<img src="${src(r.img)}" alt="">`:''}
+         <div class="t"><b>${r.name}</b><span>${[r.tech,r.glass].filter(Boolean).join(' · ')}${
+           r.tag?' · '+r.tag:''}</span></div><i>рецепт ›</i>
+       </div>${compHTML(r)}`
+    : '';
+  const out = total ? `<div class="fbtot">Выход<b>${total}</b></div>` : '';
+  return `<div class="verd">${ok?'Верно':'Неверно'}${
+      note?`<span class="vnote">${note}</span>`:''}</div>
+    ${cmp}${menu}${out}
+    <span class="next" id="fbNext">Дальше</span>`;
+}
+
+// Шапка вопроса открывает карточку только после ответа — иначе это подсказка.
+function armDrinkCard(q){
+  const d = $('#quiz').querySelector('.drink');
+  if(d && q.r!=null){ d.classList.add('open'); d.setAttribute('data-r', q.r); }
+}
+
 // возврат к уже отвеченному вопросу: показываем правильный ответ и не пересчитываем статистику
 function replay(q, rec){
   if(PAD) PAD.locked = true;
   const fb=$('#fb');
   fb.className = 'fb '+(rec.ok?'ok':'bad')+' show';
-  fb.innerHTML = (rec.ok?'Верно':'Правильный ответ: <b>'+answerText(q)+'</b>')
-    + '<span style="opacity:.55;font-size:12px"> · этот вопрос вы уже отвечали</span>'
-    + (q.r!=null ? '<br><span class="fbbtn" id="showRec" data-r="'+q.r+'">Открыть рецепт целиком</span>' : '')
-    + '<br><span class="next" id="fbNext">Дальше</span>';
+  fb.innerHTML = fbHTML(q, rec.ok, rec.my, 'этот вопрос вы уже отвечали');
+  armDrinkCard(q);
   $('#quiz').querySelectorAll('.opt').forEach((b,j)=>{ b.disabled=true;
-    b.classList.add(j===q.ai ? 'ok' : 'dim'); });
+    b.classList.add(j===q.ai ? 'ok' : (j===rec.my && !rec.ok ? 'bad' : 'dim')); });
   const nb = $('#numbox'); if(nb) nb.classList.add('answered');
   const nx = $('#fbNext'); if(nx) nx.onclick = ()=>next();
   const tab=$('#ftab');
@@ -1161,31 +1346,33 @@ function replay(q, rec){
 function grade(ok){
   const q=S.list[S.k], fb=$('#fb');
   S.done.push({id:q.id, ok});
-  S.ans[q.id] = {ok};
+  S.ans[q.id] = {ok, my:myAnswer(q)};
+  $('#fwd').classList.toggle('hidden', !canFwd());
   store.stats.total++; if(ok) store.stats.right++;
   if(ok){
     S.right++;
     store.solved[q.id] = 1;                      // для режима «только нерешённые»
     if(store.errors[q.id]){ delete store.errors[q.id]; }
-    fb.className='fb ok show'; fb.innerHTML='Верно';
+    fb.className='fb ok show';
+    fb.innerHTML = fbHTML(q, true, S.ans[q.id].my, '');
   } else {
     S.wrong++;
     delete store.solved[q.id];
     store.errors[q.id] = (store.errors[q.id]||0)+1;
     // Ошибку надо переспросить, пока она свежая: вставляем копию в ближайшие 50 вопросов.
-    if(S.mode!=='exam' && !S.again[q.id]){
+    if(!isExam() && !S.again[q.id]){
       S.again[q.id] = 1;
       const at = Math.min(S.list.length, S.k + 20 + Math.floor(Math.random()*30));
-      S.list.splice(at, 0, q);
+      // Заново перемешанная копия: иначе при повторе варианты стоят в том же порядке
+      // и вопрос решается по памяти позиции, а не по знанию.
+      S.list.splice(at, 0, varied(BY_ID[q.id] || q));
     }
     fb.className='fb bad show';
-    fb.innerHTML = 'Правильный ответ: <b>'+answerText(q)+'</b>'
-      + '<span style="opacity:.55;font-size:12px"> · тап или Enter — дальше</span>'
-      + (q.r!=null ? '<br><span class="fbbtn" id="showRec" data-r="'+q.r+'">Открыть рецепт целиком</span>' : '')
-      + '<br><span class="next" id="fbNext">Дальше</span>';
-    const nx = $('#fbNext'); if(nx) nx.onclick = ()=>next();
+    fb.innerHTML = fbHTML(q, false, S.ans[q.id].my, 'тап мимо разбора или Enter — дальше');
     $('#qc').classList.add('shake');
   }
+  armDrinkCard(q);
+  const nx = $('#fbNext'); if(nx) nx.onclick = ()=>next();
   save();
   // Верный ответ листается сам — там читать нечего. Неверный ждёт человека:
   // нужно успеть посмотреть правильное значение и при желании открыть рецепт.
@@ -1195,7 +1382,9 @@ function grade(ok){
 
 function onAdvance(e){
   // тап по кнопке рецепта, по своей клавиатуре, по звезде и внутри модалки не листает вопрос
-  if(e && e.target.closest && e.target.closest('#modal, #showRec, .numbox, .star, .top')){
+  // Разбор теперь — читаемая панель с составом и карточкой напитка: тап по ней
+  // не должен листать вопрос, иначе до рецепта не дотянуться. Листает тап мимо.
+  if(e && e.target.closest && e.target.closest('#modal, .fb, .drink, .numbox, .star, .top')){
     document.addEventListener('pointerdown', onAdvance, {once:true});
     return;
   }
@@ -1212,16 +1401,26 @@ function next(){
   if(S.k>=S.list.length) finish('end'); else renderQ();
 }
 
-// Шаг назад: вопрос показывается с разбором, отвечать заново не нужно.
-function prevQ(){
-  if(!S || S.k===0) return;
+// Шаг назад и шаг вперёд по уже пройденным вопросам: показываются с разбором,
+// отвечать заново не нужно. Вперёд пускаем только туда, где ответ уже есть —
+// иначе стрелка позволяла бы проматывать вопросы, не отвечая.
+function canFwd(){
+  if(!S || S.k >= S.list.length-1) return false;
+  const q = S.list[S.k];
+  return S.ans[q.id] != null;
+}
+function stepQ(d){
+  if(!S || S.ended) return;
   S.armed=false;
   document.removeEventListener('pointerdown', onAdvance);
   clearTimeout(S.timer);
-  S.k--;
+  S.k += d;
   saveSession();
   renderQ();
 }
+function prevQ(){ if(S && S.k>0 && !modalOn()) stepQ(-1); }
+function nextQ(){ if(canFwd() && !modalOn()) stepQ(1); }
+const modalOn = () => $('#modal').classList.contains('on');
 
 function finish(why){
   if(S.ended) return; S.ended=true; S.armed=false;
@@ -1229,23 +1428,41 @@ function finish(why){
   clearInterval(tick); clearTimeout(S.timer);
   if(S.mode==='train') store.sess=null;
   const secs = Math.round((Date.now()-S.t0)/1000);
-  if(S.mode==='exam'){
+  if(isExam()){
     store.stats.runs++;
     if(S.right>store.stats.best) store.stats.best=S.right;
   }
   save();
-  const passed = S.mode!=='exam' ? null : (why==='end' && S.wrong <= EX_LIVES);
-  const title = S.mode==='exam'
+  const passed = !isExam() ? null : (why==='end' && S.wrong <= EX_LIVES);
+  const title = isExam()
       ? (passed ? 'Аттестация сдана' : (why==='time' ? 'Время вышло' : `Не сдано · ошибок ${S.wrong}`))
       : (S.mode==='train' ? 'Тренажёр завершён' : 'Разбор ошибок завершён');
   const acc = S.done.length ? Math.round(S.right/S.done.length*100) : 0;
   const errN = Object.keys(store.errors).length;
+  // Разбор ошибок прямо в итогах аттестации. В тренировке этого нет намеренно:
+  // там ошибка возвращается сама через 20–50 вопросов, без пометки, что это повтор.
+  const miss = isExam() ? S.done.filter(d=>!d.ok) : [];
+  const seenMiss = new Set();
+  const missHTML = miss.length ? `<div class="subhead">Ошибки этой аттестации · ${miss.length}</div>` +
+    miss.map(d=>{
+      if(seenMiss.has(d.id)) return '';
+      seenMiss.add(d.id);
+      const q = S.list.find(x=>x.id===d.id) || BY_ID[d.id];
+      if(!q) return '';
+      const rec = S.ans[q.id] || {};
+      return `<button class="item" data-r="${q.r??''}">${q.img?`<img src="${src(q.img)}">`:''}
+        <div class="txt"><b>${qLabel(q)}</b><span>${q.drink}</span></div>
+        <div style="text-align:right">
+          <div class="ans" style="color:var(--bad);text-decoration:line-through">${myAnswerText(q, rec.my)}</div>
+          <div class="ans">${answerText(q)}</div></div></button>`;
+    }).join('') : '';
   $('#result').innerHTML = `
     <div class="res">
-      <div class="big ${passed===null? '' : (passed?'win':'lose')}">${S.right}<span style="font-size:22px;color:var(--ink-3)">/${S.mode==='exam'?EX_N:S.done.length}</span></div>
+      <div class="big ${passed===null? '' : (passed?'win':'lose')}">${S.right}<span style="font-size:22px;color:var(--ink-3)">/${isExam()?S.list.length:S.done.length}</span></div>
       <h1 style="font-size:22px;margin:12px 0 4px">${title}</h1>
       <p>Точность ${acc}% · время ${mmss(secs)} · ошибок ${S.wrong}</p>
     </div>
+    ${missHTML}
     <div class="row">
       <button class="go" id="again">Ещё раз</button>
       <button class="ghostbtn" id="toErr">Ошибки${errN?' · '+errN:''}</button>
@@ -1537,7 +1754,11 @@ const ROADMAP = [
   {gr:'Обучение', st:'done', t:'Тренажёр и аттестация', d:'1122 вопроса по бару: составы, украшения, посуда, метод, кофе, чай, заготовки, подача'},
   {gr:'Обучение', st:'done', t:'Технологические карты', d:'139 карточек из таблицы, поиск по ингредиенту, справочник посуды'},
   {gr:'Обучение', st:'done', t:'База вопросов', d:'весь банк списком с фильтрами и выключением лишнего'},
-  {gr:'Обучение', st:'work', t:'Разбор ошибки — состав напитка', d:'ближайшее: тап по ошибке в разборе открывает карточку с правильным составом, не выходя из списка'},
+  {gr:'Обучение', st:'done', t:'Разбор ошибки — состав напитка', d:'в разборе виден свой ответ против правильного, состав целиком, выход и карточка напитка по тапу — не выходя из вопроса'},
+  {gr:'Обучение', st:'plan', t:'Режим «Хардкор»', d:'третий режим рядом с тренажёром и аттестацией: без подсказок и без показа выхода, только точный ввод (никакого выбора из четырёх), время на вопрос, ошибка не переспрашивается. Результат хардкора идёт в рейтинг барменов — обычная тренировка не идёт'},
+  {gr:'Обучение', st:'plan', t:'Поэтапные тесты для 1-й категории', d:'теория по бару разбита на блоки в том порядке, в котором её правильно учить; следующий блок открывается после сдачи предыдущего. Прогресс по блокам виден бармену и старшему'},
+  {gr:'Обучение', st:'plan', t:'Автоматическая переаттестация после релиза меню', d:'вышло новое меню — всем автоматически назначается переаттестация со сроком неделя, с напоминаниями по мере приближения дедлайна. Кто не сдал в срок — видно старшему и менеджеру'},
+  {gr:'Обучение', st:'plan', t:'СанПиН: тесты и аттестация', d:'по разделу СанПиН свои тесты и своя аттестация. Тестовую часть бармен сдаёт в приложении, а живьём старший спрашивает только самое сложное и нюансы. Нужна защита от списывания: контроль времени на вопрос, случайный порядок, живая часть обязательна'},
   {gr:'Обучение', st:'work', t:'Статистика: тренажёр и аттестации раздельно', d:'переключатель в блоке статистики: отдельно результаты тренажёра, отдельно пробных аттестаций'},
   {gr:'Обучение', st:'plan', t:'Аттестация · назначенная', d:'управляющий ставит дату и состав, результат уходит в отчёт'},
   {gr:'Обучение', st:'plan', t:'Тренинги', d:'календарь очных занятий и запись на них'},
@@ -1570,6 +1791,13 @@ const ROADMAP = [
   {gr:'Профиль', st:'work', t:'Мой график', d:'в профиле свои смены, по переключению линзы — все смены подразделения'},
   {gr:'Профиль', st:'work', t:'Норма часов и нагрузка', d:'у каждого бармена своя норма; цветная шкала показывает 100% как идеал, меньше — недоработка, больше — переработка'},
   {gr:'Профиль', st:'plan', t:'Статистика по работе', d:'смены, опоздания, часы и зарплата за период'},
+  // --- Достижения и рейтинг
+  {gr:'Достижения и рейтинг', st:'plan', t:'Система достижений', d:'каркас: достижение = условие + значок + вес в рейтинге. Выдаётся автоматически по событиям (сдал аттестацию, прошёл хардкор, закрыл блок теории, отработал стаж). Хранится в общей базе, а не только на устройстве — иначе рейтинг не собрать'},
+  {gr:'Достижения и рейтинг', st:'plan', t:'Достижение за безошибочный хардкор', d:'спец-значок за прохождение режима «Хардкор» без единой ошибки. Самый тяжёлый по весу в рейтинге'},
+  {gr:'Достижения и рейтинг', st:'plan', t:'Рейтинг барменов', d:'общий рейтинг по сумме достижений: результаты хардкора, аттестации, закрытые блоки теории. Видят все бармены точки, срез по подразделению и по сети — менеджер и директор'},
+  {gr:'Достижения и рейтинг', st:'plan', t:'Аватар в профиле', d:'сотрудник ставит своё фото; оно же в рейтинге и в базе барменов точки. Нужен Supabase Storage и правило на размер файла'},
+  {gr:'Достижения и рейтинг', st:'plan', t:'Карточка бармена для руководителя', d:'директор, менеджер и старший видят по каждому: когда и на какую категорию сдал, официальный стаж, когда истекает медкнижка. Даты сдачи категорий и стаж идут в достижения; истекающая медкнижка — предупреждением'},
+
   {gr:'Профиль', st:'plan', t:'Рейтинг сотрудников', d:'общий рейтинг всех сотрудников'},
   {gr:'Профиль', st:'plan', t:'Персональная карта', d:'карта сотрудника в виде QR. База готовая и не наша, доступа к ней пока нет — ждём'},
   {gr:'Профиль', st:'plan', t:'Отметка о приходе', d:'связать с готовой внешней системой учёта: QR-код, отпечаток пальца или карточка сотрудника'},
@@ -1582,7 +1810,8 @@ const ROADMAP = [
   {gr:'Платформа', st:'plan', t:'Пригласительные ссылки', d:'сейчас по ссылке может зарегистрироваться любой — заменить на приглашения'},
   {gr:'Платформа', st:'plan', t:'Подразделения', d:'кухня и зал: свои карты, вопросы и аттестации'},
 ];
-const RM_GROUPS = ['Обучение','График смен','Подразделение и ФОТ','Профиль','Платформа'];
+const RM_GROUPS = ['Обучение','Достижения и рейтинг','График смен','Подразделение и ФОТ',
+                   'Профиль','Платформа'];
 const VENUE = 'ТС-45 · ул. Сизова 9 · ООО «ИНФИНИТИ»';
 const RM_NAME = {done:'готово', work:'в работе', plan:'план'};
 
@@ -2078,7 +2307,9 @@ function mergeStore(remote){
   const maxMap = (a,b)=>{ const o=Object.assign({}, a||{});
     for(const [k,v] of Object.entries(b||{})) o[k]=Math.max(o[k]||0, v||0); return o; };
   store.errors = maxMap(store.errors, remote.errors);
-  for(const k of ['fav','favQ','skip','skipQ','skipSh','solved'])
+  // favI (избранные ингредиенты) забыли в списке — из-за этого «звезда на суперджусе»
+  // не доезжала на второе устройство, хотя избранные коктейли доезжали.
+  for(const k of ['fav','favQ','favI','skip','skipQ','skipSh','solved'])
     store[k] = Object.assign({}, remote[k]||{}, store[k]||{});
   const rs = remote.stats||{}, ls = store.stats;
   store.stats = {runs:Math.max(rs.runs||0, ls.runs||0), best:Math.max(rs.best||0, ls.best||0),
@@ -2238,7 +2469,20 @@ document.addEventListener('click', e=>{
   }
 }, true);
 
+// Сколько вопросов реально наберётся по звёздам — видно до запуска, иначе человек
+// жмёт «по избранному» и получает аттестацию из четырёх вопросов, не понимая почему.
+function renderAttest(){
+  const n = dedupe(BANK.filter(q=>playable(q) && favQuestion(q)
+                                 && (q.t!=='mfill' || q.a.length<=4))).length;
+  $('#attFavN').textContent = n ? `${Math.min(n, EX_N)} вопросов` : 'избранного нет';
+  $('#attFav').classList.toggle('ghost', !n);
+  $('#attFav').style.opacity = n ? 1 : .5;
+  show('attest');
+}
 $('#attTry').addEventListener('click', ()=>start('exam'));
+$('#attFav').addEventListener('click', ()=>{
+  if(BANK.some(q=>playable(q) && favQuestion(q))) start('examfav');
+});
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   const m=b.dataset.mode;
   if(!m) return;
@@ -2246,7 +2490,7 @@ document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{
   else if(m==='learn'){ renderLearnStat(); show('learn'); }
   else if(m==='profile') renderProfile();
   else if(m==='roadmap') renderRoadmap();
-  else if(m==='attest') show('attest');
+  else if(m==='attest') renderAttest();
   else if(m==='sched' || m==='paystat' || m==='card' || m==='training') openStub(m);
   else if(m==='kb') renderKB();
   else if(m==='ref') openRef();
@@ -2281,6 +2525,7 @@ document.addEventListener('click', e=>{
 });
 $('#back').addEventListener('click',()=>{ clearInterval(tick); saveSession(); closeRecipe(); renderHome(); });
 $('#prev').addEventListener('click', e=>{ e.stopPropagation(); prevQ(); });
+$('#fwd').addEventListener('click', e=>{ e.stopPropagation(); nextQ(); });
 // «‹» в шапке справочника, базы вопросов и списка ошибок — возврат на главный экран
 document.addEventListener('click', e=>{
   const b = e.target.closest('.scrhead .back'); if(!b) return;
@@ -2301,9 +2546,14 @@ document.addEventListener('keydown',e=>{
     else if(e.key===','||e.key==='.') press('[data-d=","]');
     else if(e.key==='Backspace'){ e.preventDefault(); press('[data-del]'); }
     else if(e.key==='Enter'){ e.preventDefault(); press('#ok'); }
-    else if(e.key==='Tab' && PAD.many){ e.preventDefault(); press('#ok'); }
+    else if(e.key==='Tab' && PAD.many){ e.preventDefault(); padGo(PAD.i + (e.shiftKey?-1:1)); }
+    else if(e.key==='ArrowUp' && PAD.many){ e.preventDefault(); padGo(PAD.i-1); }
+    else if(e.key==='ArrowDown' && PAD.many){ e.preventDefault(); padGo(PAD.i+1); }
   }
-  if(e.key==='ArrowLeft') prevQ();
+  // Листание вопросов стрелками работает только когда вопрос уже закрыт разбором:
+  // иначе «влево» посреди набора числа выбрасывало из вопроса.
+  if(e.key==='ArrowLeft'){ e.preventDefault(); prevQ(); }
+  if(e.key==='ArrowRight'){ e.preventDefault(); nextQ(); }
 });
 /* Перенос входа: на компьютере жмём «Открыть на телефоне», получаем ссылку с
    refresh-токеном в хеше. Телефон меняет его на свою сессию и сразу забывает ссылку.

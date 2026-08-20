@@ -123,16 +123,17 @@ for x in extras['serve']:
     else:
         _put(x['name'], 'порция', x['amount'])
 
+# Название ингредиента раньше выдёргивалось из текста вопроса по кавычкам. С 20.08.2026
+# вопрос звучит «Сколько миллилитров сиропа Малина?» — название в родительном падеже
+# и без кавычек, из текста его не достать. Берём его из sk: он для того и заведён
+# («напиток|строка рецепта|вид») и не зависит от формулировки.
+SK_LABEL = {'ложки': 'ложек'}
 for q in bank:
     if q['cat'] not in EXTRA_CATS or q['t'] != 'num':
         continue
-    if 'ложек' in q['q']:
-        label = 'ложек'
-    elif 'выход' in q['q'] or 'на выходе' in q['q']:
-        label = 'выход'
-    else:
-        m = re.search(r'«(.+?)»', q['q'])
-        label = m.group(1) if m else '?'
+    parts = (q.get('sk') or '').split('|')
+    label = parts[1] if len(parts) > 1 else '?'
+    label = SK_LABEL.get(label, label)
     vals = EX_VALS.get((q['drink'].strip(), label.strip()), [])
     if not vals:
         fails.append(f'нет источника для вопроса: {q["drink"]} / {label}')
@@ -179,7 +180,31 @@ for q in bank:
 for k, n in seen_q.items():
     if n > 1: fails.append(f'вопрос повторяется {n} раза: {k}')
 
-# ---------- 4. разброс дистракторов
+# ---------- 4а. шаг вариантов у веса украшений
+# С 20.08.2026 шаг задан по виду украшения (вейдж и ягода — 5, мармелад — 4,
+# сухое — 2, зелень — 1 или 0,5). Проверяем, что ближайший неверный вариант отстоит
+# ровно на разрешённый шаг: раньше эта категория из проверки просто исключалась,
+# и «розмарин 4 гр против 24 гр» никто бы не поймал.
+from config import gar_steps
+for q in bank:
+    if q['t'] != 'choice' or q['cat'] != 'garnish' or not q.get('opts'):
+        continue
+    if not all(o.endswith(' гр') for o in q['opts']):
+        continue
+    parts = (q.get('sk') or '').split('|')
+    label = parts[1] if len(parts) > 2 else ''
+    if not label:
+        continue
+    nums = [float(o[:-3].replace(',', '.')) for o in q['opts']]
+    corr = nums[q['ai']]
+    steps = gar_steps(label, corr)
+    if not steps:
+        continue
+    gaps = sorted(abs(v - corr) for i, v in enumerate(nums) if i != q['ai'])
+    if gaps[0] < min(steps) - 1e-9:
+        fails.append(f'шаг украшения меньше {min(steps)}: {q["drink"]} / {label} {q["opts"]}')
+
+# ---------- 4б. разброс дистракторов
 for q in bank:
     if q['t'] != 'choice' or q['cat'] == 'garnish':
         continue
